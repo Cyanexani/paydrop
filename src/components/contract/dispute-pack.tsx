@@ -34,10 +34,10 @@ export function DisputePack({ params }: { params: Promise<{ id: string }> }) {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <Link href={`/contracts/${id}`} className="text-sm text-zinc-500 hover:underline">← Contract</Link>
-          <h1 className="cond rise text-[clamp(48px,7vw,96px)] font-extrabold leading-[0.88]">Dispute pack: {pack.contract.title}</h1>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+        <div className="min-w-0">
+          <Link href={`/contracts/${id}`} className="label inline-block py-2 text-muted hover:text-butter">← Contract</Link>
+          <h1 className="cond rise my-3 text-[clamp(44px,7vw,96px)] font-extrabold leading-[0.88]">Dispute pack: {pack.contract.title}</h1>
+          <p className="label leading-relaxed text-subtle">
             {pack.contract.parties.map((p) => `${p.name} (${p.role})`).join(" · ")} · generated {new Date(pack.generatedAt).toLocaleString("en-IN")}
           </p>
         </div>
@@ -48,13 +48,13 @@ export function DisputePack({ params }: { params: Promise<{ id: string }> }) {
       </div>
 
       {pack.milestones.map((m) => (
-        <Card key={m.position} className="space-y-2">
-          <div className="flex items-center justify-between gap-2">
+        <Card key={m.position} className="space-y-3 [overflow-wrap:anywhere]">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="cond text-[28px] font-bold leading-none">{m.position}. {m.title}</h2>
             <StatusPill status={m.status} />
           </div>
           <p className="text-xs text-zinc-500">Due {m.dueAt ? new Date(m.dueAt).toLocaleString("en-IN") : "—"} · {m.receipt.title}</p>
-          <ul className="text-sm">
+          <ul className="space-y-1.5 text-[15px]">
             {m.criteria.map((c) => {
               const r = m.lastCheck?.results.find((x) => x.criterionId === c.id);
               return (
@@ -74,11 +74,11 @@ export function DisputePack({ params }: { params: Promise<{ id: string }> }) {
 
       <Card>
         <h2 className="cond mb-3 text-[32px] font-extrabold leading-none">Timeline</h2>
-        <ol className="space-y-1 text-sm">
+        <ol className="text-sm [overflow-wrap:anywhere]">
           {pack.timeline.map((t, i) => (
-            <li key={i} className="grid grid-cols-[9rem_6rem_1fr] gap-2">
-              <span className="tabular-nums text-zinc-500">{new Date(t.at).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" })}</span>
-              <span className="text-zinc-500">{t.kind}{t.milestone ? ` #${t.milestone}` : ""}</span>
+            <li key={i} className="grid gap-x-3 gap-y-0.5 border-t border-line-soft py-2 first:border-0 sm:grid-cols-[9rem_7rem_minmax(0,1fr)]">
+              <span className="label text-subtle">{new Date(t.at).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" })}</span>
+              <span className="label text-peach">{t.kind}{t.milestone ? ` #${t.milestone}` : ""}</span>
               <span>
                 {t.text}
                 {t.link && <a className="ml-1 text-emerald-700 underline dark:text-emerald-400" href={t.link} target="_blank" rel="noreferrer">replay</a>}

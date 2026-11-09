@@ -91,6 +91,7 @@ body {
   color: #fff;
 }
 
+@layer components {
 /* ---------- Type ---------- */
 
 /* Condensed grotesk for headlines */
@@ -191,6 +192,7 @@ body {
   0% { box-shadow: 0 0 0 0 rgb(255 73 193 / 0.7); }
   100% { box-shadow: 0 0 0 12px rgb(255 73 193 / 0); }
 }
+}
 
 .float { animation: float 7s ease-in-out infinite; }
 @keyframes float {
@@ -206,8 +208,10 @@ body {
 
 /* ---------- Gooey dots (filters live in the root layout) ---------- */
 
-.goo-lg { filter: url(#goo-lg); }
-.goo-md { filter: url(#goo-md); }
+@layer components {
+  .goo-lg { filter: url(#goo-lg); }
+  .goo-md { filter: url(#goo-md); }
+}
 
 /* Loader 1 — glide: a magenta dot slides along three, merging with each */
 .gl { position: relative; width: calc(var(--s, 18px) * 5.8); height: calc(var(--s, 18px) * 1.6); filter: url(#goo-md); flex: none; }
@@ -286,7 +290,7 @@ body {
 /* Scoped milestones: a liquid chain of drops sized by price */
 .chain-drop { position: absolute; top: 50%; border-radius: 9999px; transform: translate(-50%, -50%) scale(0); animation: grow 0.9s cubic-bezier(0.3, 1.5, 0.5, 1) forwards; }
 @keyframes grow { to { transform: translate(-50%, -50%) scale(1); } }
-.chain-string { position: absolute; top: 50%; height: 16px; margin-top: -8px; border-radius: 8px; background: var(--color-paper); transform-origin: left; transform: scaleX(0); animation: stretch 1s 0.2s cubic-bezier(0.6, 0, 0.3, 1) forwards; }
+.chain-string { position: absolute; top: 50%; height: 36px; margin-top: -18px; border-radius: 18px; background: var(--color-wine); transform-origin: left; transform: scaleX(0); animation: stretch 1s 0.2s cubic-bezier(0.6, 0, 0.3, 1) forwards; }
 @keyframes stretch { to { transform: scaleX(1); } }
 
 /* Contract money stage */
@@ -308,7 +312,20 @@ body {
 details > summary { list-style: none; cursor: pointer; }
 details > summary::-webkit-details-marker { display: none; }
 
-.b-gantt { border-radius: 1.25rem; overflow: hidden; }
+.b-gantt { border-radius: 1.25rem; overflow: hidden; font-family: var(--font-sans); }
+.b-gantt .b-panel,
+.b-gantt .b-grid-cell { background-color: var(--color-raised); }
+.b-gantt .b-grid-header,
+.b-gantt .b-grid-footer { background-color: #22101d; }
+.b-gantt .b-grid-splitter,
+.b-gantt .b-grid-splitter-inner,
+.b-gantt [class*="b-grid-splitter-button"] { background-color: var(--color-line); }
+.b-gantt .b-grid-subgrid,
+.b-gantt .b-grid-body-container,
+.b-gantt .b-grid-panel-body,
+.b-gantt .b-grid-vertical-scroller { background-color: var(--color-raised) !important; }
+.b-gantt .b-sch-time-range.b-gantt-project-line { background-color: var(--color-peach) !important; border-color: var(--color-peach) !important; color: #2b0a26 !important; }
+.b-gantt .b-gantt-task { color: #22071d; font-weight: 600; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

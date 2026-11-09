@@ -9,7 +9,7 @@ import { api, type PublicConfig, type Session } from "./api";
 import { MilestoneCard } from "./contract/milestone-card";
 import { AuditTrail, ChangeRequestsPanel, MessagesPanel, OfferPanel } from "./contract/panels";
 import { MoneyStage, HELD, PAID, UNFUNDED, sumWhere } from "./contract/money-stage";
-import { Card, ErrorNote, SectionHead, StatusPill } from "./ui";
+import { Card, ErrorNote, PageHeader, SectionHead, StatusPill } from "./ui";
 import { GooBlock } from "./goo";
 
 // Browser-only widgets: load them on the client.
@@ -64,7 +64,15 @@ export function ContractScreen({ params }: { params: Promise<{ id: string }> }) 
     [id, load],
   );
 
-  if (error && !view) return <ErrorNote error={error} />;
+  if (error && !view) {
+    return (
+      <div className="space-y-6">
+        <PageHeader eyebrow="Contract" title="Can't open this one" />
+        <ErrorNote error={error} />
+        <Link href="/contracts" className="label inline-block py-2 text-muted hover:text-butter">← Back to your contracts</Link>
+      </div>
+    );
+  }
   if (!view) return <GooBlock label="Loading contract" />;
   const { contract, role } = view;
 
@@ -102,7 +110,7 @@ export function ContractScreen({ params }: { params: Promise<{ id: string }> }) 
 
       <MoneyStage view={view} heldMinor={heldMinor} paidMinor={paidMinor} toFundMinor={toFundMinor} />
 
-      <p className="label leading-relaxed text-subtle">
+      <p className="label leading-relaxed text-subtle [overflow-wrap:anywhere]">
         Price locked at signing · deliveries accepted from {contract.contractedOrigins.join(", ")}
         {contract.currency !== "INR" && config ? ` · PayPal holds funds in ${contract.currency} at ₹${config.inrPerUsd}/$` : ""}
         {config?.aiMode === "mock" ? " · AI in demo mode (no API key)" : ""}

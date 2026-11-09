@@ -14,6 +14,8 @@ export function sumWhere(ms: Milestone[], statuses: string[]) {
 }
 
 const ZONE = { client: 16, held: 50, paid: 82 } as const;
+/** A size designed in px at desktop width, shrunk on narrow screens. */
+const fit = (px: number) => `max(${Math.min(px, 30)}px, min(${px}px, ${(px * 0.115).toFixed(2)}vw))`;
 const SPREAD = { client: 7, held: 7.5, paid: 0 } as const;
 const CHECKING = ["submitted", "needs_review", "verified"];
 
@@ -47,16 +49,16 @@ export function MoneyStage({ view, heldMinor, paidMinor, toFundMinor }: { view: 
         <span>Where the money is<br /><span className="opacity-75">Live</span></span>
         <span className="text-right">Stops<br /><span className="opacity-75">{live.length}</span></span>
       </div>
-      <div className="relative h-[380px] overflow-hidden">
-        <span aria-hidden className="money-ring size-[270px]" />
-        <span aria-hidden className="absolute left-[82%] top-1/2 size-[110px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-paper/30" />
-        <div aria-hidden className="goo-lg absolute inset-0">
-          {poolSize > 0 && <span className="money-drop" style={{ left: `${ZONE.paid}%`, width: poolSize, height: poolSize, background: "#fff7ad" }} />}
+      <div className="relative h-[300px] overflow-hidden sm:h-[380px]">
+        <span aria-hidden className="money-ring" style={{ width: fit(270), height: fit(270) }} />
+        <span aria-hidden className="absolute left-[82%] top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-paper/30" style={{ width: fit(110), height: fit(110) }} />
+        <div aria-hidden className="goo-lg absolute inset-0 max-sm:[filter:url(#goo-md)]">
+          {poolSize > 0 && <span className="money-drop" style={{ left: `${ZONE.paid}%`, width: fit(poolSize), height: fit(poolSize), background: "#fff7ad" }} />}
           {drops.map((d) => (
             <span
               key={d.m.id}
               className={`money-drop ${d.zone === "held" ? "money-bob" : ""}`}
-              style={{ left: `${d.left}%`, width: d.size, height: d.size, background: d.color, animationDelay: `${-d.m.position * 0.7}s` } as CSSProperties}
+              style={{ left: `${d.left}%`, width: fit(d.size), height: fit(d.size), background: d.color, animationDelay: `${-d.m.position * 0.7}s` } as CSSProperties}
             />
           ))}
         </div>
@@ -65,13 +67,13 @@ export function MoneyStage({ view, heldMinor, paidMinor, toFundMinor }: { view: 
           .map((d) => (
             <span
               key={d.m.id}
-              className="chip chip-glass absolute -translate-x-1/2 transition-[left] duration-[1500ms]"
-              style={{ left: `${d.left}%`, top: d.above ? `calc(50% - ${d.size / 2 + 44}px)` : `calc(50% + ${d.size / 2 + 12}px)` }}
+              className={`chip chip-glass absolute -translate-x-1/2 transition-[left] duration-[1500ms] max-sm:text-[10px] ${d.zone === "client" ? "max-sm:hidden" : ""}`}
+              style={{ left: `${d.left}%`, top: d.above ? `calc(50% - ${fit(d.size / 2)} - 44px)` : `calc(50% + ${fit(d.size / 2)} + 12px)` }}
             >
               <span className="sw" style={{ background: d.color }} />#{String(d.m.position + 1).padStart(2, "0")} {formatMoney(d.m.priceMinor)}
             </span>
           ))}
-        <span className="chip chip-glass absolute left-[82%] -translate-x-1/2" style={{ top: `calc(50% + ${Math.max(poolSize, 110) / 2 + 14}px)` }}>
+        <span className="chip chip-glass absolute left-[82%] -translate-x-1/2" style={{ top: `calc(50% + ${fit(Math.max(poolSize, 110) / 2)} + 14px)` }}>
           <span className="sw" style={{ background: "#fff7ad" }} />
           {formatMoney(paidMinor)} paid
         </span>

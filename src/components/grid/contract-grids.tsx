@@ -25,7 +25,7 @@ interface ReceiptRow {
   amountMinor: number | null;
 }
 
-const OUTCOME: Record<string, string> = { pass: "✅ pass", fail: "❌ fail", couldnt_check: "❔ couldn't check", "": "— not checked" };
+const OUTCOME: Record<string, string> = { pass: "Pass", fail: "Fail", couldnt_check: "Couldn't check", "": "Not checked" };
 
 /** Criteria-check grid (with replay links) and price-receipt rows for one contract. */
 export function ContractGrids({ view }: { view: ContractView }) {

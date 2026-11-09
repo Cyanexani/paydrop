@@ -65,7 +65,7 @@ export function MilestoneCard({
           <span className="money text-[52px] leading-[0.9]" style={{ color: TONE_COLOR[statusTone(m.status)] }}>
             {String(m.position + 1).padStart(2, "0")}
           </span>
-          <div className="min-w-0 flex-1 space-y-1.5">
+          <div className="min-w-[min(100%,220px)] flex-1 space-y-1.5">
             <h3 className="cond text-[30px] font-bold leading-none">
               {m.draft.title}
               {m.kind === "change_order" && <span className="chip ml-3 align-middle text-[11px]"><span className="sw size-3" style={{ background: "#e6b9f8" }} />Change order</span>}

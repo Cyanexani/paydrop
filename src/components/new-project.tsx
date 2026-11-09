@@ -59,7 +59,7 @@ export function NewProject() {
             <label className="block">
               <span className="sr-only">What do you need built?</span>
               <textarea
-                className={`${blank} my-1.5 block min-h-32 w-full resize-y text-[clamp(22px,3vw,36px)] font-semibold leading-tight [font-stretch:85%]`}
+                className={`${blank} my-2 block min-h-56 w-full resize-y text-[clamp(20px,3vw,36px)] sm:min-h-36 font-semibold leading-tight [font-stretch:85%]`}
                 value={brief}
                 onChange={(e) => setBrief(e.target.value)}
                 maxLength={5000}
@@ -177,7 +177,7 @@ function QuoteResult({ quote, onContract }: { quote: QuoteView; onContract: (id:
                 <span
                   key={m.title}
                   className="chain-drop"
-                  style={{ left: `${((i + 0.5) / n) * 100}%`, width: size, height: size, background: DROP_COLORS[i % DROP_COLORS.length], animationDelay: `${0.1 + i * 0.25}s` }}
+                  style={{ left: `${((i + 0.5) / n) * 100}%`, width: `min(${size}px, ${Math.floor(78 / n)}vw)`, height: `min(${size}px, ${Math.floor(78 / n)}vw)`, background: DROP_COLORS[i % DROP_COLORS.length], animationDelay: `${0.1 + i * 0.25}s` }}
                 />
               );
             })}
