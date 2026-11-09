@@ -5,7 +5,7 @@ import { AgGridReact } from "ag-grid-react";
 import { useEffect, useMemo, useState } from "react";
 import type { FairnessRow } from "@/server/ledger";
 import { api } from "../api";
-import { ErrorNote } from "../ui";
+import { ErrorNote, PageHeader } from "../ui";
 import { ensureGridModules, money, useGridTheme } from "./setup";
 
 ensureGridModules();
@@ -39,12 +39,9 @@ export function FairnessGrid() {
 
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="animate-rise font-display text-4xl font-bold tracking-tight sm:text-5xl">Pricing fairness</h1>
-        <p className="max-w-3xl text-sm text-zinc-600 dark:text-zinc-400">
-          Every milestone on the platform, grouped by freelancer tier. The base rate per hour is the same in every tier: the same work earns the same base pay, and only verified track record adds a premium. Estimate error compares PERT hours with the hours freelancers report.
-        </p>
-      </div>
+      <PageHeader eyebrow="04 · Fairness" title={<>Pricing<br />fairness</>}>
+        Every milestone on the platform, grouped by freelancer tier. The base rate per hour is the same in every tier: the same work earns the same base pay, and only a verified track record adds a premium. Estimate error compares PERT hours with the hours freelancers report.
+      </PageHeader>
       <ErrorNote error={error} />
       <div className="h-[560px]">
         <AgGridReact<FairnessRow>

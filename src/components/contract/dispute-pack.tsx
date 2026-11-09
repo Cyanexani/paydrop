@@ -36,7 +36,7 @@ export function DisputePack({ params }: { params: Promise<{ id: string }> }) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <Link href={`/contracts/${id}`} className="text-sm text-zinc-500 hover:underline">← Contract</Link>
-          <h1 className="animate-rise font-display text-4xl font-bold tracking-tight sm:text-5xl">Dispute pack: {pack.contract.title}</h1>
+          <h1 className="cond rise text-[clamp(48px,7vw,96px)] font-extrabold leading-[0.88]">Dispute pack: {pack.contract.title}</h1>
           <p className="text-sm text-zinc-600 dark:text-zinc-400">
             {pack.contract.parties.map((p) => `${p.name} (${p.role})`).join(" · ")} · generated {new Date(pack.generatedAt).toLocaleString("en-IN")}
           </p>
@@ -50,7 +50,7 @@ export function DisputePack({ params }: { params: Promise<{ id: string }> }) {
       {pack.milestones.map((m) => (
         <Card key={m.position} className="space-y-2">
           <div className="flex items-center justify-between gap-2">
-            <h2 className="font-semibold">{m.position}. {m.title}</h2>
+            <h2 className="cond text-[28px] font-bold leading-none">{m.position}. {m.title}</h2>
             <StatusPill status={m.status} />
           </div>
           <p className="text-xs text-zinc-500">Due {m.dueAt ? new Date(m.dueAt).toLocaleString("en-IN") : "—"} · {m.receipt.title}</p>
@@ -73,7 +73,7 @@ export function DisputePack({ params }: { params: Promise<{ id: string }> }) {
       ))}
 
       <Card>
-        <h2 className="mb-2 font-semibold">Timeline</h2>
+        <h2 className="cond mb-3 text-[32px] font-extrabold leading-none">Timeline</h2>
         <ol className="space-y-1 text-sm">
           {pack.timeline.map((t, i) => (
             <li key={i} className="grid grid-cols-[9rem_6rem_1fr] gap-2">

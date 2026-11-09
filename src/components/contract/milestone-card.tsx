@@ -6,13 +6,18 @@ import type { MaterialOption } from "@/lib/materials/channel3";
 import type { ContractView } from "@/server/contracts";
 import { api, type PublicConfig } from "../api";
 import { PayPalFundButton } from "../paypal-button";
-import { Button, Card, StatusPill, inputClass } from "../ui";
+import { Button, Card, StatusPill, TONE_COLOR, inputClass, statusTone } from "../ui";
+import { GooLoader } from "../goo";
 import { useAction } from "./use-action";
 
 type Milestone = ContractView["milestones"][number];
 type Role = ContractView["role"];
 
-const ICON = { pass: "✅", fail: "❌", couldnt_check: "❔" } as const;
+const OUTCOME = {
+  pass: { color: "#fff7ad", label: "passed" },
+  fail: { color: "#ff6b6b", label: "failed" },
+  couldnt_check: { color: "#c7a9bc", label: "couldn't check" },
+} as const;
 
 export function MilestoneCard({
   m,
@@ -55,31 +60,35 @@ export function MilestoneCard({
 
   return (
     <li>
-      <Card className="space-y-4">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h3 className="font-semibold">
-              {m.position + 1}. {m.draft.title}
-              {m.kind === "change_order" && <span className="ml-2 rounded bg-violet-100 px-1.5 py-0.5 text-xs font-medium text-violet-800 dark:bg-violet-950 dark:text-violet-300">Change order</span>}
+      <Card className="space-y-5">
+        <div className="flex flex-wrap items-start gap-x-5 gap-y-3">
+          <span className="money text-[52px] leading-[0.9]" style={{ color: TONE_COLOR[statusTone(m.status)] }}>
+            {String(m.position + 1).padStart(2, "0")}
+          </span>
+          <div className="min-w-0 flex-1 space-y-1.5">
+            <h3 className="cond text-[30px] font-bold leading-none">
+              {m.draft.title}
+              {m.kind === "change_order" && <span className="chip ml-3 align-middle text-[11px]"><span className="sw size-3" style={{ background: "#e6b9f8" }} />Change order</span>}
             </h3>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">{m.draft.description}</p>
-            {m.dueAt && <p className="mt-1 text-xs text-zinc-500">Due {new Date(m.dueAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</p>}
+            <p className="text-[15px] leading-relaxed text-muted">{m.draft.description}</p>
+            {m.dueAt && <p className="label text-subtle">Due {new Date(m.dueAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</p>}
           </div>
-          <div className="text-right">
-            <div className="text-lg font-semibold tabular-nums">{formatMoney(m.priceMinor)}</div>
+          <div className="flex flex-col items-end gap-2">
+            <span className="money text-[36px] leading-none">{formatMoney(m.priceMinor)}</span>
             <StatusPill status={m.status} />
           </div>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
           <div>
-            <h4 className="mb-1 text-xs font-semibold uppercase tracking-wide text-zinc-500">Acceptance criteria</h4>
-            <ul className="space-y-1.5 text-sm">
+            <h4 className="label mb-2 text-peach">Acceptance criteria</h4>
+            <ul className="space-y-2 text-[15px]">
               {m.draft.criteria.map((c, i) => {
                 const r = m.lastCheck?.results.find((x) => x.criterionId === `c${i + 1}`);
                 return (
-                  <li key={c.text}>
-                    <span className="mr-1.5" aria-hidden>{r ? ICON[r.outcome] : "•"}</span>
+                  <li key={c.text} className="relative pl-6">
+                    <span aria-hidden className="absolute left-0 top-1.5 size-3 rounded-full" style={{ background: r ? OUTCOME[r.outcome].color : "#5a3550" }} />
+                    {r && <span className="sr-only">{OUTCOME[r.outcome].label}: </span>}
                     {c.text}
                     {c.method === "client_judged" && <span className="text-xs text-zinc-500"> (client-judged)</span>}
                     {r?.note && <span className="block pl-6 text-xs text-zinc-500">{r.note}</span>}
@@ -98,10 +107,10 @@ export function MilestoneCard({
                 )}
               </p>
             )}
-            {m.status === "submitted" && <p className="mt-2 text-sm text-sky-700 dark:text-sky-400">The checker is testing the delivery in a browser…</p>}
+            {m.status === "submitted" && <GooLoader kind="orbit" size={14} label="The checker is testing the delivery in a browser" className="mt-3" />}
           </div>
           <div className="space-y-2">
-            <div className="rounded-md bg-zinc-50 p-3 font-mono text-xs leading-relaxed dark:bg-zinc-950">
+            <div className="rounded-2xl bg-well p-4 font-mono text-xs leading-relaxed">
               <div className="font-semibold">{m.receipt.title}</div>
               {m.receipt.lines.map((l) => (
                 <div key={l.text}>  {l.text}{l.amountMinor !== null ? ` = ${formatMoney(l.amountMinor)}` : ""}</div>

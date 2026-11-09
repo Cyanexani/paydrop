@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { formatMoney } from "@/lib/money";
 import { api } from "./api";
-import { Card, ErrorNote, StatusPill } from "./ui";
+import { Card, ErrorNote, PageHeader, StatusPill } from "./ui";
 import { GooBlock } from "./goo";
 
 interface Row {
@@ -26,27 +26,29 @@ export function ContractList() {
   }, []);
 
   return (
-    <div className="space-y-6">
-      <h1 className="animate-rise font-display text-4xl font-bold tracking-tight sm:text-5xl">Contracts</h1>
+    <div className="space-y-8">
+      <PageHeader eyebrow="02 · Contracts" title={<>Your<br />contracts</>}>
+        Each one is a set of milestones. The money for each is held at PayPal until the work checks out.
+      </PageHeader>
       <ErrorNote error={error} />
       {rows === null && !error && <GooBlock label="Loading contracts" />}
       {rows?.length === 0 && (
-        <Card className="text-sm">
-          No contracts yet. <Link className="text-emerald-700 underline dark:text-emerald-400" href="/new">Start a project</Link>.
+        <Card className="flex flex-wrap items-center justify-between gap-4">
+          <span className="text-[15px]">No contracts yet.</span>
+          <Link className="inline-flex min-h-11 items-center rounded-full bg-butter px-6 font-bold text-plum" href="/new">Start a project →</Link>
         </Card>
       )}
-      <ul className="space-y-3">
-        {rows?.map((c) => (
-          <li key={c.id}>
-            <Link href={`/contracts/${c.id}`} className="block rounded-lg border border-zinc-200 bg-white p-4 hover:border-emerald-600 dark:border-zinc-800 dark:bg-zinc-900">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="font-medium">{c.title}</span>
-                <span className="flex items-center gap-3">
-                  <span className="text-sm tabular-nums">{formatMoney(c.totalMinor)}</span>
-                  <StatusPill status={c.status} />
-                </span>
-              </div>
-              <p className="mt-1 text-xs text-zinc-500">{new Date(c.createdAt).toLocaleString()}</p>
+      <ul>
+        {rows?.map((c, i) => (
+          <li key={c.id} className="border-b border-line">
+            <Link href={`/contracts/${c.id}`} className="group grid grid-cols-[56px_minmax(0,1fr)] items-center gap-x-5 gap-y-3 px-2 py-6 transition-colors hover:bg-raised sm:grid-cols-[72px_minmax(0,1fr)_auto_auto]">
+              <span className="money text-[48px] leading-none text-magenta">{String(i + 1).padStart(2, "0")}</span>
+              <span className="flex min-w-0 flex-col gap-1">
+                <strong className="cond text-[30px] font-bold leading-none transition-colors group-hover:text-butter">{c.title}</strong>
+                <span className="label text-subtle">{new Date(c.createdAt).toLocaleDateString("en-IN", { dateStyle: "medium" })}</span>
+              </span>
+              <span className="col-start-2 sm:col-start-auto"><StatusPill status={c.status} /></span>
+              <span className="money col-start-2 text-[34px] leading-none sm:col-start-auto sm:min-w-40 sm:text-right">{formatMoney(c.totalMinor)}</span>
             </Link>
           </li>
         ))}

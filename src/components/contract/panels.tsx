@@ -19,7 +19,7 @@ export function MessagesPanel({ view, onChange, onError }: { view: ContractView;
   return (
     <Card className="space-y-3">
       <div>
-        <h2 className="font-semibold">Messages</h2>
+        <h2 className="cond text-[32px] font-extrabold leading-none">Messages</h2>
         <p className="text-xs text-zinc-500">The client&apos;s requests are checked against the contract. WhatsApp and email come in through Zapier.</p>
       </div>
       <ul className="max-h-80 space-y-2 overflow-y-auto text-sm">
@@ -67,7 +67,7 @@ export function ChangeRequestsPanel({ view, viewerId, onChange, onError }: { vie
     <Card className="space-y-3">
       <div className="flex items-center justify-between gap-2">
         <div>
-          <h2 className="font-semibold">Change requests</h2>
+          <h2 className="cond text-[32px] font-extrabold leading-none">Change requests</h2>
           <p className="text-xs text-zinc-500">Out-of-scope work becomes a priced change order; dragging a deadline on the timeline proposes a schedule change.</p>
         </div>
         {!isClient && view.contract.status === "active" && <Button variant="secondary" onClick={() => setOpen(!open)}>Raise one</Button>}
@@ -190,7 +190,7 @@ export function OfferPanel({ view, onChange, onError }: { view: ContractView; on
 export function AuditTrail({ view }: { view: ContractView }) {
   return (
     <Card>
-      <h2 className="mb-3 font-semibold">Audit trail</h2>
+      <h2 className="cond mb-4 text-[32px] font-extrabold leading-none">Audit trail</h2>
       {view.events.length === 0 ? (
         <p className="text-sm text-zinc-500">No events yet.</p>
       ) : (

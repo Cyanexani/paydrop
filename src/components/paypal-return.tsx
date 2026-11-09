@@ -39,7 +39,7 @@ export function PayPalReturn({ params }: { params: Promise<{ id: string }> }) {
 
   return (
     <Card className="mx-auto max-w-lg space-y-3">
-      <h1 className="text-lg font-semibold">PayPal</h1>
+      <h1 className="cond text-5xl font-extrabold">PayPal</h1>
       <p className="text-sm">{message}</p>
       <ErrorNote error={error} />
       <Link className="text-sm text-emerald-700 underline dark:text-emerald-400" href={`/contracts/${id}`}>Back to the contract</Link>

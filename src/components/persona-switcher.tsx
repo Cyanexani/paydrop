@@ -20,13 +20,13 @@ export function PersonaSwitcher() {
     window.location.reload();
   }
 
-  if (!session) return <GooLoader size={22} label="Loading personas" />;
+  if (!session) return <GooLoader size={10} label="Loading personas" showLabel={false} />;
   return (
     <label className="flex items-center gap-2 text-sm">
-      <span className="hidden text-zinc-400 sm:inline">Viewing as</span>
+      <span className="label hidden text-subtle sm:inline">Viewing as</span>
       <select
         aria-label="Viewing as"
-        className="max-w-[12rem] cursor-pointer rounded-full border border-white/10 bg-white/10 px-3 py-2 text-sm font-medium text-zinc-100 transition-colors hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-magenta/50"
+        className="label max-w-[13rem] cursor-pointer rounded-full border border-line bg-raised px-4 py-3 text-paper transition-colors hover:border-butter focus:outline-none focus:ring-2 focus:ring-magenta/50"
         value={session.viewer?.id ?? ""}
         onChange={(e) => choose(e.target.value)}
       >

@@ -8,7 +8,8 @@ import type { ContractView } from "@/server/contracts";
 import { api, type PublicConfig, type Session } from "./api";
 import { MilestoneCard } from "./contract/milestone-card";
 import { AuditTrail, ChangeRequestsPanel, MessagesPanel, OfferPanel } from "./contract/panels";
-import { Card, ErrorNote, StatusPill } from "./ui";
+import { MoneyStage, HELD, PAID, UNFUNDED, sumWhere } from "./contract/money-stage";
+import { Card, ErrorNote, SectionHead, StatusPill } from "./ui";
 import { GooBlock } from "./goo";
 
 // Browser-only widgets: load them on the client.
@@ -67,46 +68,54 @@ export function ContractScreen({ params }: { params: Promise<{ id: string }> }) 
   if (!view) return <GooBlock label="Loading contract" />;
   const { contract, role } = view;
 
+  const paidMinor = sumWhere(view.milestones, PAID);
+  const heldMinor = sumWhere(view.milestones, HELD);
+  const toFundMinor = sumWhere(view.milestones, UNFUNDED);
+
   return (
-    <div className="space-y-6">
-      <div className="space-y-2">
-        <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
-          <Link href="/contracts" className="text-zinc-500 hover:underline">← Contracts</Link>
-          <span className="flex gap-3">
-            <Link href={`/contracts/${id}/dispute-pack`} className="text-zinc-600 underline dark:text-zinc-400">Dispute pack</Link>
-            <Link href="/ledger" className="text-zinc-600 underline dark:text-zinc-400">Ledger</Link>
+    <div className="space-y-10">
+      <nav aria-label="Contract" className="label flex flex-wrap items-center justify-between gap-2 text-muted">
+        <Link href="/contracts" className="py-2 hover:text-butter">← Contracts</Link>
+        <span className="flex gap-4">
+          <Link href={`/contracts/${id}/dispute-pack`} className="py-2 hover:text-butter">Dispute pack</Link>
+          <Link href="/ledger" className="py-2 hover:text-butter">Ledger</Link>
+        </span>
+      </nav>
+
+      <section className="rise flex flex-wrap items-end justify-between gap-6">
+        <div className="flex min-w-0 flex-col gap-3.5">
+          <span className="label text-peach">
+            {view.clientName} → {view.freelancer?.name}{view.freelancer?.kind === "agent" ? " (AI agent)" : ""} · {contract.tier.name} tier
+            {contract.standing.verifiedMilestones > 0 ? ` · VRS ${contract.standing.vrs}` : ""}
           </span>
+          <h1 className="cond max-w-4xl text-[clamp(52px,8vw,112px)] font-extrabold leading-[0.86]">{contract.title}</h1>
+          <div className="flex flex-wrap items-center gap-3">
+            <StatusPill status={contract.status} />
+            <span className="label text-subtle">You are the {role.replace("_", " ")}</span>
+          </div>
         </div>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">{contract.title}</h1>
-          <StatusPill status={contract.status} />
+        <div className="flex flex-col items-end gap-1.5 text-right">
+          <span className="money text-[clamp(56px,7vw,84px)] leading-[0.9] text-butter">{formatMoney(paidMinor)}</span>
+          <span className="label text-subtle">released of {formatMoney(contract.subtotalMinor)} · + {formatMoney(contract.feeMinor)} fee</span>
         </div>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          {view.clientName} → {view.freelancer?.name}{view.freelancer?.kind === "agent" ? " (AI agent)" : ""} · {contract.tier.name} tier
-          {contract.standing.verifiedMilestones > 0 ? ` (VRS ${contract.standing.vrs})` : ""} · price locked at signing ·{" "}
-          {formatMoney(contract.subtotalMinor)} + {formatMoney(contract.feeMinor)} fee = <strong>{formatMoney(contract.totalMinor)}</strong>
-        </p>
-        <p className="text-xs text-zinc-500">
-          You are the {role.replace("_", " ")}. Deliveries accepted from {contract.contractedOrigins.join(", ")}.
-          {contract.currency !== "INR" && config ? ` PayPal holds funds in ${contract.currency} at ₹${config.inrPerUsd}/$.` : ""}
-          {config?.aiMode === "mock" ? " AI is in demo mode (no API key)." : ""}
-        </p>
-      </div>
+      </section>
+
+      <MoneyStage view={view} heldMinor={heldMinor} paidMinor={paidMinor} toFundMinor={toFundMinor} />
+
+      <p className="label leading-relaxed text-subtle">
+        Price locked at signing · deliveries accepted from {contract.contractedOrigins.join(", ")}
+        {contract.currency !== "INR" && config ? ` · PayPal holds funds in ${contract.currency} at ₹${config.inrPerUsd}/$` : ""}
+        {config?.aiMode === "mock" ? " · AI in demo mode (no API key)" : ""}
+      </p>
 
       <ErrorNote error={error} />
-      {notice && <p className="rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-sm text-sky-900 dark:border-sky-900 dark:bg-sky-950 dark:text-sky-200">{notice}</p>}
+      {notice && <p className="flex items-start gap-3 rounded-2xl border border-peach/30 bg-peach/10 px-4 py-3 text-[15px]"><span aria-hidden className="mt-1.5 size-2.5 flex-none rounded-full bg-peach" />{notice}</p>}
 
       <OfferPanel view={view} onChange={load} onError={setError} />
 
-      <Card className="space-y-2">
-        <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="font-semibold">Timeline</h2>
-          <p className="text-xs text-zinc-500">Bryntum Gantt · drag or stretch a milestone to propose a new due date</p>
-        </div>
-        <MilestoneGantt view={view} onProposeDue={proposeDue} />
-      </Card>
-
-      <ol className="space-y-4">
+      <section className="space-y-5">
+        <SectionHead title="Milestones" note={`${view.milestones.length} stops`} />
+        <ol className="space-y-4">
         {view.milestones.map((m) => (
           <MilestoneCard
             key={m.id}
@@ -119,7 +128,15 @@ export function ContractScreen({ params }: { params: Promise<{ id: string }> }) 
             onError={setError}
           />
         ))}
-      </ol>
+        </ol>
+      </section>
+
+      <section className="space-y-5">
+        <SectionHead title="Timeline" note="Drag or stretch a milestone to propose a new due date" />
+        <Card className="p-3 sm:p-4">
+          <MilestoneGantt view={view} onProposeDue={proposeDue} />
+        </Card>
+      </section>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <MessagesPanel view={view} onChange={load} onError={setError} />
