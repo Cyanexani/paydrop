@@ -1,0 +1,166 @@
+{
+  "info": {
+    "name": "MilestonePay API",
+    "_postman_id": "8f3d2c1e-5b6a-4c7d-9e8f-0a1b2c3d4e5f",
+    "description": "End-to-end flow and guard rails of the MilestonePay API. Runs as the integration test suite in CI (newman). Set {{baseUrl}} (default http://localhost:3000). Cookies carry the demo persona between requests.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "quoteId", "value": "" },
+    { "key": "contractId", "value": "" },
+    { "key": "milestoneId", "value": "" },
+    { "key": "milestone2Id", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "request": { "method": "GET", "url": "{{baseUrl}}/api/health" },
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('app and database are up', () => pm.expect(pm.response.json().ok).to.eql(true));"] } }]
+    },
+    {
+      "name": "Signed out: quotes need a persona",
+      "request": { "method": "DELETE", "url": "{{baseUrl}}/api/session" },
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('signed out', () => pm.response.to.have.status(200));"] } }]
+    },
+    {
+      "name": "Quote without a session is refused",
+      "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/api/quotes", "body": { "mode": "raw", "raw": "{\"brief\":\"A website\",\"deadlineDays\":14}" } },
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('401 signed_out', () => { pm.response.to.have.status(401); pm.expect(pm.response.json().error.code).to.eql('signed_out'); });"] } }]
+    },
+    {
+      "name": "Sign in as the client",
+      "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/api/session", "body": { "mode": "raw", "raw": "{\"userId\":\"client-jaya\"}" } },
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('signed in', () => pm.response.to.have.status(200));"] } }]
+    },
+    {
+      "name": "Scope and price a brief",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/api/quotes",
+        "body": { "mode": "raw", "raw": "{\"brief\":\"Website for my dance studio: class booking with a deposit, a photo gallery of our shows, live on our domain within two weeks.\",\"deadlineDays\":14}" }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const q = pm.response.json();",
+              "pm.test('scoped into milestones', () => pm.expect(q.scope.status).to.eql('scoped'));",
+              "pm.test('priced for matched freelancers', () => { pm.expect(q.pricing.status).to.eql('priced'); pm.expect(q.pricing.candidates.length).to.be.above(1); });",
+              "pm.test('same base pay for everyone', () => pm.expect(q.pricing.base.baseSubtotalMinor).to.be.above(0));",
+              "pm.collectionVariables.set('quoteId', q.id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Offer the contract to Ravi",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/api/contracts",
+        "body": { "mode": "raw", "raw": "{\"quoteId\":\"{{quoteId}}\",\"freelancerId\":\"fl-ravi\",\"deliveryUrl\":\"https://jayadance.example\",\"allowParallel\":false}" }
+      },
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('contract created', () => pm.expect(pm.response.json().id).to.match(/^ct_/));", "pm.collectionVariables.set('contractId', pm.response.json().id);"] } }]
+    },
+    {
+      "name": "Client can't accept for the freelancer",
+      "request": { "method": "POST", "url": "{{baseUrl}}/api/contracts/{{contractId}}/accept" },
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('403 forbidden', () => pm.response.to.have.status(403));"] } }]
+    },
+    {
+      "name": "Sign in as a stranger (Asha)",
+      "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/api/session", "body": { "mode": "raw", "raw": "{\"userId\":\"fl-asha\"}" } }
+    },
+    {
+      "name": "Stranger can't read the contract",
+      "request": { "method": "GET", "url": "{{baseUrl}}/api/contracts/{{contractId}}" },
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('403 forbidden', () => pm.response.to.have.status(403));"] } }]
+    },
+    {
+      "name": "Sign in as Ravi",
+      "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/api/session", "body": { "mode": "raw", "raw": "{\"userId\":\"fl-ravi\"}" } }
+    },
+    {
+      "name": "Ravi accepts",
+      "request": { "method": "POST", "url": "{{baseUrl}}/api/contracts/{{contractId}}/accept" },
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('accepted', () => pm.response.to.have.status(200));"] } }]
+    },
+    {
+      "name": "Contract view: locked prices and due dates",
+      "request": { "method": "GET", "url": "{{baseUrl}}/api/contracts/{{contractId}}" },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const v = pm.response.json();",
+              "pm.test('active with accepted milestones', () => { pm.expect(v.contract.status).to.eql('active'); v.milestones.forEach(m => pm.expect(m.status).to.eql('accepted')); });",
+              "pm.test('milestones add up to the subtotal', () => pm.expect(v.milestones.reduce((a, m) => a + m.priceMinor, 0)).to.eql(v.contract.subtotalMinor));",
+              "pm.test('every milestone has a due date', () => v.milestones.forEach(m => pm.expect(m.dueAt).to.be.a('string')));",
+              "pm.collectionVariables.set('milestoneId', v.milestones[0].id);",
+              "pm.collectionVariables.set('milestone2Id', v.milestones[1].id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Work can't be submitted before funding",
+      "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/api/milestones/{{milestoneId}}/submit", "body": { "mode": "raw", "raw": "{\"evidenceUrl\":\"https://jayadance.example/\"}" } },
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('409 invalid_transition', () => { pm.response.to.have.status(409); pm.expect(pm.response.json().error.message).to.include('funded'); });"] } }]
+    },
+    {
+      "name": "Freelancer can't approve a release",
+      "request": { "method": "POST", "url": "{{baseUrl}}/api/milestones/{{milestoneId}}/approve" },
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('403 forbidden', () => pm.response.to.have.status(403));"] } }]
+    },
+    {
+      "name": "Sign in as the client again",
+      "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/api/session", "body": { "mode": "raw", "raw": "{\"userId\":\"client-jaya\"}" } }
+    },
+    {
+      "name": "Milestone 2 can't be funded before milestone 1 is released",
+      "request": { "method": "POST", "url": "{{baseUrl}}/api/milestones/{{milestone2Id}}/order" },
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('409 funding_out_of_order', () => pm.expect(pm.response.json().error.code).to.eql('funding_out_of_order'));"] } }]
+    },
+    {
+      "name": "Scope creep: 'also add a blog' becomes a change order",
+      "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/api/contracts/{{contractId}}/messages", "body": { "mode": "raw", "raw": "{\"body\":\"Can you also add a blog to the site?\"}" } },
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('flagged out of scope', () => pm.expect(pm.response.json().scope.verdict).to.eql('out_of_scope'));"] } }]
+    },
+    {
+      "name": "Ledger shows the contract's milestones",
+      "request": { "method": "GET", "url": "{{baseUrl}}/api/ledger" },
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('rows for the contract', () => pm.expect(pm.response.json().rows.filter(r => r.contractId === pm.collectionVariables.get('contractId')).length).to.be.above(2));"] } }]
+    },
+    {
+      "name": "Dispute pack has a timeline",
+      "request": { "method": "GET", "url": "{{baseUrl}}/api/contracts/{{contractId}}/dispute-pack" },
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('timeline present', () => pm.expect(pm.response.json().timeline.length).to.be.above(2));"] } }]
+    },
+    {
+      "name": "Forged PayPal webhook is rejected",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/api/webhooks/paypal",
+        "body": { "mode": "raw", "raw": "{\"id\":\"WH-FORGED-{{$timestamp}}\",\"event_type\":\"PAYMENT.CAPTURE.COMPLETED\",\"resource\":{\"id\":\"CAP-1\",\"custom_id\":\"{{milestoneId}}\"}}" }
+      },
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('400 rejected_unverified', () => { pm.response.to.have.status(400); pm.expect(pm.response.json().outcome).to.eql('rejected_unverified'); });"] } }]
+    },
+    {
+      "name": "Zapier inbound needs the shared secret",
+      "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "x-zapier-secret", "value": "wrong" }], "url": "{{baseUrl}}/api/integrations/zapier/messages", "body": { "mode": "raw", "raw": "{\"from\":\"+919800000001\",\"text\":\"Can you add a shop?\"}" } },
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('refused (403, or 503 when not configured)', () => pm.expect([403, 503]).to.include(pm.response.code));"] } }]
+    },
+    {
+      "name": "Cron needs the cron secret",
+      "request": { "method": "POST", "url": "{{baseUrl}}/api/cron/all" },
+      "event": [{ "listen": "test", "script": { "exec": ["pm.test('403 forbidden', () => pm.response.to.have.status(403));"] } }]
+    }
+  ]
+}

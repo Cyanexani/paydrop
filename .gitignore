@@ -39,3 +39,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+!.env.example
+
+# local PGlite database
+/.data/
+
+# Bryntum UMD copied from node_modules by scripts/copy-vendor.mjs
+/public/vendor/
+
+# local tool settings
+/.claude/

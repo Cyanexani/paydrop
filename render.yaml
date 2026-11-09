@@ -1,0 +1,113 @@
+# Render Blueprint: web app + background worker + nightly reconciliation + Postgres.
+# Deploy: Render Dashboard → New → Blueprint → pick this repo. Fill the `sync: false` secrets when prompted.
+# Plans are left at Render's default (0.5c-512mb) for services; the database uses the free plan.
+services:
+  - type: web
+    name: milestonepay-web
+    runtime: node
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: milestonepay-db
+          property: connectionString
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: PAYPAL_CLIENT_ID
+        sync: false
+      - key: PAYPAL_CLIENT_SECRET
+        sync: false
+      - key: PAYPAL_WEBHOOK_ID
+        sync: false
+      - key: PAYPAL_ENV
+        value: sandbox
+      - key: PAYPAL_CURRENCY
+        value: USD
+      - key: FX_INR_PER_USD
+        value: "84"
+      - key: DEMO_PAYOUT_EMAIL
+        sync: false
+      # Kernel runs the AI work checker's browser in the cloud and records replays.
+      - key: KERNEL_API_KEY
+        sync: false
+      - key: ELASTIC_URL
+        sync: false
+      - key: ELASTIC_API_KEY
+        sync: false
+      - key: ZAPIER_SECRET
+        generateValue: true
+      - key: ZAPIER_HOOK_URL
+        sync: false
+      - key: CHANNEL3_API_KEY
+        sync: false
+      - key: NEXT_PUBLIC_AG_GRID_LICENSE_KEY
+        sync: false
+      - key: CRON_SECRET
+        generateValue: true
+      - key: ADMIN_SECRET
+        generateValue: true
+
+  # Runs every job each minute: auto-release, PayPal holds, stale checkouts, offers,
+  # silent freelancers, payout retries, stuck checks, reconciliation.
+  - type: worker
+    name: milestonepay-worker
+    runtime: node
+    buildCommand: npm ci
+    startCommand: npx tsx scripts/run-jobs.ts --loop
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: milestonepay-db
+          property: connectionString
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: PAYPAL_CLIENT_ID
+        sync: false
+      - key: PAYPAL_CLIENT_SECRET
+        sync: false
+      - key: PAYPAL_ENV
+        value: sandbox
+      - key: PAYPAL_CURRENCY
+        value: USD
+      - key: FX_INR_PER_USD
+        value: "84"
+      - key: DEMO_PAYOUT_EMAIL
+        sync: false
+      - key: KERNEL_API_KEY
+        sync: false
+      - key: ZAPIER_HOOK_URL
+        sync: false
+
+  # Nightly reconciliation with PayPal at 01:30 IST (20:00 UTC), in case a webhook was missed.
+  - type: cron
+    name: milestonepay-reconcile
+    runtime: node
+    schedule: "0 20 * * *"
+    buildCommand: npm ci
+    startCommand: npx tsx scripts/run-jobs.ts reconcile payouts
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: milestonepay-db
+          property: connectionString
+      - key: PAYPAL_CLIENT_ID
+        sync: false
+      - key: PAYPAL_CLIENT_SECRET
+        sync: false
+      - key: PAYPAL_ENV
+        value: sandbox
+      - key: DEMO_PAYOUT_EMAIL
+        sync: false
+
+databases:
+  - name: milestonepay-db
+    plan: free
+    databaseName: milestonepay

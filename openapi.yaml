@@ -1,0 +1,280 @@
+openapi: 3.1.0
+info:
+  title: MilestonePay API
+  version: 0.1.0
+  summary: Milestone payments held in PayPal and released only for AI-verified work.
+  description: |
+    Session auth is a demo persona cookie (`mp_user`) set by `POST /api/session`.
+    Money is always an integer number of minor units (paise for INR, cents for USD).
+    Errors are `{ "error": { "code": string, "message": string } }`.
+    Generate an SDK and docs from this file with APIMatic (see README).
+  license:
+    name: MIT
+servers:
+  - url: http://localhost:3000
+  - url: https://milestonepay-web.onrender.com
+tags:
+  - name: Session
+  - name: Quotes
+  - name: Contracts
+  - name: Milestones
+  - name: Scope
+  - name: Integrations
+  - name: Operations
+components:
+  securitySchemes:
+    persona:
+      type: apiKey
+      in: cookie
+      name: mp_user
+    cron:
+      type: http
+      scheme: bearer
+    zapier:
+      type: apiKey
+      in: header
+      name: x-zapier-secret
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code: { type: string, examples: [forbidden, funding_out_of_order, amount_mismatch] }
+            message: { type: string }
+    MilestoneStatus:
+      type: string
+      enum: [offered, accepted, funding, funded, submitted, changes_requested, needs_review, verified, releasing, release_pending, release_failed, released, payout_pending, paid_out, disputed, voided, cancelled]
+    QuoteRequest:
+      type: object
+      required: [brief, deadlineDays]
+      properties:
+        brief: { type: string, maxLength: 5000 }
+        deadlineDays: { type: integer, minimum: 1, maximum: 365 }
+        budgetMinor: { type: integer, minimum: 0, description: Budget in paise }
+    ContractRequest:
+      type: object
+      required: [quoteId, freelancerId, deliveryUrl]
+      properties:
+        quoteId: { type: string }
+        freelancerId: { type: string }
+        deliveryUrl: { type: string, format: uri, description: "https origin or repo URL the delivery must come from" }
+        allowParallel: { type: boolean, default: false }
+    SubmitRequest:
+      type: object
+      required: [evidenceUrl]
+      properties:
+        evidenceUrl: { type: string, format: uri }
+        commitSha: { type: string, pattern: "^[0-9a-f]{7,40}$" }
+        actualHours: { type: number }
+    CriterionResult:
+      type: object
+      required: [criterionId, outcome]
+      properties:
+        criterionId: { type: string, examples: [c1] }
+        outcome: { type: string, enum: [pass, fail, couldnt_check] }
+        note: { type: string }
+        replayUrl: { type: string }
+    ScopeCheck:
+      type: object
+      properties:
+        verdict: { type: string, enum: [in_scope, out_of_scope, unclear, not_a_request] }
+        reasoning: { type: string }
+        matchedMilestones: { type: array, items: { type: string } }
+        searchMode: { type: string, enum: [elastic, postgres] }
+  responses:
+    Error:
+      description: Error
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+security:
+  - persona: []
+paths:
+  /api/health:
+    get:
+      tags: [Operations]
+      security: []
+      summary: App and database health
+      responses:
+        "200": { description: OK }
+  /api/session:
+    get:
+      tags: [Session]
+      security: []
+      summary: Current persona and the list of demo personas
+      responses: { "200": { description: OK } }
+    post:
+      tags: [Session]
+      security: []
+      summary: Act as a persona
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object, required: [userId], properties: { userId: { type: string } } }
+      responses: { "200": { description: Cookie set }, "404": { $ref: "#/components/responses/Error" } }
+    delete:
+      tags: [Session]
+      summary: Sign out
+      responses: { "200": { description: OK } }
+  /api/quotes:
+    post:
+      tags: [Quotes]
+      summary: Scope a brief with AI and price it for matched freelancers
+      requestBody:
+        content: { application/json: { schema: { $ref: "#/components/schemas/QuoteRequest" } } }
+      responses:
+        "200": { description: Quote with scope (scoped, needs_info, refused, manual_quote) and pricing per candidate }
+        "401": { $ref: "#/components/responses/Error" }
+        "503": { $ref: "#/components/responses/Error" }
+  /api/contracts:
+    get:
+      tags: [Contracts]
+      summary: Contracts the viewer is party to
+      responses: { "200": { description: OK } }
+    post:
+      tags: [Contracts]
+      summary: Offer a contract (price and tier are locked here)
+      requestBody:
+        content: { application/json: { schema: { $ref: "#/components/schemas/ContractRequest" } } }
+      responses: { "200": { description: "{ id }" }, "400": { $ref: "#/components/responses/Error" } }
+  /api/contracts/{id}:
+    get:
+      tags: [Contracts]
+      summary: Full contract view (milestones, checks, payouts, messages, change requests)
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses: { "200": { description: OK }, "403": { $ref: "#/components/responses/Error" } }
+  /api/contracts/{id}/{action}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string } }
+      - { name: action, in: path, required: true, schema: { type: string, enum: [accept, decline, collaborators, dispute-pack] } }
+    get:
+      tags: [Contracts]
+      summary: Dispute pack (action = dispute-pack)
+      responses: { "200": { description: OK } }
+    post:
+      tags: [Contracts]
+      summary: Accept or decline (freelancer), or set collaborators (payout split)
+      responses: { "200": { description: OK }, "403": { $ref: "#/components/responses/Error" } }
+  /api/contracts/{id}/messages:
+    post:
+      tags: [Scope]
+      summary: Post a message; the client's messages run through the scope-creep detector
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        content: { application/json: { schema: { type: object, required: [body], properties: { body: { type: string } } } } }
+      responses:
+        "200":
+          description: Message with its scope check
+          content: { application/json: { schema: { type: object, properties: { scope: { $ref: "#/components/schemas/ScopeCheck" } } } } }
+  /api/contracts/{id}/change-requests:
+    post:
+      tags: [Scope]
+      summary: Raise a change order (kind=work, freelancer) or propose a schedule change (kind=schedule)
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses: { "200": { description: "{ id }" } }
+  /api/change-requests/{id}/{decision}:
+    post:
+      tags: [Scope]
+      summary: Accept, decline, or mark in scope
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+        - { name: decision, in: path, required: true, schema: { type: string, enum: [accept, decline, in_scope] } }
+      responses: { "200": { description: OK } }
+  /api/milestones/{id}/{action}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string } }
+      - name: action
+        in: path
+        required: true
+        schema:
+          type: string
+          enum: [order, pay-link, authorize, abandon, accept, submit, challenge, approve, counter, rate, dispute, agent-run, materials-search, materials]
+    post:
+      tags: [Milestones]
+      summary: Milestone actions
+      description: |
+        - `order`: create a PayPal AUTHORIZE order for the locked amount (client)
+        - `pay-link`: same, as a shareable PayPal link with a return URL (client)
+        - `authorize`: `{ orderId }` after approval; amounts are read from PayPal (client)
+        - `submit`: `SubmitRequest`; the AI checker runs in a recorded browser (freelancer/agent)
+        - `approve`: release payment (client only; AI and agents can never release)
+        - `counter`: `{ priceMinor, reason? }` counter-offer before acceptance (freelancer)
+        - `rate`: `{ stars }` after release (client)
+        - `dispute`: `{ reason }`
+        - `agent-run`: BuildBot builds and submits (agent owner)
+        - `materials-search` / `materials`: Channel3 sourcing before funding (freelancer)
+      responses:
+        "200": { description: New status and effect log }
+        "403": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+        "502": { $ref: "#/components/responses/Error" }
+  /api/negotiations/{id}/{decision}:
+    post:
+      tags: [Contracts]
+      summary: Client answers a counter-offer
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+        - { name: decision, in: path, required: true, schema: { type: string, enum: [accept, reject] } }
+      responses: { "200": { description: OK } }
+  /api/ledger:
+    get:
+      tags: [Contracts]
+      summary: Every milestone the viewer is party to, with held / released / paid-out amounts
+      responses: { "200": { description: OK } }
+  /api/fairness:
+    get:
+      tags: [Contracts]
+      summary: Platform-wide pricing transparency (base rate per hour by tier, estimate error)
+      responses: { "200": { description: OK } }
+  /api/grid-assist:
+    post:
+      tags: [Contracts]
+      summary: Natural-language AG Grid control (AI Toolkit structured schema in, grid state out)
+      responses: { "200": { description: "{ state, explanation }" } }
+  /api/check-runs/{id}/replay:
+    get:
+      tags: [Milestones]
+      summary: Local replay video of a check run (parties only)
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses: { "200": { description: video/webm } }
+  /api/webhooks/paypal:
+    post:
+      tags: [Integrations]
+      security: []
+      summary: PayPal webhooks (signature verified with PayPal, deduplicated by event id)
+      responses: { "200": { description: Processed or duplicate }, "400": { description: Unverified } }
+  /api/integrations/zapier/messages:
+    post:
+      tags: [Integrations]
+      security: [{ zapier: [] }]
+      summary: WhatsApp/email messages from Zapier become scope checks
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [from, text]
+              properties:
+                from: { type: string, description: Sender email or phone (must match a client) }
+                text: { type: string }
+                channel: { type: string, enum: [whatsapp, email, sms] }
+                contractId: { type: string }
+      responses: { "200": { description: Scope check or ignored }, "403": { $ref: "#/components/responses/Error" } }
+  /api/cron/{job}:
+    post:
+      tags: [Operations]
+      security: [{ cron: [] }]
+      summary: Run background jobs (all, auto-release, holds, stale-funding, offers, silent, payouts, checks, reconcile)
+      parameters: [{ name: job, in: path, required: true, schema: { type: string } }]
+      responses: { "200": { description: Job results }, "403": { $ref: "#/components/responses/Error" } }
+  /api/admin/milestones/{id}/resolve:
+    post:
+      tags: [Operations]
+      security: []
+      summary: Resolve a dispute (x-admin-secret header)
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses: { "200": { description: OK } }

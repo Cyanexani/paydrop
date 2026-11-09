@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      AI_MODE: mock
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Secrets in the public repo: fail the build if a key is committed.
+      - name: Secret scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+
+      - name: Checker eval (wrongful passes must be 0)
+        run: |
+          npx playwright-core install --with-deps chromium-headless-shell
+          npm run eval:checker
+
+      - run: npm run build
+
+      - name: Postman collection (newman) against the built app
+        run: |
+          npm start &
+          npx wait-on --timeout 60000 http://localhost:3000/api/health
+          npx newman run postman/milestonepay.postman_collection.json --env-var baseUrl=http://localhost:3000
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: checker-eval
+          path: evals/checker/REPORT*.md
