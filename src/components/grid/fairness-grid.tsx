@@ -40,7 +40,7 @@ export function FairnessGrid() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Pricing fairness</h1>
+        <h1 className="animate-rise font-display text-4xl font-bold tracking-tight sm:text-5xl">Pricing fairness</h1>
         <p className="max-w-3xl text-sm text-zinc-600 dark:text-zinc-400">
           Every milestone on the platform, grouped by freelancer tier. The base rate per hour is the same in every tier: the same work earns the same base pay, and only verified track record adds a premium. Estimate error compares PERT hours with the hours freelancers report.
         </p>

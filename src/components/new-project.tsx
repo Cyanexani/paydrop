@@ -7,6 +7,7 @@ import { SKILL_LABELS } from "@/lib/pricing/config";
 import type { QuoteView } from "@/server/quotes";
 import { api } from "./api";
 import { Button, Card, ErrorNote, inputClass } from "./ui";
+import { GooLoader } from "./goo";
 
 const EXAMPLE =
   "Website for my dance studio, Jaya Dance & Fitness: home, classes and contact pages, online class booking with a deposit through PayPal, a photo gallery of our shows, and live on our own domain with good SEO. We have a logo and photos.";
@@ -39,7 +40,7 @@ export function NewProject() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">New project</h1>
+        <h1 className="animate-rise font-display text-4xl font-bold tracking-tight sm:text-5xl">New project</h1>
         <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">Describe it in plain language. The AI scopes it; the price is computed, not guessed.</p>
       </div>
 
@@ -60,7 +61,7 @@ export function NewProject() {
             </label>
           </div>
           <ErrorNote error={error} />
-          <Button type="submit" disabled={busy}>{busy ? "Scoping…" : "Scope and price it"}</Button>
+          <Button type="submit" disabled={busy}>{busy ? <><GooLoader size={20} label="Scoping" /> Scoping…</> : "Scope and price it"}</Button>
         </form>
       </Card>
 

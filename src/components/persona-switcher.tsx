@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { api, type Session } from "./api";
+import { GooLoader } from "./goo";
 
 export function PersonaSwitcher() {
   const [session, setSession] = useState<Session | null>(null);
@@ -19,13 +20,13 @@ export function PersonaSwitcher() {
     window.location.reload();
   }
 
-  if (!session) return <span className="text-sm text-zinc-500">…</span>;
+  if (!session) return <GooLoader size={22} label="Loading personas" />;
   return (
     <label className="flex items-center gap-2 text-sm">
-      <span className="hidden text-zinc-500 sm:inline">Viewing as</span>
+      <span className="hidden text-zinc-400 sm:inline">Viewing as</span>
       <select
         aria-label="Viewing as"
-        className="max-w-[12rem] rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+        className="max-w-[12rem] cursor-pointer rounded-full border border-white/10 bg-white/10 px-3 py-2 text-sm font-medium text-zinc-100 transition-colors hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-magenta/50"
         value={session.viewer?.id ?? ""}
         onChange={(e) => choose(e.target.value)}
       >

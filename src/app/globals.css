@@ -1,24 +1,216 @@
 @import "tailwindcss";
 
+/* MilestonePay — "Retro Magic" theme: deep plum ground, hot magenta, peach and butter,
+   with gooey (metaball) dots as the signature motion. The app is always dark. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-display-face), var(--font-body), sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  /* Brand */
+  --color-plum-950: #1f0619;
+  --color-plum-900: #2c0a26;
+  --color-plum-800: #44113e;
+  --color-plum-700: #6a1452;
+  --color-magenta: #ff49c1;
+  --color-peach: #ffb3ae;
+  --color-butter: #fff7ad;
+
+  /* Neutrals, re-tinted toward plum so every existing zinc utility follows the theme */
+  --color-zinc-50: #fff4fa;
+  --color-zinc-100: #fbe9f3;
+  --color-zinc-200: #f0d3e5;
+  --color-zinc-300: #dcb4cd;
+  --color-zinc-400: #cfa9c4;
+  --color-zinc-500: #b48ea9;
+  --color-zinc-600: #8a6280;
+  --color-zinc-700: #5e2d55;
+  --color-zinc-800: #4a1a43;
+  --color-zinc-900: #330d2d;
+  --color-zinc-950: #22071d;
+
+  /* Accent: magenta (was emerald) */
+  --color-emerald-50: #fff0fa;
+  --color-emerald-100: #ffd9f2;
+  --color-emerald-300: #ffa3df;
+  --color-emerald-400: #ff7fd3;
+  --color-emerald-500: #ff49c1;
+  --color-emerald-600: #e62fa8;
+  --color-emerald-700: #c21a8c;
+  --color-emerald-800: #9e1172;
+  --color-emerald-900: #6a1452;
+  --color-emerald-950: #4a0f3c;
+
+  /* Info notices: lilac (was sky) */
+  --color-sky-50: #fbf0ff;
+  --color-sky-100: #f3dcfb;
+  --color-sky-200: #e9c6f5;
+  --color-sky-300: #e6b9f8;
+  --color-sky-400: #d79af0;
+  --color-sky-700: #8a3fa8;
+  --color-sky-800: #6c2a86;
+  --color-sky-900: #4f1d63;
+  --color-sky-950: #36113f;
+
+  /* Warnings: butter (was amber) */
+  --color-amber-100: #fffbd6;
+  --color-amber-300: #fff7ad;
+  --color-amber-400: #ffe98a;
+  --color-amber-500: #f5d55c;
+  --color-amber-700: #8a6d00;
+  --color-amber-800: #6b5400;
+  --color-amber-950: #3a2a12;
+
+  --animate-rise: rise 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: dark;
+  --goo-a: #ff49c1;
+  --goo-b: #ffb3ae;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  background: var(--color-plum-950);
 }
 
 body {
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-family: var(--font-sans);
+  background:
+    radial-gradient(60rem 40rem at 85% -10%, rgb(255 73 193 / 0.28), transparent 60%),
+    radial-gradient(50rem 36rem at -10% 20%, rgb(106 20 82 / 0.75), transparent 65%),
+    radial-gradient(40rem 30rem at 70% 110%, rgb(255 179 174 / 0.16), transparent 60%),
+    var(--color-plum-950);
+  background-attachment: fixed;
+}
+
+/* Fine dot grid over the whole app, fading toward the bottom */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: radial-gradient(rgb(255 244 250 / 0.09) 1px, transparent 1.4px);
+  background-size: 22px 22px;
+  mask-image: linear-gradient(to bottom, #000, transparent 75%);
+  animation: dot-drift 40s linear infinite;
+}
+
+@keyframes dot-drift {
+  to { background-position: 22px 44px; }
+}
+
+h1, h2, .font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.025em;
+}
+
+::selection {
+  background: rgb(255 73 193 / 0.45);
+  color: #fff;
+}
+
+/* ---------- Gooey dots ---------- */
+
+/* Dots inside a .goo container merge and split like liquid (filters live in the layout). */
+.goo { filter: url(#goo); }
+.goo-sm { filter: url(#goo-sm); }
+
+.goo-loader {
+  position: relative;
+  width: var(--size, 40px);
+  height: var(--size, 40px);
+  filter: url(#goo-sm);
+  flex: none;
+}
+.goo-loader > span {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 34%;
+  height: 34%;
+  border-radius: 9999px;
+  background: var(--goo-a);
+}
+.goo-loader > span:nth-child(1) {
+  animation: goo-breathe 1.6s ease-in-out infinite;
+}
+.goo-loader > span:nth-child(n + 2) {
+  animation: goo-orbit 1.6s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+.goo-loader > span:nth-child(2) { --a: 0deg; background: var(--goo-b); }
+.goo-loader > span:nth-child(3) { --a: 120deg; animation-delay: -0.2s; }
+.goo-loader > span:nth-child(4) { --a: 240deg; animation-delay: -0.4s; background: var(--color-butter); }
+
+@keyframes goo-orbit {
+  0%, 100% { transform: rotate(var(--a)) translateX(0) scale(0.9); }
+  50% { transform: rotate(calc(var(--a) + 180deg)) translateX(calc(var(--size, 40px) * 0.34)) scale(0.7); }
+}
+@keyframes goo-breathe {
+  0%, 100% { transform: scale(1.15); }
+  50% { transform: scale(0.85); }
+}
+
+/* Large metaballs (hero, empty states) */
+.blob {
+  position: absolute;
+  border-radius: 9999px;
+}
+.blob-a { animation: blob-a 11s ease-in-out infinite; }
+.blob-b { animation: blob-b 13s ease-in-out infinite; }
+.blob-c { animation: blob-c 9s ease-in-out infinite; }
+.blob-d { animation: blob-d 15s ease-in-out infinite; }
+.blob-morph { animation: blob-morph 12s ease-in-out infinite; }
+
+@keyframes blob-a { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(7rem, 2.5rem); } }
+@keyframes blob-b { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-6rem, 4rem) scale(1.1); } }
+@keyframes blob-c { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(2.5rem, -5rem) scale(1.3); } }
+@keyframes blob-d { 0%, 100% { transform: translate(0, 0); } 33% { transform: translate(-4rem, -3rem); } 66% { transform: translate(3.5rem, -1rem); } }
+@keyframes blob-morph {
+  0%, 100% { border-radius: 42% 58% 63% 37% / 45% 40% 60% 55%; transform: rotate(0deg); }
+  50% { border-radius: 60% 40% 38% 62% / 58% 62% 38% 42%; transform: rotate(25deg); }
+}
+
+.logo-dot { animation: logo-dot 3.2s ease-in-out infinite; }
+@keyframes logo-dot { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(6px, -4px); } }
+
+/* Floating swatch chips (from the Retro Magic reference) */
+.float-chip { animation: float-chip 7s ease-in-out infinite; }
+@keyframes float-chip {
+  0%, 100% { transform: translateY(0) rotate(var(--tilt, -8deg)); }
+  50% { transform: translateY(-10px) rotate(var(--tilt, -8deg)); }
+}
+
+/* A dot that is "live" (checking, waiting for PayPal) */
+.dot-live { animation: dot-live 2s ease-out infinite; }
+@keyframes dot-live {
+  0% { box-shadow: 0 0 0 0 rgb(255 73 193 / 0.6); }
+  100% { box-shadow: 0 0 0 10px rgb(255 73 193 / 0); }
+}
+
+/* ---------- Third-party widgets ---------- */
+
+details > summary { list-style: none; }
+details > summary::-webkit-details-marker { display: none; }
+
+.b-gantt {
+  --b-primary: #ff49c1;
+  border-radius: 1rem;
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
 }

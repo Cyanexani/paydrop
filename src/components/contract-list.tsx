@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { formatMoney } from "@/lib/money";
 import { api } from "./api";
 import { Card, ErrorNote, StatusPill } from "./ui";
+import { GooBlock } from "./goo";
 
 interface Row {
   id: string;
@@ -26,9 +27,9 @@ export function ContractList() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold tracking-tight">Contracts</h1>
+      <h1 className="animate-rise font-display text-4xl font-bold tracking-tight sm:text-5xl">Contracts</h1>
       <ErrorNote error={error} />
-      {rows === null && !error && <p className="text-sm text-zinc-500">Loading…</p>}
+      {rows === null && !error && <GooBlock label="Loading contracts" />}
       {rows?.length === 0 && (
         <Card className="text-sm">
           No contracts yet. <Link className="text-emerald-700 underline dark:text-emerald-400" href="/new">Start a project</Link>.

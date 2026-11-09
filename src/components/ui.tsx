@@ -6,14 +6,14 @@ export function Button({
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "primary" | "secondary" | "danger" }) {
   const styles = {
-    primary: "bg-emerald-700 text-white hover:bg-emerald-800 disabled:bg-emerald-700/50",
-    secondary:
-      "border border-zinc-300 bg-white text-zinc-900 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800",
-    danger: "border border-red-300 text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-950",
+    primary:
+      "bg-butter text-plum-800 shadow-[0_8px_24px_-10px_rgb(255_247_173/0.6)] hover:-translate-y-px hover:bg-white disabled:translate-y-0 disabled:bg-butter/40 disabled:text-plum-800/60 disabled:shadow-none",
+    secondary: "border border-white/15 bg-white/5 text-zinc-100 hover:border-white/30 hover:bg-white/10",
+    danger: "border border-[#ff8a8a]/40 text-[#ffb0b0] hover:bg-[#ff8a8a]/10",
   }[variant];
   return (
     <button
-      className={`inline-flex items-center justify-center rounded-md px-3.5 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed ${styles} ${className}`}
+      className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-full px-5 py-2 text-sm font-semibold transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-magenta disabled:cursor-not-allowed ${styles} ${className}`}
       {...props}
     />
   );
@@ -21,26 +21,30 @@ export function Button({
 
 export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
-    <div className={`rounded-lg border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900 ${className}`}>
+    <div
+      className={`rounded-3xl border border-white/10 bg-plum-900/55 p-6 shadow-[0_20px_60px_-30px_rgb(0_0_0/0.7)] backdrop-blur-xl ${className}`}
+    >
       {children}
     </div>
   );
 }
 
-const STATUS: Record<string, { label: string; tone: "neutral" | "info" | "good" | "warn" | "bad" }> = {
+type Tone = "neutral" | "info" | "good" | "warn" | "bad";
+
+const STATUS: Record<string, { label: string; tone: Tone; live?: boolean }> = {
   offered: { label: "Offered", tone: "neutral" },
   accepted: { label: "Accepted · not funded", tone: "neutral" },
-  funding: { label: "Waiting for PayPal", tone: "info" },
+  funding: { label: "Waiting for PayPal", tone: "info", live: true },
   funded: { label: "Funded · held in PayPal", tone: "info" },
-  submitted: { label: "Checking", tone: "info" },
+  submitted: { label: "Checking", tone: "info", live: true },
   changes_requested: { label: "Changes requested", tone: "warn" },
   needs_review: { label: "Client review", tone: "warn" },
   verified: { label: "Verified", tone: "good" },
-  releasing: { label: "Releasing", tone: "info" },
-  release_pending: { label: "Release pending at PayPal", tone: "info" },
+  releasing: { label: "Releasing", tone: "info", live: true },
+  release_pending: { label: "Release pending at PayPal", tone: "info", live: true },
   release_failed: { label: "Release failed · re-fund", tone: "bad" },
   released: { label: "Released", tone: "good" },
-  payout_pending: { label: "Payout pending", tone: "info" },
+  payout_pending: { label: "Payout pending", tone: "info", live: true },
   paid_out: { label: "Paid out", tone: "good" },
   disputed: { label: "Disputed", tone: "bad" },
   voided: { label: "Voided", tone: "neutral" },
@@ -49,26 +53,53 @@ const STATUS: Record<string, { label: string; tone: "neutral" | "info" | "good" 
   completed: { label: "Completed", tone: "good" },
 };
 
+/** Dot colour per tone; shared with timelines so a milestone's dot matches its pill. */
+export const TONE_DOT: Record<Tone, string> = {
+  neutral: "#b48ea9",
+  info: "#ff49c1",
+  good: "#fff7ad",
+  warn: "#ffb3ae",
+  bad: "#ff6b6b",
+};
+
+export function statusTone(status: string): Tone {
+  return STATUS[status]?.tone ?? "neutral";
+}
+
+/** A glass chip with a coloured dot, like a swatch on a palette card. */
 export function StatusPill({ status }: { status: string }) {
   const s = STATUS[status] ?? { label: status, tone: "neutral" as const };
-  const tone = {
-    neutral: "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300",
-    info: "bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300",
-    good: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300",
-    warn: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300",
-    bad: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300",
-  }[s.tone];
-  return <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${tone}`}>{s.label}</span>;
+  return (
+    <span className="inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-white/10 bg-white/[0.07] py-1 pl-1.5 pr-3 text-xs font-medium text-zinc-100 backdrop-blur">
+      <span
+        aria-hidden
+        className={`size-3.5 rounded-full ring-2 ring-white/15 ${s.live ? "dot-live" : ""}`}
+        style={{ background: TONE_DOT[s.tone] }}
+      />
+      {s.label}
+    </span>
+  );
 }
 
 export function ErrorNote({ error }: { error: string | null }) {
   if (!error) return null;
   return (
-    <p role="alert" className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200">
+    <p role="alert" className="flex items-start gap-3 rounded-2xl border border-[#ff6b6b]/30 bg-[#ff6b6b]/10 px-4 py-3 text-sm text-[#ffd0d0]">
+      <span aria-hidden className="mt-1 size-2.5 flex-none rounded-full bg-[#ff6b6b]" />
       {error}
     </p>
   );
 }
 
+export function PageHeader({ eyebrow, title, children }: { eyebrow?: string; title: string; children?: ReactNode }) {
+  return (
+    <div className="animate-rise space-y-2">
+      {eyebrow && <p className="text-xs font-semibold uppercase tracking-[0.16em] text-peach">{eyebrow}</p>}
+      <h1 className="font-display text-4xl font-bold tracking-tight sm:text-5xl">{title}</h1>
+      {children && <div className="max-w-2xl text-zinc-400">{children}</div>}
+    </div>
+  );
+}
+
 export const inputClass =
-  "w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-600/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100";
+  "w-full rounded-2xl border border-white/10 bg-plum-950/60 px-4 py-3 text-sm text-zinc-100 placeholder:text-zinc-500 transition-colors focus:border-magenta/70 focus:outline-none focus:ring-4 focus:ring-magenta/15";

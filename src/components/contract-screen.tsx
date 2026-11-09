@@ -9,9 +9,10 @@ import { api, type PublicConfig, type Session } from "./api";
 import { MilestoneCard } from "./contract/milestone-card";
 import { AuditTrail, ChangeRequestsPanel, MessagesPanel, OfferPanel } from "./contract/panels";
 import { Card, ErrorNote, StatusPill } from "./ui";
+import { GooBlock } from "./goo";
 
 // Browser-only widgets: load them on the client.
-const MilestoneGantt = dynamic(() => import("./gantt/milestone-gantt"), { ssr: false, loading: () => <p className="text-sm text-zinc-500">Loading timeline…</p> });
+const MilestoneGantt = dynamic(() => import("./gantt/milestone-gantt"), { ssr: false, loading: () => <GooBlock label="Loading timeline" /> });
 const ContractGrids = dynamic(() => import("./grid/contract-grids").then((m) => m.ContractGrids), { ssr: false });
 
 const WORKING = ["submitted", "releasing", "release_pending"];
@@ -63,7 +64,7 @@ export function ContractScreen({ params }: { params: Promise<{ id: string }> }) 
   );
 
   if (error && !view) return <ErrorNote error={error} />;
-  if (!view) return <p className="text-sm text-zinc-500">Loading…</p>;
+  if (!view) return <GooBlock label="Loading contract" />;
   const { contract, role } = view;
 
   return (
@@ -77,7 +78,7 @@ export function ContractScreen({ params }: { params: Promise<{ id: string }> }) 
           </span>
         </div>
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-2xl font-semibold tracking-tight">{contract.title}</h1>
+          <h1 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">{contract.title}</h1>
           <StatusPill status={contract.status} />
         </div>
         <p className="text-sm text-zinc-600 dark:text-zinc-400">

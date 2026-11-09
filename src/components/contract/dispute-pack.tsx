@@ -6,6 +6,7 @@ import { formatMoney } from "@/lib/money";
 import type { disputePack } from "@/server/contract-actions";
 import { api } from "../api";
 import { Button, Card, ErrorNote, StatusPill } from "../ui";
+import { GooBlock } from "@/components/goo";
 
 type Pack = Awaited<ReturnType<typeof disputePack>>;
 
@@ -20,7 +21,7 @@ export function DisputePack({ params }: { params: Promise<{ id: string }> }) {
   }, [id]);
 
   if (error) return <ErrorNote error={error} />;
-  if (!pack) return <p className="text-sm text-zinc-500">Loading…</p>;
+  if (!pack) return <GooBlock />;
 
   const download = () => {
     const blob = new Blob([JSON.stringify(pack, null, 2)], { type: "application/json" });
@@ -35,7 +36,7 @@ export function DisputePack({ params }: { params: Promise<{ id: string }> }) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <Link href={`/contracts/${id}`} className="text-sm text-zinc-500 hover:underline">← Contract</Link>
-          <h1 className="text-2xl font-semibold tracking-tight">Dispute pack: {pack.contract.title}</h1>
+          <h1 className="animate-rise font-display text-4xl font-bold tracking-tight sm:text-5xl">Dispute pack: {pack.contract.title}</h1>
           <p className="text-sm text-zinc-600 dark:text-zinc-400">
             {pack.contract.parties.map((p) => `${p.name} (${p.role})`).join(" · ")} · generated {new Date(pack.generatedAt).toLocaleString("en-IN")}
           </p>

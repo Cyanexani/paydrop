@@ -16,7 +16,7 @@ let loader: Promise<BryntumGanttNS> | null = null;
 
 function loadBryntum(): Promise<BryntumGanttNS> {
   loader ??= new Promise((resolve, reject) => {
-    for (const href of ["gantt.css", "stockholm-light.css", "fontawesome/css/fontawesome.css", "fontawesome/css/solid.css"]) {
+    for (const href of ["gantt.css", "stockholm-dark.css", "fontawesome/css/fontawesome.css", "fontawesome/css/solid.css"]) {
       const link = document.createElement("link");
       link.rel = "stylesheet";
       link.href = `/vendor/bryntum/${href}`;

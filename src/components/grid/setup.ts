@@ -1,8 +1,7 @@
 "use client";
 
-import { AllCommunityModule, ModuleRegistry, colorSchemeDark, colorSchemeLight, themeQuartz } from "ag-grid-community";
+import { AllCommunityModule, ModuleRegistry, colorSchemeDark, themeQuartz } from "ag-grid-community";
 import { AllEnterpriseModule, LicenseManager } from "ag-grid-enterprise";
-import { useMemo, useSyncExternalStore } from "react";
 import { formatMoney } from "@/lib/money";
 
 let registered = false;
@@ -16,28 +15,23 @@ export function ensureGridModules() {
   registered = true;
 }
 
-function subscribe(cb: () => void) {
-  const mq = window.matchMedia("(prefers-color-scheme: dark)");
-  mq.addEventListener("change", cb);
-  return () => mq.removeEventListener("change", cb);
-}
+// The app is always dark: one plum-tinted grid theme, built once.
+const gridTheme = themeQuartz.withPart(colorSchemeDark).withParams({
+  accentColor: "#ff49c1",
+  backgroundColor: "#2c0a26",
+  foregroundColor: "#fbe9f3",
+  headerBackgroundColor: "#44113e",
+  oddRowBackgroundColor: "#330d2d",
+  borderColor: "rgb(255 255 255 / 0.08)",
+  chromeBackgroundColor: "#330d2d",
+  wrapperBorderRadius: 18,
+  fontFamily: "inherit",
+  fontSize: 13,
+  headerFontWeight: 600,
+});
 
 export function useGridTheme() {
-  const dark = useSyncExternalStore(
-    subscribe,
-    () => window.matchMedia("(prefers-color-scheme: dark)").matches,
-    () => false,
-  );
-  return useMemo(
-    () =>
-      themeQuartz.withPart(dark ? colorSchemeDark : colorSchemeLight).withParams({
-        accentColor: "#047857",
-        fontFamily: "inherit",
-        fontSize: 13,
-        headerFontWeight: 600,
-      }),
-    [dark],
-  );
+  return gridTheme;
 }
 
 export const money = (p: { value: unknown }) => (typeof p.value === "number" ? formatMoney(p.value) : "");
