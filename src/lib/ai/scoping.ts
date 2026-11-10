@@ -62,8 +62,8 @@ export interface CalibrationExample {
   actualHours: number;
 }
 
-export async function scopeBrief(brief: string, examples: CalibrationExample[] = []): Promise<{ result: ScopeResult; meta: ScopeMeta }> {
-  const mode = aiMode();
+export async function scopeBrief(brief: string, examples: CalibrationExample[] = [], opts: { demo?: boolean } = {}): Promise<{ result: ScopeResult; meta: ScopeMeta }> {
+  const mode = opts.demo ? "mock" : aiMode();
   if (mode === "mock") {
     return { result: mockScope(brief), meta: { mode, model: "mock", promptVersion: SCOPING_PROMPT_VERSION, attempts: 1 } };
   }

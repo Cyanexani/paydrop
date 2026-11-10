@@ -1,10 +1,15 @@
-# Render Blueprint: web app + background worker + nightly reconciliation + Postgres.
+# Render Blueprint, free plan: the web app and Postgres.
 # Deploy: Render Dashboard → New → Blueprint → pick this repo. Fill the `sync: false` secrets when prompted.
-# Plans are left at Render's default (0.5c-512mb) for services; the database uses the free plan.
+#
+# Free web services sleep after about 15 idle minutes, and the free plan has no background workers,
+# so the background jobs (auto-release, PayPal holds, payout retries, reconciliation...) run from
+# .github/workflows/jobs.yml, which calls /api/cron/all every 14 minutes and keeps the site awake.
+# To run them on Render instead, add a worker running `npx tsx scripts/run-jobs.ts --loop` (paid).
 services:
   - type: web
     name: paydrop-web
     runtime: node
+    plan: free
     buildCommand: npm ci && npm run build
     startCommand: npm start
     healthCheckPath: /api/health
@@ -52,64 +57,6 @@ services:
         generateValue: true
       - key: ADMIN_SECRET
         generateValue: true
-
-  # Runs every job each minute: auto-release, PayPal holds, stale checkouts, offers,
-  # silent freelancers, payout retries, stuck checks, reconciliation.
-  - type: worker
-    name: paydrop-worker
-    runtime: node
-    buildCommand: npm ci
-    startCommand: npx tsx scripts/run-jobs.ts --loop
-    envVars:
-      - key: NODE_VERSION
-        value: "24"
-      - key: DATABASE_URL
-        fromDatabase:
-          name: paydrop-db
-          property: connectionString
-      - key: ANTHROPIC_API_KEY
-        sync: false
-      - key: OPENROUTER_API_KEY
-        sync: false
-      - key: PAYPAL_CLIENT_ID
-        sync: false
-      - key: PAYPAL_CLIENT_SECRET
-        sync: false
-      - key: PAYPAL_ENV
-        value: sandbox
-      - key: PAYPAL_CURRENCY
-        value: USD
-      - key: FX_INR_PER_USD
-        value: "84"
-      - key: DEMO_PAYOUT_EMAIL
-        sync: false
-      - key: KERNEL_API_KEY
-        sync: false
-      - key: ZAPIER_HOOK_URL
-        sync: false
-
-  # Nightly reconciliation with PayPal at 01:30 IST (20:00 UTC), in case a webhook was missed.
-  - type: cron
-    name: paydrop-reconcile
-    runtime: node
-    schedule: "0 20 * * *"
-    buildCommand: npm ci
-    startCommand: npx tsx scripts/run-jobs.ts reconcile payouts
-    envVars:
-      - key: NODE_VERSION
-        value: "24"
-      - key: DATABASE_URL
-        fromDatabase:
-          name: paydrop-db
-          property: connectionString
-      - key: PAYPAL_CLIENT_ID
-        sync: false
-      - key: PAYPAL_CLIENT_SECRET
-        sync: false
-      - key: PAYPAL_ENV
-        value: sandbox
-      - key: DEMO_PAYOUT_EMAIL
-        sync: false
 
 databases:
   - name: paydrop-db

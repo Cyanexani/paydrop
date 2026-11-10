@@ -69,7 +69,7 @@ export type QuoteView = {
     | { status: "priced"; base: Extract<ContractQuote, { status: "priced" }>; candidates: PricedCandidate[]; agentCatalog: AgentCatalogView | null };
 };
 
-export async function createQuote(db: Db, viewer: Viewer, input: z.infer<typeof QuoteRequest>): Promise<QuoteView> {
+export async function createQuote(db: Db, viewer: Viewer, input: z.infer<typeof QuoteRequest>, opts: { demoScoper?: boolean } = {}): Promise<QuoteView> {
   if (viewer.role !== "client") throw forbidden("Only clients can request quotes");
   // The estimator learns: the latest milestones with reported hours become calibration examples.
   const done = await db
@@ -79,7 +79,7 @@ export async function createQuote(db: Db, viewer: Viewer, input: z.infer<typeof 
     .orderBy(desc(milestones.updatedAt))
     .limit(8);
   const examples = done.map((d) => ({ title: d.draft.title, likelyHours: d.draft.estimate.likely, actualHours: d.actualHours! }));
-  const { result, meta } = await scopeBrief(input.brief, examples);
+  const { result, meta } = await scopeBrief(input.brief, examples, { demo: opts.demoScoper });
   const id = newId("q");
   await db.insert(quotes).values({
     id,

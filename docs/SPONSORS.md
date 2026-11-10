@@ -9,7 +9,7 @@ Each integration has a job in the product, and each works without a key (a local
 | [AG Grid](#ag-grid) | Ledger, criteria checks, receipts, fairness, chat filtering | `src/components/grid/` | Works, with a trial watermark |
 | [Kernel](#kernel) | Cloud browser for the AI checker, with replays | `src/lib/checker/browser.ts` | Local headless Chromium |
 | [Elastic](#elastic) | Search behind the scope-creep detector | `src/lib/search/elastic.ts` | Local search over the contract |
-| [Render](#render) | Hosting: web, worker, cron, Postgres | `render.yaml` | Run locally |
+| [Render](#render) | Hosting: web service and Postgres (free plan) | `render.yaml` | Run locally |
 | [Bryntum](#bryntum) | Gantt timeline; drag a deadline to propose a change | `src/components/gantt/milestone-gantt.tsx` | Trial build (watermark) |
 | [Postman](#postman) | API test suite in CI | `postman/` | Run with newman |
 | [Zapier](#zapier) | WhatsApp/email in; Slack/Sheets out | `src/server/scope.ts`, `src/server/integrations.ts` | Inbound returns 503 |
@@ -71,11 +71,11 @@ Each integration has a job in the product, and each works without a key (a local
 
 ## Render
 
-**What it does:** `render.yaml` defines:
+**What it does:** `render.yaml` defines, on the free plan:
 - **Web service:** Next.js.
-- **Background worker:** runs every job each minute (auto-release, PayPal holds, stale checkouts, offers, silent freelancers, payout retries, stuck checks, reconciliation).
-- **Nightly cron:** reconciliation.
 - **Postgres database.**
+
+The background jobs (auto-release, PayPal holds, stale checkouts, offers, silent freelancers, payout retries, stuck checks, reconciliation) run from a scheduled GitHub Actions workflow that calls `/api/cron/all` every 14 minutes, because the free plan has no workers. On a paid plan they can run as a Render background worker instead: `npx tsx scripts/run-jobs.ts --loop`.
 
 **Switch it on:** see [DEPLOYMENT.md](DEPLOYMENT.md).
 
