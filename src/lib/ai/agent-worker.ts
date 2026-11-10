@@ -130,7 +130,7 @@ async function buildWithOpenRouter(model: string, projectTitle: string, draft: M
       headers: {
         Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
         "Content-Type": "application/json",
-        "HTTP-Referer": process.env.APP_URL ?? "https://github.com/Cyanexani/milestonepay",
+        "HTTP-Referer": process.env.APP_URL ?? "https://github.com/Cyanexani/paydrop",
         "X-Title": "Paydrop BuildBot",
       },
       body: JSON.stringify({

@@ -6,7 +6,7 @@ Deadline: **12 Nov 2026, 12:00 pm PST (13 Nov, 1:30 am IST)**. Submit on the mor
 
 | Requirement | Status | How |
 | --- | --- | --- |
-| Public repo with license visible | Repo is **private** for now | `gh repo edit Cyanexani/milestonepay --visibility public --accept-visibility-change-consequences`; MIT `LICENSE` is in the root |
+| Public repo with license visible | Repo is **private** for now | `gh repo edit Cyanexani/paydrop --visibility public --accept-visibility-change-consequences`; MIT `LICENSE` is in the root |
 | Working demo (hosted URL or repo with run steps) | Run steps ready ([SETUP.md](SETUP.md)); hosting not yet | Deploy with [DEPLOYMENT.md](DEPLOYMENT.md) |
 | Text description | Draft below | Paste into Devpost |
 | AI tools and how each is used | Below | Paste into Devpost |

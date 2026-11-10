@@ -11,8 +11,8 @@ Everything runs on your machine with no accounts: AI features have deterministic
 ## 2. Install
 
 ```bash
-git clone https://github.com/Cyanexani/milestonepay.git
-cd milestonepay
+git clone https://github.com/Cyanexani/paydrop.git
+cd paydrop
 npm install
 ```
 

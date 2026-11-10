@@ -15,7 +15,7 @@ Services use Render's default instance size; change `plan` per service if you wa
 
 1. **Make the repo reachable by Render.** Connect your GitHub account in Render. For the hackathon the repo must also be public:
    ```bash
-   gh repo edit Cyanexani/milestonepay --visibility public --accept-visibility-change-consequences
+   gh repo edit Cyanexani/paydrop --visibility public --accept-visibility-change-consequences
    ```
 2. **Create the Blueprint.** Render Dashboard → **New → Blueprint** → pick the repo. Render reads `render.yaml`.
 3. **Fill the secrets it prompts for** (`sync: false`). Values Render generates itself: `ZAPIER_SECRET`, `CRON_SECRET`, `ADMIN_SECRET`.

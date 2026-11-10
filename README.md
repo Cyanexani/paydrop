@@ -11,8 +11,8 @@ Built for the PayPal AI Hackathon ("Build What's Next with PayPal and AI"). MIT 
 Needs Node 20+ (tested on 24). No accounts or database server needed.
 
 ```bash
-git clone https://github.com/Cyanexani/milestonepay.git
-cd milestonepay
+git clone https://github.com/Cyanexani/paydrop.git
+cd paydrop
 npm install
 npx playwright-core install chromium-headless-shell   # browser for the AI checker
 cp .env.example .env.local                            # every key is optional
