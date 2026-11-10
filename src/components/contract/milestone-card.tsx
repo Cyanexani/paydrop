@@ -8,6 +8,7 @@ import { api, type PublicConfig } from "../api";
 import { PayPalFundButton } from "../paypal-button";
 import { Button, Card, StatusPill, TONE_COLOR, inputClass, statusTone } from "../ui";
 import { GooLoader } from "../goo";
+import { AgentLadder } from "./agent-ladder";
 import { Journey } from "./journey";
 import { useAction } from "./use-action";
 
@@ -58,6 +59,8 @@ export function MilestoneCard({
   const openCounter = m.negotiations.find((n) => n.status === "open");
   const lastRun = m.checkRuns[0];
   const tone = statusTone(m.status);
+  // An agent climbs its model ladder one rung per attempt.
+  const nextRung = m.agentPlan ? m.agentPlan.ladder[m.agentRuns.length] ?? null : true;
   const color = tone === "neutral" ? "#8a6280" : TONE_COLOR[tone];
 
   async function searchMaterials(e: React.FormEvent) {
@@ -100,6 +103,7 @@ export function MilestoneCard({
             <div className="space-y-5 px-5 pb-6 sm:px-6">
               <p className="max-w-3xl text-[15px] leading-relaxed text-muted">{m.draft.description}</p>
               <Journey status={m.status} color={color} />
+              <AgentLadder m={m} settled={settled} />
 
         <div className="grid gap-4 md:grid-cols-2">
           <div>
@@ -268,8 +272,12 @@ export function MilestoneCard({
           <div className="space-y-2 border-t border-line-soft pt-4">
             {workerIsAgent && role === "agent_owner" && ["funded", "changes_requested"].includes(m.status) ? (
               <div className="flex flex-wrap items-center gap-3">
-                <p className="flex-1 text-sm">BuildBot builds this milestone, hosts it, and submits it for checking. It&apos;s paid only if every criterion is verified.</p>
-                <Button disabled={!!busy} onClick={() => run("agent", `/api/milestones/${m.id}/agent-run`)}>{busy === "agent" ? "BuildBot is building…" : "Run BuildBot"}</Button>
+                <p className="flex-1 text-sm">
+                  BuildBot builds this milestone{nextRung && nextRung !== true ? ` on ${nextRung.name}` : ""}, hosts it, and submits it for checking. It&apos;s paid only if every criterion is verified.
+                </p>
+                <Button disabled={!!busy || !nextRung} onClick={() => run("agent", `/api/milestones/${m.id}/agent-run`)}>
+                  {busy === "agent" ? <><GooLoader kind="orbit" size={10} label="BuildBot is building" showLabel={false} /> BuildBot is building…</> : nextRung ? `Run BuildBot · rung ${m.agentRuns.length + 1}` : "Ladder used up"}
+                </Button>
               </div>
             ) : (
               <form

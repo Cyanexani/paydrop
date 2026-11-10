@@ -36,6 +36,7 @@ Every key is optional. `.env.local` is git-ignored; never commit keys. See [SPON
 | --- | --- |
 | `ANTHROPIC_API_KEY` | Real Claude for scoping, scope creep, the checker's browser agent, BuildBot and grid chat |
 | `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET` | Funding (hold), release (capture) and payouts in the PayPal sandbox |
+| `OPENROUTER_API_KEY` | BuildBot really runs on the models on its ladder (any of OpenRouter's models). Agent prices use OpenRouter's public price list with or without a key |
 | `PGLITE_DIR` | Where the local database lives (default `.data/pglite`) |
 
 ## 4. Run

@@ -227,8 +227,23 @@ export const deliveries = pgTable("deliveries", {
   contractId: text("contract_id").notNull(),
   workerId: text("worker_id").notNull(),
   html: text("html").notNull(),
+  /** Which model built it and what it cost (agent runs only; null for older rows) */
+  run: jsonb("run").$type<AgentRun>(),
   createdAt: createdAt(),
 });
+
+/** One agent attempt at a milestone: the ladder rung, the model, and estimated vs actual cost. */
+export interface AgentRun {
+  rung: number;
+  modelId: string;
+  modelName: string;
+  /** openrouter = a real model call; claude = the built-in Claude path; demo = template, no model called */
+  mode: "openrouter" | "claude" | "demo";
+  inputTokens: number | null;
+  outputTokens: number | null;
+  costUsd: number | null;
+  estimatedUsd: number | null;
+}
 
 /** Materials a milestone needs (sourced through Channel3), added to its funded budget. */
 export const materials = pgTable(

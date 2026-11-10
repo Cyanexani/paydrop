@@ -21,10 +21,12 @@ import {
   newMilestoneState,
   type MilestoneStatus,
 } from "@/lib/milestones/state-machine";
-import { priceContract } from "@/lib/pricing/engine";
+import { AgentPricingError, defaultLadder, quoteAgent, resolveLadder, type AgentPlan, type AgentQuote } from "@/lib/agents/estimate";
+import { priceContract, type PricedMilestone } from "@/lib/pricing/engine";
 import { buildReceipt } from "@/lib/pricing/receipt";
 import { milestoneDueDates } from "@/lib/time";
 import { badRequest, forbidden, newId, notFound } from "./errors";
+import { loadCatalog } from "./agent-catalog";
 import { applyMilestoneEvent, fromStored } from "./milestone-store";
 import { adjustedBand, openCounterCount } from "./negotiation";
 import { primarySkill, toPricingInputs } from "./quotes";
@@ -37,6 +39,8 @@ export const ContractRequest = z.object({
   /** Where the work will be delivered; the checker only accepts submissions from here. */
   deliveryUrl: z.string().url(),
   allowParallel: z.boolean().default(false),
+  /** For an AI agent: the models on its ladder, cheapest first (default: chosen from live prices). */
+  agentModels: z.array(z.string().min(1).max(200)).min(1).max(3).optional(),
 });
 
 export const RELEASED_STATUSES: readonly MilestoneStatus[] = ["released", "payout_pending", "paid_out"];
@@ -79,20 +83,45 @@ export async function createContract(
 
   const currency = chargeCurrency();
   const rate = inrPerUsd();
+
+  // An AI agent is priced by the models it runs on: the ladder and its price are locked here too.
+  let agent: AgentQuote | null = null;
+  if (freelancer.kind === "agent") {
+    const catalog = await loadCatalog();
+    const base = priceContract({ milestones: toPricingInputs(scope.milestones), availableDays: q.deadlineDays, freelancer: null });
+    try {
+      const ladder = input.agentModels ? resolveLadder(catalog.models, input.agentModels, scope.milestones) : defaultLadder(catalog.models, scope.milestones);
+      const [owner] = freelancer.ownerId ? await db.select({ name: users.name }).from(users).where(eq(users.id, freelancer.ownerId)) : [];
+      agent = quoteAgent({
+        ladder,
+        drafts: scope.milestones,
+        inrPerUsd: rate,
+        ownerName: owner?.name ?? "the agent's owner",
+        humanPricesMinor: base.status === "priced" ? base.milestones.map((m) => m.priceMinor) : undefined,
+      });
+    } catch (error) {
+      if (error instanceof AgentPricingError) throw badRequest(error.message, "agent_pricing");
+      throw error;
+    }
+  }
+
   const rows = quote.milestones.map((m, i) => {
     const id = newId("ms");
     const draft = scope.milestones[i];
-    const fundMinor = toChargeMinor(m.priceMinor + m.feeMinor, currency, rate);
-    const payoutMinor = toChargeMinor(m.priceMinor, currency, rate);
+    const a = agent?.milestones[i];
+    // For an agent, the human pricing record is kept for reference; price, fee and receipt are the model-priced ones.
+    const priced = a ? ({ ...m, priceMinor: a.priceMinor, feeMinor: a.feeMinor, agentPlan: a.plan } as PricedMilestone) : m;
+    const fundMinor = toChargeMinor(priced.priceMinor + priced.feeMinor, currency, rate);
+    const payoutMinor = toChargeMinor(priced.priceMinor, currency, rate);
     const state = newMilestoneState({ id, fundMinor, payoutMinor, currency, contractedOrigins: [origin] });
     return {
       id,
       contractId,
       position: i,
       draft,
-      pricing: m,
-      receipt: buildReceipt(m, quote.tier, standing),
-      priceMinor: m.priceMinor,
+      pricing: priced,
+      receipt: a ? a.receipt : buildReceipt(m, quote.tier, standing),
+      priceMinor: priced.priceMinor,
       status: state.status,
       version: state.version,
       state: JSON.parse(JSON.stringify(state)),
@@ -113,9 +142,9 @@ export async function createContract(
       contractedOrigins: [origin],
       tier: quote.tier,
       standing,
-      subtotalMinor: quote.subtotalMinor,
-      feeMinor: quote.feeMinor,
-      totalMinor: quote.totalMinor,
+      subtotalMinor: agent?.subtotalMinor ?? quote.subtotalMinor,
+      feeMinor: agent?.feeMinor ?? quote.feeMinor,
+      totalMinor: agent?.totalMinor ?? quote.totalMinor,
     });
     await tx.insert(milestones).values(rows);
   });
@@ -231,7 +260,7 @@ export async function getContractView(db: Db, viewer: Viewer, contractId: string
     db.select().from(messages).where(eq(messages.contractId, contractId)).orderBy(asc(messages.createdAt)),
     db.select().from(changeRequests).where(eq(changeRequests.contractId, contractId)).orderBy(desc(changeRequests.createdAt)),
     ids.length ? db.select().from(materials).where(inArray(materials.milestoneId, ids)) : [],
-    db.select({ id: deliveries.id, milestoneId: deliveries.milestoneId, createdAt: deliveries.createdAt }).from(deliveries).where(eq(deliveries.contractId, contractId)),
+    db.select({ id: deliveries.id, milestoneId: deliveries.milestoneId, createdAt: deliveries.createdAt, run: deliveries.run }).from(deliveries).where(eq(deliveries.contractId, contractId)).orderBy(asc(deliveries.createdAt)),
   ]);
   return {
     contract,
@@ -272,7 +301,10 @@ export async function getContractView(db: Db, viewer: Viewer, contractId: string
         payouts: pos.filter((p) => p.milestoneId === m.id).map((p) => ({ id: p.id, name: p.name, amountMinor: p.amountMinor, currency: p.currency, status: p.status, failure: p.failure })),
         checkRuns: runs.filter((r) => r.milestoneId === m.id).map((r) => ({ id: r.id, attempt: r.attempt, mode: r.mode, replayUrl: r.replayUrl, steps: r.steps, at: r.finishedAt.toISOString() })),
         materials: mats.filter((x) => x.milestoneId === m.id),
-        delivery: dels.find((d) => d.milestoneId === m.id) ?? null,
+        delivery: dels.findLast((d) => d.milestoneId === m.id) ?? null,
+        /** For an AI agent: the model ladder locked at signing, and each attempt with its real cost */
+        agentPlan: (m.pricing as PricedMilestone & { agentPlan?: AgentPlan }).agentPlan ?? null,
+        agentRuns: dels.filter((d) => d.milestoneId === m.id && d.run).map((d) => ({ ...d.run!, at: d.createdAt.toISOString() })),
         status: state.status,
         fundMinor: state.fundMinor,
         payoutMinor: state.payoutMinor,

@@ -4,8 +4,10 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { formatMoney } from "@/lib/money";
 import { SKILL_LABELS } from "@/lib/pricing/config";
-import type { QuoteView } from "@/server/quotes";
 import { api } from "./api";
+import type { MilestoneDraft } from "@/lib/ai/scoping-schema";
+import type { AgentCatalogView, PricedCandidate, QuoteView } from "@/server/quotes";
+import { AgentCard, AgentModelPicker, useAgentQuote } from "./agent-quote";
 import { GooLoader } from "./goo";
 import { Button, Card, ErrorNote, PageHeader } from "./ui";
 
@@ -251,11 +253,11 @@ function PricingSection({ quote, onContract }: { quote: QuoteView; onContract: (
     );
   }
 
-  async function offer(freelancerId: string) {
+  async function offer(freelancerId: string, agentModels?: string[]) {
     setBusyId(freelancerId);
     setError(null);
     try {
-      const { id } = await api<{ id: string }>("/api/contracts", { body: { quoteId: quote.id, freelancerId, deliveryUrl, allowParallel: false } });
+      const { id } = await api<{ id: string }>("/api/contracts", { body: { quoteId: quote.id, freelancerId, deliveryUrl, allowParallel: false, agentModels } });
       onContract(id);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -264,6 +266,8 @@ function PricingSection({ quote, onContract }: { quote: QuoteView; onContract: (
   }
 
   const base = pricing.base;
+  const scopeDrafts = quote.scope.status === "scoped" ? quote.scope.milestones : [];
+  const humanPrices = base.milestones.map((m) => m.priceMinor);
   const urlOk = /^https:\/\/[^/]+\.[^/]+/.test(deliveryUrl);
   return (
     <div className="space-y-6">
@@ -291,7 +295,32 @@ function PricingSection({ quote, onContract }: { quote: QuoteView; onContract: (
       <ErrorNote error={error} />
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {pricing.candidates.map(({ candidate, quote: q, receipts }, i) => (
+        {pricing.candidates.map((pc, i) => {
+          const { candidate, quote: q, receipts } = pc;
+          const offerButton = (ids?: string[]) => (
+            <button
+              type="button"
+              disabled={busyId !== null || !urlOk}
+              onClick={() => offer(candidate.id, ids)}
+              className="jelly mt-auto min-h-12 rounded-full border border-butter font-bold text-butter hover:bg-butter hover:text-plum disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-butter"
+            >
+              {busyId === candidate.id ? "Creating contract…" : `Offer to ${candidate.name.split(" ")[0]}`}
+            </button>
+          );
+          if (candidate.kind === "agent" && pc.agent && pricing.agentCatalog) {
+            return (
+              <AgentSlot
+                key={candidate.id}
+                pc={pc}
+                catalog={pricing.agentCatalog}
+                drafts={scopeDrafts}
+                humanPricesMinor={humanPrices}
+                humanBaseMinor={base.baseSubtotalMinor}
+                offerButton={offerButton}
+              />
+            );
+          }
+          return (
           <article key={candidate.id} className="rise flex flex-col gap-[18px] rounded-[28px] border border-line-soft bg-raised p-6 transition-[border-color,translate] duration-300 hover:-translate-y-1 hover:border-wine" style={{ animationDelay: `${i * 110}ms` }}>
             <div className="flex items-center gap-3.5">
               <span aria-hidden className="relative size-[52px] flex-none">
@@ -327,18 +356,36 @@ function PricingSection({ quote, onContract }: { quote: QuoteView; onContract: (
                 ))}
               </div>
             </details>
-            <button
-              type="button"
-              disabled={busyId !== null || !urlOk}
-              onClick={() => offer(candidate.id)}
-              className="jelly mt-auto min-h-12 rounded-full border border-butter font-bold text-butter hover:bg-butter hover:text-plum disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-butter"
-            >
-              {busyId === candidate.id ? "Creating contract…" : `Offer to ${candidate.name.split(" ")[0]}`}
-            </button>
+            {offerButton()}
           </article>
-        ))}
+          );
+        })}
       </div>
       {!urlOk && <p className="label text-subtle">Add a delivery link above to make an offer</p>}
     </div>
+  );
+}
+
+/** BuildBot's card plus, when open, the full model list on its own row under the cards. */
+function AgentSlot({ pc, catalog, drafts, humanPricesMinor, humanBaseMinor, offerButton }: {
+  pc: PricedCandidate;
+  catalog: AgentCatalogView;
+  drafts: MilestoneDraft[];
+  humanPricesMinor: number[];
+  humanBaseMinor: number;
+  offerButton: (ids?: string[]) => React.ReactNode;
+}) {
+  const [ids, setIds] = useState<string[]>(() => pc.agent?.ladder.map((r) => r.modelId) ?? []);
+  const [picking, setPicking] = useState(false);
+  const { quote, error } = useAgentQuote(catalog, drafts, ids, pc.candidate.ownerName ?? "the agent's owner", humanPricesMinor);
+  return (
+    <>
+      <AgentCard pc={pc} quote={quote} error={error} humanBaseMinor={humanBaseMinor} picking={picking} onPick={() => setPicking(!picking)} offer={offerButton(quote ? ids : undefined)} />
+      {picking && (
+        <div className="md:col-span-2 lg:col-span-3">
+          <AgentModelPicker catalog={catalog} drafts={drafts} ids={ids} onChange={setIds} />
+        </div>
+      )}
+    </>
   );
 }

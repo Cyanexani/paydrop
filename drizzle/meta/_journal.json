@@ -36,6 +36,13 @@
       "when": 1794233866066,
       "tag": "0004_change_request_proposer",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1794288611328,
+      "tag": "0005_agent_runs",
+      "breakpoints": true
     }
   ]
 }

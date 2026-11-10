@@ -1,6 +1,7 @@
 import { asc, eq } from "drizzle-orm";
 import type { Db } from "@/db/client";
-import { deliveries, users } from "@/db/schema";
+import { deliveries, users, type AgentRun } from "@/db/schema";
+import type { AgentPlan } from "@/lib/agents/estimate";
 import { buildMilestone, type SiteFiles } from "@/lib/ai/agent-worker";
 import { loadMilestoneFor } from "./contracts";
 import { AppError, badRequest, forbidden, newId } from "./errors";
@@ -27,12 +28,28 @@ export async function runAgent(db: Db, viewer: Viewer, milestoneId: string, base
   if (role !== "agent_owner" && viewer.id !== worker.id) throw forbidden("Only the agent's owner can start it");
   if (!["funded", "changes_requested"].includes(state.status)) throw badRequest("The agent works only on funded milestones");
   const runs = (await db.select({ id: deliveries.id }).from(deliveries).where(eq(deliveries.milestoneId, milestoneId))).length;
-  if (runs >= MAX_AGENT_RUNS) throw new AppError(409, "agent_limit", `BuildBot has used its ${MAX_AGENT_RUNS} attempts; reassign the milestone to a person`);
+  // Each attempt climbs one rung of the model ladder locked at signing: cheapest model first.
+  const plan = (row.pricing as { agentPlan?: AgentPlan }).agentPlan;
+  const limit = plan ? Math.min(MAX_AGENT_RUNS, plan.ladder.length) : MAX_AGENT_RUNS;
+  if (runs >= limit) {
+    throw new AppError(409, "agent_limit", plan ? `BuildBot has tried every model on its ladder; reassign the milestone to a person` : `BuildBot has used its ${MAX_AGENT_RUNS} attempts; reassign the milestone to a person`);
+  }
+  const rung = plan?.ladder[runs];
 
   const previous = await siteFiles(db, contract.id);
-  const { files, notes, mode } = await buildMilestone(contract.title, row.draft, previous);
-  await db.insert(deliveries).values({ id: newId("dl"), milestoneId, contractId: contract.id, workerId: worker.id, html: JSON.stringify(files) });
+  const { files, notes, mode, usage } = await buildMilestone(contract.title, row.draft, previous, rung?.modelId);
+  const run: AgentRun = {
+    rung: runs + 1,
+    modelId: mode === "openrouter" && rung ? rung.modelId : mode === "claude" ? "anthropic (built-in)" : "demo-template",
+    modelName: mode === "openrouter" && rung ? rung.name : mode === "claude" ? "Claude (built-in)" : "Demo template (no model called)",
+    mode: mode === "mock" ? "demo" : mode,
+    inputTokens: usage?.inputTokens ?? null,
+    outputTokens: usage?.outputTokens ?? null,
+    costUsd: mode === "mock" ? 0 : (usage?.costUsd ?? null),
+    estimatedUsd: plan?.rungCostsUsd[runs] ?? null,
+  };
+  await db.insert(deliveries).values({ id: newId("dl"), milestoneId, contractId: contract.id, workerId: worker.id, html: JSON.stringify(files), run });
   // The agent submits like any freelancer; the state machine refuses it anything that moves money.
   const submitted = await submitWork(db, worker, milestoneId, { evidenceUrl: `${deliveryBase(baseUrl, contract.id)}/` });
-  return { ...submitted, files: Object.keys(files), notes, mode };
+  return { ...submitted, files: Object.keys(files), notes, mode, run };
 }

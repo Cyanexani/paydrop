@@ -225,6 +225,12 @@ describe("full milestone lifecycle", () => {
     const view = await getContractView(db, ravi, id);
     expect(view.role).toBe("agent_owner");
     expect(view.contract.contractedOrigins).toEqual([`http://localhost:3000/deliveries/${id}`]);
+    // An agent is priced by the models on its ladder (cheapest first), not by hours.
+    const plan = view.milestones[0].agentPlan!;
+    expect(plan.ladder).toHaveLength(3);
+    expect(plan.rungCostsUsd[0]).toBeLessThanOrEqual(plan.rungCostsUsd[2]);
+    expect(view.milestones[0].receipt.fairBand).toMatch(/^Priced by model cost/);
+    expect(view.contract.subtotalMinor).toBe(view.milestones.reduce((a, x) => a + x.priceMinor, 0));
     await acceptContract(db, ravi, id);
 
     const m = view.milestones[0];
@@ -234,6 +240,9 @@ describe("full milestone lifecycle", () => {
 
     const run = await runAgent(db, ravi, m.id, "http://localhost:3000");
     expect(run.files).toEqual(expect.arrayContaining(["/", "/classes", "/contact", "/sitemap.xml"]));
+    // No OpenRouter key in tests: rung 1 ran as the offline demo build, with its model estimate recorded.
+    expect(run.run).toMatchObject({ rung: 1, mode: "demo", costUsd: 0, estimatedUsd: plan.rungCostsUsd[0] });
+    expect((await getContractView(db, ravi, id)).milestones[0].agentRuns).toHaveLength(1);
     expect((await db.select().from(milestones).where(eq(milestones.id, m.id)))[0].status).toBe("verified");
 
     await approveRelease(db, client, m.id);
