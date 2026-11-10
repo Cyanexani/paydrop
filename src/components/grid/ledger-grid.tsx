@@ -95,7 +95,7 @@ export function LedgerGrid() {
                 <span className="flex items-center gap-2 text-[13px] font-medium text-muted"><span className="sw" style={{ background: t.color }} />{t.label}</span>
                 <span className="text-xs text-subtle">{t.count} milestone{t.count === 1 ? "" : "s"}</span>
               </div>
-              <span className="money text-2xl"><CountUp minor={t.minor} /></span>
+              <span className="money text-4xl leading-none" style={{ color: t.ink }}><CountUp minor={t.minor} /></span>
               <p className="text-[13px] leading-snug text-subtle">{t.note}</p>
             </div>
           ))}

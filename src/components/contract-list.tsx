@@ -50,7 +50,7 @@ export function ContractList() {
       {rows?.length === 0 && (
         <Card className="flex flex-col items-center gap-4 px-6 py-14 text-center">
           <div className="space-y-1">
-            <p className="text-base font-semibold">No contracts yet</p>
+            <p className="cond text-2xl font-extrabold">No contracts yet</p>
             <p className="text-sm text-muted">Scope your first project to create one.</p>
           </div>
           <Link className="jelly inline-flex min-h-10 items-center gap-2 rounded-lg bg-butter px-4 text-sm font-semibold text-plum hover:bg-white" href="/new">Start a project <span aria-hidden>→</span></Link>
@@ -75,7 +75,7 @@ export function ContractList() {
                     className="group grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-6 gap-y-2 px-5 py-4 transition-colors hover:bg-white/5 md:grid-cols-[minmax(0,1fr)_150px_130px_150px]"
                   >
                     <span className="flex min-w-0 flex-col gap-0.5">
-                      <strong className="truncate text-[15px] font-semibold group-hover:text-butter">{c.title}</strong>
+                      <strong className="cond truncate text-xl font-bold group-hover:text-butter">{c.title}</strong>
                       <span className="truncate text-[13px] text-subtle">
                         {c.clientName} → {c.freelancerName} · {new Date(c.createdAt).toLocaleDateString("en-IN", { dateStyle: "medium" })}
                       </span>
@@ -92,7 +92,7 @@ export function ContractList() {
                     </span>
                     <span className="max-md:col-start-1 max-md:row-start-2"><StatusPill status={c.status} /></span>
                     <span className="flex flex-col items-end gap-0.5 max-md:row-span-2 max-md:row-start-1 max-md:col-start-2">
-                      <span className="money text-[15px]">{formatMoney(paid)}</span>
+                      <span className="money text-2xl leading-none">{formatMoney(paid)}</span>
                       <span className="text-xs text-subtle">of {formatMoney(c.subtotalMinor)}</span>
                     </span>
                   </Link>

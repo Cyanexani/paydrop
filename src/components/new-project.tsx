@@ -44,7 +44,7 @@ export function NewProject() {
       <PageHeader title="New project">
         Describe the work in plain language. It is scoped into milestones, and each price is computed from the estimated hours.
       </PageHeader>
-      <section className="poster max-w-3xl">
+      <section className="max-w-3xl rounded-xl border border-line-soft bg-raised">
         <form onSubmit={submit} className="flex flex-col gap-5 p-5 sm:p-6">
           <label className="flex flex-col gap-1.5">
             <span className="text-sm font-medium">What do you need built?</span>
@@ -162,14 +162,14 @@ function QuoteResult({ quote, onContract }: { quote: QuoteView; onContract: (id:
       <div className="space-y-5">
         <div className="flex flex-wrap items-start justify-between gap-5 rounded-xl border border-line-soft bg-raised p-5 shadow-[var(--shadow-card)]">
           <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-            <h2 className="text-xl font-semibold tracking-tight">{scope.projectTitle}</h2>
+            <h2 className="cond text-3xl font-extrabold">{scope.projectTitle}</h2>
             <p className="max-w-3xl text-sm leading-relaxed text-muted">{scope.summary}</p>
             <span className="pt-1 text-xs text-subtle">{n} milestones · {hours[0]}–{hours[1]} hours</span>
             {badge}
           </div>
           {priced && (
             <div className="text-right">
-              <span className="money block text-3xl">{formatMoney(priced.baseSubtotalMinor)}</span>
+              <span className="money block text-5xl leading-none text-butter">{formatMoney(priced.baseSubtotalMinor)}</span>
               <span className="text-xs text-subtle">Base pay for this scope · + 5% fee</span>
             </div>
           )}
@@ -180,9 +180,9 @@ function QuoteResult({ quote, onContract }: { quote: QuoteView; onContract: (id:
             <li key={m.title} className="flex flex-col gap-2.5 rounded-xl border border-line-soft bg-raised p-5 shadow-[var(--shadow-card)]">
               <div className="flex items-baseline justify-between gap-2">
                 <span className="text-xs font-medium text-subtle">Milestone {i + 1} · {m.durationDays} days</span>
-                {values[i] !== null && <span className="money text-base">{formatMoney(values[i]!)}</span>}
+                {values[i] !== null && <span className="money text-2xl leading-none">{formatMoney(values[i]!)}</span>}
               </div>
-              <h3 className="text-base font-semibold">{m.title}</h3>
+              <h3 className="cond text-xl font-bold">{m.title}</h3>
               <span className="label text-subtle">{SKILL_LABELS[m.skill]} · {m.estimate.optimistic}/{m.estimate.likely}/{m.estimate.pessimistic} hrs</span>
               <ul className="space-y-2 text-sm leading-snug text-muted">
                 {m.criteria.map((c) => (
@@ -241,7 +241,7 @@ function PricingSection({ quote, onContract }: { quote: QuoteView; onContract: (
   return (
     <div className="space-y-6">
       <div className="space-y-1.5">
-        <h2 className="text-lg font-semibold">Choose who does the work</h2>
+        <h2 className="cond text-[28px] font-extrabold">Choose who does the work</h2>
         <p className="max-w-3xl text-sm leading-relaxed text-muted">
           Same work, same base pay: everyone earns {formatMoney(base.baseSubtotalMinor)} for this scope ({base.expectedHours.toFixed(1)} expected hours
           {base.urgency.multiplier > 1 ? `, ×${base.urgency.multiplier.toFixed(2)} urgency` : ""}). A premium is paid only for a verified track record, shown line by line on the receipt.
@@ -300,7 +300,7 @@ function PricingSection({ quote, onContract }: { quote: QuoteView; onContract: (
             </div>
             <div className="flex items-baseline justify-between gap-2 border-y border-line-soft py-3">
               <span className="label text-subtle">+ {formatMoney(q.feeMinor)} fee</span>
-              <span className="money text-xl">{formatMoney(q.subtotalMinor)}</span>
+              <span className="money text-3xl leading-none">{formatMoney(q.subtotalMinor)}</span>
             </div>
             <p className="text-sm leading-normal text-muted">{candidate.why}</p>
             {q.budget && !q.budget.withinBudget && (

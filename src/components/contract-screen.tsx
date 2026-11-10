@@ -107,14 +107,14 @@ export function ContractScreen({ params }: { params: Promise<{ id: string }> }) 
             {view.clientName} → {view.freelancer?.name}{view.freelancer?.kind === "agent" ? " (AI agent)" : ""} · {contract.tier.name} tier
             {contract.standing.verifiedMilestones > 0 ? ` · VRS ${contract.standing.vrs}` : ""}
           </span>
-          <h1 className="cond max-w-4xl text-2xl font-semibold leading-tight">{contract.title}</h1>
+          <h1 className="cond max-w-4xl text-4xl font-extrabold leading-tight sm:text-5xl">{contract.title}</h1>
           <div className="flex flex-wrap items-center gap-3">
             <StatusPill status={contract.status} />
             <span className="label text-subtle">You are the {role.replace("_", " ")}</span>
           </div>
         </div>
         <div className="flex flex-col items-end gap-1.5 text-right">
-          <span className="money text-2xl"><CountUp minor={paidMinor} /></span>
+          <span className="money text-5xl leading-none text-butter"><CountUp minor={paidMinor} /></span>
           <span className="label text-subtle">released of {formatMoney(contract.subtotalMinor)} · + {formatMoney(contract.feeMinor)} fee</span>
         </div>
       </section>
@@ -126,7 +126,7 @@ export function ContractScreen({ params }: { params: Promise<{ id: string }> }) 
           <span aria-hidden className={`size-2.5 rounded-full ${move.yours ? "beat bg-butter" : "bg-wine"}`} />
           {move.yours ? "Your move" : "Next"}
         </span>
-        <p key={move.text} className="min-w-0 flex-1 text-base font-semibold">{move.text}</p>
+        <p key={move.text} className="cond min-w-0 flex-1 text-xl font-bold">{move.text}</p>
         {move.milestone && (
           <button
             type="button"

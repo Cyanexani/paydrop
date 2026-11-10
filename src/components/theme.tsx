@@ -21,9 +21,9 @@ function apply(choice: ThemeChoice) {
 export function readChoice(): ThemeChoice {
   try {
     const v = localStorage.getItem(KEY);
-    return v === "light" || v === "dark" ? v : "system";
+    return v === "light" || v === "system" ? v : "dark";
   } catch {
-    return "system";
+    return "dark";
   }
 }
 
@@ -97,7 +97,7 @@ export function ThemeToggle() {
       onClick={() => setThemeChoice(next)}
       aria-label={`Switch to ${next} theme`}
       title={`Switch to ${next} theme`}
-      className="grid size-9 place-items-center rounded-lg text-muted transition-colors hover:bg-white/5 hover:text-paper"
+      className="jelly grid size-10 place-items-center rounded-full border border-line text-muted transition-colors hover:border-butter hover:text-paper"
     >
       {theme === "dark" ? (
         <svg aria-hidden viewBox="0 0 24 24" className="size-[18px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

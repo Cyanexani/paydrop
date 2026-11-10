@@ -7,12 +7,12 @@ export function Button({
 }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "primary" | "secondary" | "danger" }) {
   const styles = {
     primary: "bg-butter text-plum shadow-sm hover:bg-white disabled:opacity-50",
-    secondary: "border border-line bg-raised text-paper hover:bg-well",
+    secondary: "border border-paper/35 text-paper hover:border-paper/70",
     danger: "border border-danger/40 text-[#ffc2c2] hover:bg-danger/10",
   }[variant];
   return (
     <button
-      className={`jelly inline-flex min-h-10 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-magenta disabled:cursor-not-allowed ${styles} ${className}`}
+      className={`jelly inline-flex min-h-10 items-center justify-center gap-2 rounded-lg px-5 py-2 text-[15px] font-bold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-magenta disabled:cursor-not-allowed ${styles} ${className}`}
       {...props}
     />
   );
@@ -96,8 +96,8 @@ export function PageHeader({ title, aside, children }: { eyebrow?: string; title
   return (
     <div className="flex flex-wrap items-end justify-between gap-4 border-b border-line-soft pb-5">
       <div className="flex min-w-0 flex-col gap-1.5">
-        <h1 className="cond text-2xl font-semibold [&_br]:hidden">{title}</h1>
-        {(aside || children) && <div className="max-w-2xl text-sm leading-relaxed text-muted">{aside ?? children}</div>}
+        <h1 className="cond text-4xl font-extrabold sm:text-5xl [&_br]:hidden">{title}</h1>
+        {(aside || children) && <div className="max-w-2xl text-[15px] leading-relaxed text-muted">{aside ?? children}</div>}
       </div>
     </div>
   );
@@ -107,11 +107,11 @@ export function PageHeader({ title, aside, children }: { eyebrow?: string; title
 export function SectionHead({ title, note }: { title: ReactNode; note?: ReactNode }) {
   return (
     <div className="flex flex-wrap items-baseline justify-between gap-3">
-      <h2 className="cond text-lg font-semibold">{title}</h2>
+      <h2 className="cond text-[28px] font-extrabold">{title}</h2>
       {note && <span className="label text-subtle">{note}</span>}
     </div>
   );
 }
 
 export const inputClass =
-  "w-full rounded-lg border border-line bg-[var(--c-input)] px-3 py-2.5 text-sm text-paper placeholder:text-subtle/70 transition-colors focus:border-magenta focus:outline-none focus:ring-4 focus:ring-magenta/15";
+  "w-full rounded-lg border border-line bg-[var(--c-input)] px-4 py-3 text-[15px] text-paper placeholder:text-subtle/70 transition-colors focus:border-magenta focus:outline-none focus:ring-4 focus:ring-magenta/15";

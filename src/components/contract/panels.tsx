@@ -27,7 +27,7 @@ export function MessagesPanel({ view, onChange, onError }: { view: ContractView;
   return (
     <Card className="flex flex-col gap-4">
       <div className="space-y-1.5">
-        <h2 className="cond text-lg font-semibold">Messages</h2>
+        <h2 className="cond text-2xl font-extrabold">Messages</h2>
         <p className="text-sm text-subtle">The client&apos;s requests are checked against the contract. WhatsApp and email come in through Zapier.</p>
       </div>
       <ul ref={list} className="flex max-h-96 flex-col gap-3 overflow-y-auto pr-1">
@@ -86,7 +86,7 @@ export function ChangeRequestsPanel({ view, viewerId, onChange, onError }: { vie
     <Card className="space-y-4">
       <div className="flex items-start justify-between gap-3">
         <div className="space-y-1.5">
-          <h2 className="cond text-lg font-semibold">Change requests</h2>
+          <h2 className="cond text-2xl font-extrabold">Change requests</h2>
           <p className="text-sm text-subtle">Out-of-scope work becomes a priced change order; dragging a deadline on the timeline proposes a schedule change.</p>
         </div>
         {!isClient && view.contract.status === "active" && <Button variant="secondary" onClick={() => setOpen(!open)}>Raise one</Button>}
@@ -235,7 +235,7 @@ export function AuditTrail({ view }: { view: ContractView }) {
   return (
     <Card className="space-y-4">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <h2 className="cond text-lg font-semibold">Audit trail</h2>
+        <h2 className="cond text-2xl font-extrabold">Audit trail</h2>
         <span className="label text-subtle">{view.events.length} events · every money move is logged</span>
       </div>
       {view.events.length === 0 ? (

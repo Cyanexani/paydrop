@@ -7,7 +7,7 @@ import { api, type Session } from "./api";
 import { hardNavigate, initials } from "./auth/forms";
 import { GooLoader } from "./goo";
 
-const AVATAR = { client: "#4f46e5", freelancer: "#0f766e" } as const;
+const AVATAR = { client: "#fff7ad", freelancer: "#ffb3ae" } as const;
 
 /** Top-right: sign-in links, or the signed-in account's menu. */
 export function AccountMenu() {
@@ -68,7 +68,7 @@ export function AccountMenu() {
         onClick={() => setOpen(!open)}
         className="flex items-center gap-2.5 rounded-lg py-1 pl-1 pr-2 transition-colors hover:bg-white/5"
       >
-        <span aria-hidden className="grid size-7 place-items-center rounded-full text-[13px] font-semibold text-white" style={{ background: AVATAR[v.role] }}>{initials(v.name)}</span>
+        <span aria-hidden className="grid size-7 place-items-center rounded-full text-[13px] font-semibold text-plum" style={{ background: AVATAR[v.role] }}>{initials(v.name)}</span>
         <span className="max-w-[10rem] truncate text-sm font-semibold max-sm:hidden">{v.name}</span>
         {v.demo && <span className="rounded-md bg-magenta/15 px-1.5 py-0.5 text-[11px] font-medium text-magenta max-sm:hidden">Demo</span>}
         <svg aria-hidden viewBox="0 0 24 24" className={`size-4 text-subtle transition-transform duration-300 ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
@@ -77,7 +77,7 @@ export function AccountMenu() {
       {open && (
         <div role="menu" aria-label="Account" className="rise absolute right-0 top-[calc(100%+8px)] z-50 w-[280px] rounded-xl border border-line bg-raised p-1.5 shadow-[0_16px_40px_-12px_rgb(0_0_0/0.35)]">
           <div className="flex items-center gap-3 border-b border-line-soft px-3 pb-3 pt-2">
-            <span aria-hidden className="grid size-10 flex-none place-items-center rounded-full text-sm font-semibold text-white" style={{ background: AVATAR[v.role] }}>{initials(v.name)}</span>
+            <span aria-hidden className="grid size-10 flex-none place-items-center rounded-full text-sm font-semibold text-plum" style={{ background: AVATAR[v.role] }}>{initials(v.name)}</span>
             <span className="min-w-0">
               <span className="block truncate font-semibold">{v.name}</span>
               <span className="block truncate text-xs text-subtle">{v.demo ? "Demo account · no password" : v.email}</span>
@@ -93,7 +93,7 @@ export function AccountMenu() {
               <span className="block px-3 pb-1 pt-2 text-xs font-medium text-subtle">Switch demo account</span>
               {session.personas.filter((p) => p.id !== v.id).map((p) => (
                 <button key={p.id} role="menuitem" type="button" className={item} disabled={busy !== null} onClick={() => switchTo(p.id)}>
-                  <span aria-hidden className="grid size-7 flex-none place-items-center rounded-full text-[11px] font-semibold text-white" style={{ background: AVATAR[p.role] }}>
+                  <span aria-hidden className="grid size-7 flex-none place-items-center rounded-full text-[11px] font-semibold text-plum" style={{ background: AVATAR[p.role] }}>
                     {busy === p.id ? <GooLoader kind="orbit" size={5} label="Switching" showLabel={false} /> : initials(p.name)}
                   </span>
                   <span className="min-w-0 truncate">{p.name}</span>

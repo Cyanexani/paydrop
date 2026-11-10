@@ -157,7 +157,7 @@ function DemoAccounts() {
               disabled={busy !== null}
               className="flex w-full items-center gap-3 rounded-lg border border-line-soft bg-well px-3 py-2.5 text-left transition-colors hover:border-wine disabled:opacity-60"
             >
-              <span aria-hidden className="grid size-9 flex-none place-items-center rounded-full text-sm font-semibold text-white" style={{ background: p.role === "client" ? "#4f46e5" : "#0f766e" }}>
+              <span aria-hidden className="grid size-9 flex-none place-items-center rounded-full text-sm font-semibold text-plum" style={{ background: p.role === "client" ? "#fff7ad" : "#ffb3ae" }}>
                 {busy === p.id ? <GooLoader kind="orbit" size={6} label="Signing in" showLabel={false} /> : initials(p.name)}
               </span>
               <span className="min-w-0">
@@ -224,8 +224,8 @@ export function SignupForm() {
         <div className="grid grid-cols-2 gap-2">
           {(
             [
-              ["client", "Hire", "Get work done, pay per milestone", "var(--tone-held)"],
-              ["freelancer", "Work", "Get paid when the work passes", "var(--tone-paid)"],
+              ["client", "Hire", "Get work done, pay per milestone", "var(--tone-paid)"],
+              ["freelancer", "Work", "Get paid when the work passes", "var(--tone-check)"],
             ] as const
           ).map(([value, title, sub, color]) => (
             <label

@@ -71,8 +71,8 @@ const PROGRESS: Record<string, number> = {
 // The app's swatch colours: magenta = held at PayPal, peach = being checked, butter = paid.
 // Bryntum wants literal colours, so each theme gets its own set (matching the --tone-* tokens).
 const TONES = {
-  dark: { paid: "#34d399", check: "#fbbf24", held: "#38bdf8", bad: "#f87171", neutral: "#4b5565", pending: "#6b7485", project: "#5b63f5" },
-  light: { paid: "#10b981", check: "#f59e0b", held: "#0ea5e9", bad: "#dc2626", neutral: "#c3cad5", pending: "#9aa3b2", project: "#4f46e5" },
+  dark: { paid: "#fff7ad", check: "#ffb3ae", held: "#ff49c1", bad: "#ff6b6b", neutral: "#6a4560", pending: "#8a6280", project: "#6a1452" },
+  light: { paid: "#f2c230", check: "#f0857d", held: "#e6249f", bad: "#e5484d", neutral: "#cbb3c3", pending: "#b39aab", project: "#b5107b" },
 } as const;
 type ToneKey = keyof (typeof TONES)["dark"];
 const STATUS_TONE: Record<string, ToneKey> = {

@@ -16,28 +16,27 @@ export function ensureGridModules() {
   registered = true;
 }
 
-const shared = { fontFamily: "inherit", fontSize: 13, headerFontWeight: 600, wrapperBorderRadius: 10 } as const;
+const shared = { fontFamily: "inherit", fontSize: 13, headerFontWeight: 600, wrapperBorderRadius: 18, accentColor: "#ff49c1" } as const;
 
-// Grids in the app's own surface colours, built once per theme.
+// Plum-tinted grids for each theme, built once.
 const darkTheme = themeQuartz.withPart(colorSchemeDark).withParams({
   ...shared,
-  accentColor: "#8b96ff",
-  backgroundColor: "#12151c",
-  foregroundColor: "#eef0f4",
-  headerBackgroundColor: "#181c25",
-  oddRowBackgroundColor: "#12151c",
-  borderColor: "#272c38",
-  chromeBackgroundColor: "#181c25",
+  backgroundColor: "#160a13",
+  foregroundColor: "#fff1f7",
+  headerBackgroundColor: "#2c0f27",
+  oddRowBackgroundColor: "#1a0d17",
+  borderColor: "rgb(255 255 255 / 0.08)",
+  chromeBackgroundColor: "#1a0d17",
 });
 const lightTheme = themeQuartz.withPart(colorSchemeLight).withParams({
   ...shared,
-  accentColor: "#4f46e5",
+  accentColor: "#c2187f",
   backgroundColor: "#ffffff",
-  foregroundColor: "#111827",
-  headerBackgroundColor: "#f6f7f9",
-  oddRowBackgroundColor: "#ffffff",
-  borderColor: "#e8ebf0",
-  chromeBackgroundColor: "#f6f7f9",
+  foregroundColor: "#24081f",
+  headerBackgroundColor: "#f5ebf1",
+  oddRowBackgroundColor: "#fcf7fa",
+  borderColor: "#eadbe4",
+  chromeBackgroundColor: "#fbf5f8",
 });
 
 export function useGridTheme() {
