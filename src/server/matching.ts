@@ -2,6 +2,7 @@ import { eq, inArray, sql } from "drizzle-orm";
 import type { Db } from "@/db/client";
 import { contracts, users } from "@/db/schema";
 import { SKILL_LABELS, type Skill } from "@/lib/pricing/config";
+import { presenceOf, type Presence } from "./auth/profile";
 import { standingFor } from "./reputation";
 
 /** Top freelancers take everything: each freelancer holds at most this many open contracts. */
@@ -18,6 +19,7 @@ export interface Candidate {
   standing: ReturnType<typeof standingFor>["standing"];
   tier: ReturnType<typeof standingFor>["tier"];
   why: string;
+  presence: Presence;
 }
 
 export async function matchFreelancers(db: Db, skills: Skill[], primary: Skill, clientId: string, now: Date): Promise<Candidate[]> {
@@ -50,6 +52,7 @@ export async function matchFreelancers(db: Db, skills: Skill[], primary: Skill, 
         standing,
         tier,
         why: `${tier.name} tier · reputation ${standing.vrs}/100 · ${record}${u.kind === "agent" && owner ? ` · registered to ${owner}` : ""}`,
+        presence: presenceOf(u, now),
       };
     })
     .sort((a, b) => b.standing.vrs - a.standing.vrs);

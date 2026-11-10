@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { useMemo } from "react";
 import type { MilestoneDraft } from "@/lib/ai/scoping-schema";
 import { AgentPricingError, formatUsd, projectCostUsd, quoteAgent, resolveLadder, type AgentQuote } from "@/lib/agents/estimate";
@@ -43,7 +44,7 @@ export function AgentCard({ pc, quote, error, humanBaseMinor, picking, onPick, o
           <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="8" width="14" height="11" rx="2.5" /><path d="M12 4v4M9.5 13v1.5M14.5 13v1.5" /></svg>
         </span>
         <div className="flex min-w-0 flex-col gap-0.5">
-          <strong className="text-[15px]">{candidate.name}</strong>
+          <Link href={`/u/${candidate.id}`} target="_blank" className="text-[15px] font-bold underline-offset-2 hover:text-butter hover:underline">{candidate.name}</Link>
           <span className="label text-subtle">AI agent{candidate.ownerName ? ` · owned by ${candidate.ownerName}` : ""}</span>
         </div>
       </div>

@@ -68,7 +68,10 @@ export function AccountMenu() {
         onClick={() => setOpen(!open)}
         className="flex items-center gap-2.5 rounded-lg py-1 pl-1 pr-2 transition-colors hover:bg-white/5"
       >
-        <span aria-hidden className="grid size-7 place-items-center rounded-full text-[13px] font-semibold text-plum" style={{ background: AVATAR[v.role] }}>{initials(v.name)}</span>
+        <span aria-hidden className="relative grid size-7 place-items-center rounded-full text-[13px] font-semibold text-plum" style={{ background: AVATAR[v.role] }}>
+          {initials(v.name)}
+          <span className="absolute -bottom-0.5 -right-0.5 size-2.5 rounded-full bg-[#3ddc84] shadow-[0_0_0_2px_var(--color-ink)]" />
+        </span>
         <span className="max-w-[10rem] truncate text-sm font-semibold max-sm:hidden">{v.name}</span>
         {v.demo && <span className="rounded-md bg-magenta/15 px-1.5 py-0.5 text-[11px] font-medium text-magenta max-sm:hidden">Demo</span>}
         <svg aria-hidden viewBox="0 0 24 24" className={`size-4 text-subtle transition-transform duration-300 ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
@@ -81,12 +84,18 @@ export function AccountMenu() {
             <span className="min-w-0">
               <span className="block truncate font-semibold">{v.name}</span>
               <span className="block truncate text-xs text-subtle">{v.demo ? "Demo account · no password" : v.email}</span>
+              <span className="flex items-center gap-1.5 pt-0.5 text-xs font-semibold"><span aria-hidden className="size-2 rounded-full bg-[#3ddc84]" />Online now</span>
             </span>
           </div>
           <div className="py-1.5">
             <Link role="menuitem" href="/contracts" className={item} onClick={() => setOpen(false)}>Your contracts</Link>
             {v.role === "client" && <Link role="menuitem" href="/new" className={item} onClick={() => setOpen(false)}>New project</Link>}
             <Link role="menuitem" href="/ledger" className={item} onClick={() => setOpen(false)}>Money ledger</Link>
+            {v.role === "freelancer" && <Link role="menuitem" href={`/u/${v.id}`} className={item} onClick={() => setOpen(false)}>Your public profile</Link>}
+            <Link role="menuitem" href="/settings" className={item} onClick={() => setOpen(false)}>
+              Settings
+              {!v.demo && !v.emailVerified && <span className="ml-auto text-xs text-peach">Verify email</span>}
+            </Link>
           </div>
           {v.demo && session.personas.length > 1 && (
             <div className="border-t border-line-soft py-1.5">

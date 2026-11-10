@@ -50,6 +50,13 @@
       "when": 1794293748315,
       "tag": "0006_accounts_and_sessions",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1794299788674,
+      "tag": "0007_profiles_and_verification",
+      "breakpoints": true
     }
   ]
 }

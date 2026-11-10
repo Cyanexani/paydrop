@@ -1,3 +1,4 @@
+import { presenceOf } from "./auth/profile";
 import { and, asc, desc, eq, inArray, or } from "drizzle-orm";
 import { z } from "zod";
 import type { Db } from "@/db/client";
@@ -266,7 +267,7 @@ export async function getContractView(db: Db, viewer: Viewer, contractId: string
     contract,
     role,
     clientName: client?.name ?? "Client",
-    freelancer: freelancer ? { id: freelancer.id, name: freelancer.name, kind: freelancer.kind, headline: freelancer.headline } : null,
+    freelancer: freelancer ? { id: freelancer.id, name: freelancer.name, kind: freelancer.kind, headline: freelancer.headline, presence: presenceOf(freelancer) } : null,
     messages: msgs.map((m) => ({ id: m.id, channel: m.channel, sender: m.sender, body: m.body, scope: m.scope, changeRequestId: m.changeRequestId, at: m.createdAt.toISOString() })),
     changeRequests: crs.map((c) => ({
       id: c.id,

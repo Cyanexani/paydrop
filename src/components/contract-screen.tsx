@@ -12,6 +12,7 @@ import { MoneyStage, HELD, PAID, UNFUNDED, sumWhere } from "./contract/money-sta
 import { nextMove, stopNo } from "./contract/next-move";
 import { CountUp } from "./motion";
 import { Card, ErrorNote, PageHeader, SectionHead, StatusPill } from "./ui";
+import { PresenceBadge } from "./presence";
 import { GooBlock } from "./goo";
 
 // Browser-only widgets: load them on the client.
@@ -104,13 +105,16 @@ export function ContractScreen({ params }: { params: Promise<{ id: string }> }) 
       <section className="rise flex flex-wrap items-end justify-between gap-6">
         <div className="flex min-w-0 flex-col gap-3.5">
           <span className="label text-peach">
-            {view.clientName} → {view.freelancer?.name}{view.freelancer?.kind === "agent" ? " (AI agent)" : ""} · {contract.tier.name} tier
+            {view.clientName} →{" "}
+            {view.freelancer ? <Link href={`/u/${view.freelancer.id}`} className="underline underline-offset-2 hover:text-butter">{view.freelancer.name}</Link> : null}
+            {view.freelancer?.kind === "agent" ? " (AI agent)" : ""} · {contract.tier.name} tier
             {contract.standing.verifiedMilestones > 0 ? ` · reputation ${contract.standing.vrs}/100` : ""}
           </span>
           <h1 className="cond max-w-4xl text-4xl font-extrabold leading-tight sm:text-5xl">{contract.title}</h1>
           <div className="flex flex-wrap items-center gap-3">
             <StatusPill status={contract.status} />
             <span className="label text-subtle">You are the {role.replace("_", " ")}</span>
+            {view.freelancer && role !== "freelancer" && <PresenceBadge presence={view.freelancer.presence} kind={view.freelancer.kind} />}
           </div>
         </div>
         <div className="flex flex-col items-end gap-1.5 text-right">

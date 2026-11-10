@@ -24,6 +24,14 @@ export async function currentSession(db: Db): Promise<{ viewer: Viewer; demo: bo
   return s ? { viewer: s.user, demo: s.demo } : null;
 }
 
+/** The signed-in user plus the raw cookie token, for actions that must spare "this device". */
+export async function requireSession(db: Db): Promise<{ viewer: Viewer; demo: boolean; token: string }> {
+  const raw = await cookieToken();
+  const s = raw ? await sessionUser(db, raw) : null;
+  if (!raw || !s) throw new AppError(401, "signed_out", "Sign in to continue");
+  return { viewer: s.user, demo: s.demo, token: raw };
+}
+
 export async function currentViewer(db: Db): Promise<Viewer | null> {
   return (await currentSession(db))?.viewer ?? null;
 }

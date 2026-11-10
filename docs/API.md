@@ -55,3 +55,20 @@ curl -b jar -X POST $B/api/milestones/ms_…/order
 | `POST /api/cron/{job}` | scheduler (`Bearer CRON_SECRET`) | Background jobs |
 | `POST /api/admin/milestones/{id}/resolve` | admin (`x-admin-secret`) | Resolve a dispute |
 | `GET /api/health` | anyone | App and database health |
+
+## Account, profiles and presence
+
+| Method | Path | Who | What |
+| --- | --- | --- | --- |
+| GET | `/api/account` | signed in | The account as the settings page shows it |
+| POST | `/api/account` | signed in | Update name; freelancers also headline, skills, PayPal email |
+| POST | `/api/account/password` | signed in | Change password (`currentPassword`, `newPassword`); other devices are signed out |
+| GET | `/api/account/devices` | signed in | Signed-in devices, this one first |
+| POST | `/api/account/devices` | signed in | Sign out one other device (`sessionId`) or, without it, all others |
+| POST | `/api/account/verify-email` | signed in | Email a one-time verification link (24 hours) |
+| POST | `/api/auth/verify-email` | anyone with the link | Use the link's `token`; marks the email verified |
+| GET | `/api/profiles/{id}` | public | A freelancer's or agent's profile: badges, verified stats, recent verified work, presence |
+
+Demo accounts are read-only: profile, password and verification calls return `403 demo_read_only`.
+Verification links go out as an `auth.email_verification_requested` event on `ZAPIER_HOOK_URL` (a Zap emails them); without the hook they are printed to the server log in development and not sent in production.
+A user is "online" for five minutes after their last request; after that the profile shows "Active … ago".

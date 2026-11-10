@@ -61,8 +61,23 @@ export const users = pgTable("users", {
   /** scrypt hash; null for demo personas, which sign in only through the demo buttons */
   passwordHash: text("password_hash"),
   lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
+  /** Set when the owner opens the link we emailed to this address; cleared if the email changes. */
+  emailVerifiedAt: timestamp("email_verified_at", { withTimezone: true }),
+  /** Last request from any of this user's sessions (kept to the minute); drives "Online now". */
+  lastSeenAt: timestamp("last_seen_at", { withTimezone: true }),
   createdAt: createdAt(),
 }, (t) => [uniqueIndex("users_email_idx").on(t.email)]);
+
+/** One-time email verification links. Only the SHA-256 of the token is stored. */
+export const emailVerifications = pgTable("email_verifications", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull(),
+  /** The address the link was sent to; the link is void if the account's email has changed since. */
+  email: text("email").notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  usedAt: timestamp("used_at", { withTimezone: true }),
+  createdAt: createdAt(),
+});
 
 /** A signed-in browser. The cookie holds a random token; only its SHA-256 is stored here. */
 export const sessions = pgTable(

@@ -29,7 +29,7 @@ export async function api<T>(path: string, init?: { method?: string; body?: unkn
 }
 
 export interface Session {
-  viewer: { id: string; name: string; role: "client" | "freelancer"; kind: "human" | "agent"; email: string | null; demo: boolean } | null;
+  viewer: { id: string; name: string; role: "client" | "freelancer"; kind: "human" | "agent"; email: string | null; emailVerified: boolean; demo: boolean } | null;
   demoEnabled: boolean;
   personas: Array<{ id: string; name: string; role: "client" | "freelancer"; kind: "human" | "agent"; headline: string | null }>;
 }

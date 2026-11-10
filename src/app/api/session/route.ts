@@ -19,7 +19,7 @@ export const GET = route(async () => {
         .orderBy(asc(users.role), asc(users.name))
     : [];
   return {
-    viewer: s ? { id: s.viewer.id, name: s.viewer.name, role: s.viewer.role, kind: s.viewer.kind, email: s.viewer.email, demo: s.demo } : null,
+    viewer: s ? { id: s.viewer.id, name: s.viewer.name, role: s.viewer.role, kind: s.viewer.kind, email: s.viewer.email, emailVerified: s.viewer.emailVerifiedAt !== null, demo: s.demo } : null,
     personas,
     demoEnabled,
   };

@@ -2,7 +2,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { and, eq, gt, isNull, lt } from "drizzle-orm";
 import { z } from "zod";
 import type { Db } from "@/db/client";
-import { passwordResets, sessions, users } from "@/db/schema";
+import { emailVerifications, passwordResets, sessions, users } from "@/db/schema";
 import { SKILLS } from "@/lib/pricing/config";
 import { AppError, badRequest, newId } from "../errors";
 import { emitEvent } from "../integrations";
@@ -38,9 +38,14 @@ export async function sessionUser(db: Db, raw: string, now = new Date()): Promis
   if (!row) return null;
   const [user] = await db.select().from(users).where(eq(users.id, row.userId));
   if (!user) return null;
-  // Record activity at most once an hour, not on every request.
-  if (now.getTime() - row.lastSeenAt.getTime() > 3_600_000) {
+  // Record activity at most once a minute, not on every request: it drives "Online now" and the
+  // device list in Settings.
+  if (now.getTime() - row.lastSeenAt.getTime() > 60_000) {
     await db.update(sessions).set({ lastSeenAt: now }).where(eq(sessions.id, row.id));
+  }
+  if (!user.lastSeenAt || now.getTime() - user.lastSeenAt.getTime() > 60_000) {
+    await db.update(users).set({ lastSeenAt: now }).where(eq(users.id, user.id));
+    user.lastSeenAt = now;
   }
   return { user, demo: row.demo };
 }
@@ -56,6 +61,7 @@ export async function revokeAllSessions(db: Db, userId: string) {
 export async function pruneExpired(db: Db, now = new Date()) {
   await db.delete(sessions).where(lt(sessions.expiresAt, now));
   await db.delete(passwordResets).where(lt(passwordResets.expiresAt, now));
+  await db.delete(emailVerifications).where(lt(emailVerifications.expiresAt, now));
 }
 
 // ---------------------------------------------------------------- sign up

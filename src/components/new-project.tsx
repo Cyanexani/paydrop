@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { formatMoney } from "@/lib/money";
@@ -9,6 +10,7 @@ import type { MilestoneDraft } from "@/lib/ai/scoping-schema";
 import type { AgentCatalogView, PricedCandidate, QuoteView } from "@/server/quotes";
 import { AgentCard, AgentModelPicker, useAgentQuote } from "./agent-quote";
 import { GooLoader } from "./goo";
+import { PresenceBadge } from "./presence";
 import { Button, Card, ErrorNote, PageHeader, inputClass } from "./ui";
 
 const EXAMPLE =
@@ -294,15 +296,15 @@ function PricingSection({ quote, onContract }: { quote: QuoteView; onContract: (
                 {candidate.name.split(" ").map((w) => w[0]).slice(0, 2).join("")}
               </span>
               <div className="flex min-w-0 flex-col gap-0.5">
-                <strong className="text-[15px]">{candidate.name}</strong>
-                <span className="label text-subtle">{candidate.kind === "agent" ? "AI agent" : "Freelancer"}</span>
+                <Link href={`/u/${candidate.id}`} target="_blank" className="text-[15px] font-bold underline-offset-2 hover:text-butter hover:underline">{candidate.name}</Link>
+                <PresenceBadge presence={candidate.presence} kind={candidate.kind} />
               </div>
             </div>
             <div className="flex items-baseline justify-between gap-2 border-y border-line-soft py-3">
               <span className="label text-subtle">+ {formatMoney(q.feeMinor)} fee</span>
               <span className="money text-3xl leading-none">{formatMoney(q.subtotalMinor)}</span>
             </div>
-            <p className="text-sm leading-normal text-muted">{candidate.why}</p>
+            <p className="text-sm leading-normal text-muted">{candidate.why}. <Link href={`/u/${candidate.id}`} target="_blank" className="font-semibold text-peach underline-offset-2 hover:text-butter hover:underline">View profile</Link></p>
             {q.budget && !q.budget.withinBudget && (
               <p className="text-sm text-butter">
                 {formatMoney(q.budget.shortfallMinor)} over budget. Options: {q.budget.options.map((o) => o.replace("_", " ")).join(", ")}.
