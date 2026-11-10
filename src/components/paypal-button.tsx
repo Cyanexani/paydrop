@@ -8,7 +8,7 @@ interface PayPalButtonsInstance {
 }
 interface PayPalNamespace {
   Buttons(options: {
-    style?: Record<string, string>;
+    style?: Record<string, string | number | boolean>;
     createOrder: () => Promise<string>;
     onApprove: (data: { orderID: string }) => Promise<void>;
     onCancel?: () => void;
@@ -65,7 +65,7 @@ export function PayPalFundButton(props: {
       .then((paypal) => {
         if (cancelled || !ref.current) return;
         buttons = paypal.Buttons({
-          style: { layout: "horizontal", label: "pay", height: "40", tagline: "false" },
+          style: { layout: "horizontal", label: "pay", height: 40, tagline: false },
           createOrder: () => handlers.current.createOrder(),
           onApprove: (data) => handlers.current.onApprove(data.orderID),
           onCancel: () => handlers.current.onCancel(),
