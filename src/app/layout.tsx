@@ -28,7 +28,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="flex min-h-full flex-col">
         <GooFilters />
         <header className="sticky top-0 z-40 border-b border-line-soft bg-ink/85 backdrop-blur">
-          <div className="mx-auto flex min-h-14 w-full max-w-[1200px] flex-wrap items-center gap-x-8 gap-y-0 px-5">
+          <div className="mx-auto flex min-h-14 w-full max-w-[1200px] flex-wrap items-center gap-x-3 gap-y-0 px-5 sm:gap-x-8">
           <Link href="/" className="flex items-center gap-2.5 py-3" aria-label="MilestonePay home">
             <Logo />
             <span className="cond text-[22px] font-extrabold">milestone/pay</span>

@@ -163,14 +163,14 @@ function QuoteResult({ quote, onContract }: { quote: QuoteView; onContract: (id:
     <section className="space-y-10">
       <div className="space-y-5">
         <div className="flex flex-wrap items-start justify-between gap-5 rounded-xl border border-line-soft bg-raised p-5 shadow-[var(--shadow-card)]">
-          <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+          <div className="flex min-w-0 flex-1 flex-col gap-1.5 max-sm:basis-full">
             <h2 className="cond text-3xl font-extrabold">{scope.projectTitle}</h2>
             <p className="max-w-3xl text-sm leading-relaxed text-muted">{scope.summary}</p>
             <span className="pt-1 text-xs text-subtle">{n} milestones · {hours[0]}–{hours[1]} hours</span>
             {badge}
           </div>
           {priced && (
-            <div className="text-right">
+            <div className="sm:text-right">
               <span className="money block text-5xl leading-none text-butter">{formatMoney(priced.baseSubtotalMinor)}</span>
               <span className="text-xs text-subtle">Base pay for this scope · + 5% fee</span>
             </div>

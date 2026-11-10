@@ -71,7 +71,7 @@ export function SettingsScreen() {
           <ProfileSection account={account} onSaved={setAccount} />
           <EmailSection account={account} />
           {account.hasPassword && !account.demo && <PasswordSection />}
-          <DevicesSection />
+          <DevicesSection demo={account.demo} />
           <ThemeSection />
         </>
       )}
@@ -246,7 +246,7 @@ function PasswordSection() {
   );
 }
 
-function DevicesSection() {
+function DevicesSection({ demo }: { demo: boolean }) {
   const [devices, setDevices] = useState<Device[] | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -307,7 +307,7 @@ function DevicesSection() {
             {busy === "all" ? "Signing out…" : `Sign out ${others.length === 1 ? "the other device" : `all ${others.length} other devices`}`}
           </Button>
         )}
-        {devices !== null && others.length === 0 && !saved && <p className="text-sm text-subtle">You&apos;re only signed in here.</p>}
+        {devices !== null && others.length === 0 && !saved && <p className="text-sm text-subtle">{demo ? "Demo accounts are shared, so only this device is shown." : "You're only signed in here."}</p>}
         <Saved text={saved} />
       </div>
     </Section>

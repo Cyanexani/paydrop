@@ -72,3 +72,8 @@ curl -b jar -X POST $B/api/milestones/ms_…/order
 Demo accounts are read-only: profile, password and verification calls return `403 demo_read_only`.
 Verification links go out as an `auth.email_verification_requested` event on `ZAPIER_HOOK_URL` (a Zap emails them); without the hook they are printed to the server log in development and not sent in production.
 A user is "online" for five minutes after their last request; after that the profile shows "Active … ago".
+
+## Safety rules on submissions and scopes
+
+- `POST /api/milestones/{id}/submit` returns `400 blocked_url` when the link points to a private, loopback, link-local or cloud-metadata address. In production the checker's browser also refuses every request to such an address, including redirects and sub-resources. `CHECKER_ALLOW_PRIVATE=1` turns this off; it is off by default outside production so local fixtures work.
+- Every scoped milestone carries `briefQuote`, the words in the client's brief that ask for it. If the AI returns a quote that is not in the brief, the scope is retried once and then becomes a manual quote, so invented work is never priced.

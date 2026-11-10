@@ -104,7 +104,7 @@ export function ProfileScreen({ params }: { params: Promise<{ id: string }> }) {
           <ul className="divide-y divide-line-soft overflow-hidden rounded-xl border border-line-soft bg-raised">
             {p.recentWork.map((w, i) => (
               <li key={i} className="flex flex-wrap items-center gap-x-5 gap-y-2 px-5 py-4">
-                <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                <span className="flex min-w-0 flex-1 flex-col gap-0.5 max-sm:basis-full">
                   <strong className="truncate text-[15px] first-letter:uppercase">{w.title}</strong>
                   <span className="text-[13px] text-subtle">
                     {w.project ? `${w.project} · ` : ""}{new Date(w.completedAt).toLocaleDateString("en-IN", { dateStyle: "medium" })}
