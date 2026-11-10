@@ -186,11 +186,28 @@ export async function declineContract(db: Db, viewer: Viewer, contractId: string
 export async function listContracts(db: Db, viewer: Viewer) {
   const owned = await db.select({ id: users.id }).from(users).where(eq(users.ownerId, viewer.id));
   const ids = [viewer.id, ...owned.map((o) => o.id)];
-  return db
+  const rows = await db
     .select()
     .from(contracts)
     .where(or(eq(contracts.clientId, viewer.id), inArray(contracts.freelancerId, ids)))
     .orderBy(desc(contracts.createdAt));
+  if (rows.length === 0) return [];
+  // Each contract carries its milestones' status and price, so a list can show progress at a glance.
+  const [stops, people] = await Promise.all([
+    db
+      .select({ contractId: milestones.contractId, position: milestones.position, status: milestones.status, priceMinor: milestones.priceMinor })
+      .from(milestones)
+      .where(inArray(milestones.contractId, rows.map((r) => r.id)))
+      .orderBy(asc(milestones.position)),
+    db.select({ id: users.id, name: users.name }).from(users).where(inArray(users.id, [...new Set(rows.flatMap((r) => [r.clientId, r.freelancerId]))])),
+  ]);
+  const nameOf = new Map(people.map((p) => [p.id, p.name]));
+  return rows.map((c) => ({
+    ...c,
+    clientName: nameOf.get(c.clientId) ?? "",
+    freelancerName: nameOf.get(c.freelancerId) ?? "",
+    milestones: stops.filter((m) => m.contractId === c.id).map(({ position, status, priceMinor }) => ({ position, status, priceMinor })),
+  }));
 }
 
 export async function getContractView(db: Db, viewer: Viewer, contractId: string, now = new Date()) {

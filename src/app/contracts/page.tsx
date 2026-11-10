@@ -1,5 +1,10 @@
 import { ContractList } from "@/components/contract-list";
+import { PageTransition } from "@/components/page-transition";
 
 export default function ContractsPage() {
-  return <ContractList />;
+  return (
+    <PageTransition>
+      <ContractList />
+    </PageTransition>
+  );
 }

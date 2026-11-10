@@ -1,5 +1,7 @@
 import Link from "next/link";
 import type { CSSProperties } from "react";
+import { PointerBlob, Reveal } from "@/components/motion";
+import { PageTransition } from "@/components/page-transition";
 
 const chips = [
   { label: "#01 Scope", color: "#ff49c1", style: { left: 0, top: "6%", rotate: "-12deg" } },
@@ -10,8 +12,9 @@ const chips = [
 
 export default function Home() {
   return (
+    <PageTransition>
     <div className="space-y-28">
-      <section className="poster flex min-h-[720px] flex-col">
+      <section data-pointer-zone className="poster flex min-h-[720px] flex-col">
         <div aria-hidden className="ring right-[4%] top-20 size-[560px] max-lg:hidden" />
         <div aria-hidden className="ring right-[calc(4%+100px)] top-[180px] size-[360px] max-lg:hidden" />
         <div className="label flex justify-between gap-4 border-b border-paper/20 px-6 pb-4 pt-7 sm:px-9">
@@ -28,10 +31,10 @@ export default function Home() {
               Describe the work. Claude cuts it into priced milestones. The client&apos;s money waits in PayPal and only moves when the work checks out.
             </p>
             <div className="flex flex-wrap gap-3">
-              <Link href="/new" className="inline-flex min-h-[52px] items-center gap-3 rounded-full bg-butter px-7 font-bold text-plum transition-transform hover:-translate-y-0.5">
+              <Link href="/new" className="jelly inline-flex min-h-[52px] items-center gap-3 rounded-full bg-butter px-7 font-bold text-plum hover:bg-white">
                 Start a project <span aria-hidden>→</span>
               </Link>
-              <Link href="/contracts" className="inline-flex min-h-[52px] items-center rounded-full border border-paper/50 px-7 font-semibold transition-transform hover:-translate-y-0.5">
+              <Link href="/contracts" className="jelly inline-flex min-h-[52px] items-center rounded-full border border-paper/50 px-7 font-semibold hover:border-paper">
                 Your contracts
               </Link>
             </div>
@@ -44,6 +47,7 @@ export default function Home() {
               <div className="mb mb2 left-[62%] top-[16%] size-[110px] bg-butter" />
               <div className="mb mb3 left-[50%] top-[64%] size-[72px] bg-peach" />
               <div className="mb mb4 left-[26%] top-[74%] size-[52px] bg-paper" />
+              <PointerBlob />
             </div>
             {chips.map((c) => (
               <span key={c.label} className="chip chip-glass float absolute py-1.5 pl-1.5 pr-[18px] text-sm font-medium" style={c.style}>
@@ -61,38 +65,40 @@ export default function Home() {
       </section>
 
       <section>
-        <div className="flex flex-wrap items-end justify-between gap-6 border-b border-line pb-7">
+        <Reveal className="flex flex-wrap items-end justify-between gap-6 border-b border-line pb-7">
           <h2 className="cond text-[clamp(48px,7vw,96px)] font-extrabold leading-[0.9]">
             Every rupee<br />is a <span className="money text-magenta [font-stretch:100%]">drop.</span>
           </h2>
           <p className="max-w-[360px] leading-relaxed text-muted">
             Watch where it sits. It&apos;s split into milestones, guarded at PayPal, and merges into the freelancer&apos;s pool only when the work passes.
           </p>
-        </div>
+        </Reveal>
         <div className="grid md:grid-cols-3">
-          <Step n="01" tag="Scope" color="text-magenta" title="One brief splits into milestones" className="md:border-r md:pr-7"
+          <Step n="01" delay={0} tag="Scope" color="text-magenta" title="One brief splits into milestones" className="md:border-r md:pr-7"
             body="Claude scopes it and asks when the brief is too vague to price. Each drop gets checkable criteria and a computed price.">
             <div className="goo-md absolute inset-0"><span className="split s1" /><span className="split s2" /><span className="split s3" /><span className="split s4" /></div>
           </Step>
-          <Step n="02" tag="Hold" color="text-peach" title="PayPal guards the money" className="md:border-r md:px-7"
+          <Step n="02" delay={120} tag="Hold" color="text-peach" title="PayPal guards the money" className="md:border-r md:px-7"
             body="The client funds a milestone before work starts. PayPal holds it, not us, and the hold is renewed before day 29.">
             <div className="goo-md absolute inset-0"><span className="hold-core" /><span className="hold-orb o1" /><span className="hold-orb o2" /><span className="hold-orb o3" /></div>
             <span className="label absolute left-[18px] top-3.5 text-subtle">PayPal</span>
             <span className="label absolute right-[18px] top-3.5 text-subtle">Authorized</span>
             <span className="label absolute bottom-3.5 left-[18px] text-subtle">Not taken until approved</span>
           </Step>
-          <Step n="03" tag="Release" color="text-butter" title="It merges when the work checks out" className="md:pl-7"
+          <Step n="03" delay={240} tag="Release" color="text-butter" title="It merges when the work checks out" className="md:pl-7"
             body="An AI checker opens the live site and tests every criterion. The client approves, and the drop flows into the payout.">
             <div className="goo-md absolute inset-0"><span className="rel-drop" /><span className="rel-pool" /></div>
           </Step>
         </div>
       </section>
     </div>
+    </PageTransition>
   );
 }
 
-function Step({ n, tag, color, title, body, className, children }: {
+function Step({ n, delay, tag, color, title, body, className, children }: {
   n: string;
+  delay: number;
   tag: string;
   color: string;
   title: string;
@@ -101,7 +107,7 @@ function Step({ n, tag, color, title, body, className, children }: {
   children: React.ReactNode;
 }) {
   return (
-    <article className={`flex flex-col gap-[18px] border-line py-7 ${className}`}>
+    <Reveal as="article" delay={delay} className={`flex flex-col gap-[18px] border-line py-7 ${className}`}>
       <div className="flex items-baseline justify-between">
         <span className={`money text-[56px] leading-none ${color}`}>{n}</span>
         <span className="label text-subtle">{tag}</span>
@@ -109,6 +115,6 @@ function Step({ n, tag, color, title, body, className, children }: {
       <div aria-hidden className="relative h-[200px] overflow-hidden rounded-[28px] bg-well">{children}</div>
       <h3 className="cond text-[32px] font-bold leading-none">{title}</h3>
       <p className="text-[15px] leading-relaxed text-muted">{body}</p>
-    </article>
+    </Reveal>
   );
 }

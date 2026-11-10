@@ -1,5 +1,10 @@
 import { LedgerGrid } from "@/components/grid/ledger-grid";
+import { PageTransition } from "@/components/page-transition";
 
 export default function LedgerPage() {
-  return <LedgerGrid />;
+  return (
+    <PageTransition>
+      <LedgerGrid />
+    </PageTransition>
+  );
 }

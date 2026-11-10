@@ -9,6 +9,8 @@ import { api, type PublicConfig, type Session } from "./api";
 import { MilestoneCard } from "./contract/milestone-card";
 import { AuditTrail, ChangeRequestsPanel, MessagesPanel, OfferPanel } from "./contract/panels";
 import { MoneyStage, HELD, PAID, UNFUNDED, sumWhere } from "./contract/money-stage";
+import { nextMove, stopNo } from "./contract/next-move";
+import { CountUp } from "./motion";
 import { Card, ErrorNote, PageHeader, SectionHead, StatusPill } from "./ui";
 import { GooBlock } from "./goo";
 
@@ -26,6 +28,8 @@ export function ContractScreen({ params }: { params: Promise<{ id: string }> }) 
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [revision, setRevision] = useState(0);
+  // Cards the viewer opened or closed by hand; untouched cards follow the next move.
+  const [toggled, setToggled] = useState<Record<string, boolean>>({});
   const load = useCallback(() => setRevision((r) => r + 1), []);
 
   useEffect(() => {
@@ -79,6 +83,13 @@ export function ContractScreen({ params }: { params: Promise<{ id: string }> }) 
   const paidMinor = sumWhere(view.milestones, PAID);
   const heldMinor = sumWhere(view.milestones, HELD);
   const toFundMinor = sumWhere(view.milestones, UNFUNDED);
+  const move = nextMove(view);
+  const isOpen = (milestoneId: string) => toggled[milestoneId] ?? milestoneId === move.milestone?.id;
+  const pick = (milestoneId: string) => {
+    setToggled((t) => ({ ...t, [milestoneId]: true }));
+    // Wait a frame so the card has started opening before the page scrolls to it.
+    requestAnimationFrame(() => document.getElementById(`m-${milestoneId}`)?.scrollIntoView({ behavior: "smooth", block: "center" }));
+  };
 
   return (
     <div className="space-y-10">
@@ -103,12 +114,29 @@ export function ContractScreen({ params }: { params: Promise<{ id: string }> }) 
           </div>
         </div>
         <div className="flex flex-col items-end gap-1.5 text-right">
-          <span className="money text-[clamp(56px,7vw,84px)] leading-[0.9] text-butter">{formatMoney(paidMinor)}</span>
+          <span className="money text-[clamp(56px,7vw,84px)] leading-[0.9] text-butter"><CountUp minor={paidMinor} /></span>
           <span className="label text-subtle">released of {formatMoney(contract.subtotalMinor)} · + {formatMoney(contract.feeMinor)} fee</span>
         </div>
       </section>
 
-      <MoneyStage view={view} heldMinor={heldMinor} paidMinor={paidMinor} toFundMinor={toFundMinor} />
+      <MoneyStage view={view} heldMinor={heldMinor} paidMinor={paidMinor} toFundMinor={toFundMinor} onPick={pick} />
+
+      <section aria-label="Next move" className="flex flex-wrap items-center gap-x-5 gap-y-3 border-y border-line py-5">
+        <span className="label flex items-center gap-2.5 text-peach">
+          <span aria-hidden className={`size-2.5 rounded-full ${move.yours ? "beat bg-butter" : "bg-wine"}`} />
+          {move.yours ? "Your move" : "Next"}
+        </span>
+        <p key={move.text} className="cond rise min-w-0 flex-1 text-[clamp(26px,3.4vw,40px)] font-bold leading-none">{move.text}</p>
+        {move.milestone && (
+          <button
+            type="button"
+            onClick={() => pick(move.milestone!.id)}
+            className={`jelly inline-flex min-h-11 items-center gap-2 rounded-full px-5 text-[15px] font-bold ${move.yours ? "bg-butter text-plum hover:bg-white" : "border border-paper/35 hover:border-paper/70"}`}
+          >
+            Open {stopNo(move.milestone)} <span aria-hidden>↓</span>
+          </button>
+        )}
+      </section>
 
       <p className="label leading-relaxed text-subtle [overflow-wrap:anywhere]">
         Price locked at signing · deliveries accepted from {contract.contractedOrigins.join(", ")}
@@ -123,7 +151,7 @@ export function ContractScreen({ params }: { params: Promise<{ id: string }> }) 
 
       <section className="space-y-5">
         <SectionHead title="Milestones" note={`${view.milestones.length} stops`} />
-        <ol className="space-y-4">
+        <ol className="space-y-3">
         {view.milestones.map((m) => (
           <MilestoneCard
             key={m.id}
@@ -132,6 +160,8 @@ export function ContractScreen({ params }: { params: Promise<{ id: string }> }) 
             contractStatus={contract.status}
             workerIsAgent={view.freelancer?.kind === "agent"}
             config={config}
+            open={isOpen(m.id)}
+            onToggle={() => setToggled((t) => ({ ...t, [m.id]: !isOpen(m.id) }))}
             onChange={load}
             onError={setError}
           />
@@ -146,7 +176,7 @@ export function ContractScreen({ params }: { params: Promise<{ id: string }> }) 
         </Card>
       </section>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-2 [&>*]:min-w-0">
         <MessagesPanel view={view} onChange={load} onError={setError} />
         <ChangeRequestsPanel view={view} viewerId={viewerId} onChange={load} onError={setError} />
       </div>

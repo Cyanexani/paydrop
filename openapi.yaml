@@ -133,7 +133,7 @@ paths:
   /api/contracts:
     get:
       tags: [Contracts]
-      summary: Contracts the viewer is party to
+      summary: Contracts the viewer is party to, each with client and freelancer names and its milestones (position, status, priceMinor)
       responses: { "200": { description: OK } }
     post:
       tags: [Contracts]

@@ -6,13 +6,13 @@ export function Button({
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "primary" | "secondary" | "danger" }) {
   const styles = {
-    primary: "bg-butter text-plum hover:-translate-y-0.5 disabled:translate-y-0 disabled:bg-butter/40 disabled:text-plum/60",
+    primary: "bg-butter text-plum hover:bg-white disabled:bg-butter/40 disabled:text-plum/60",
     secondary: "border border-paper/35 text-paper hover:border-paper/70",
     danger: "border border-danger/50 text-[#ffc2c2] hover:bg-danger/10",
   }[variant];
   return (
     <button
-      className={`inline-flex min-h-11 items-center justify-center gap-2.5 rounded-full px-6 py-2 text-[15px] font-bold transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-magenta disabled:cursor-not-allowed ${styles} ${className}`}
+      className={`jelly inline-flex min-h-11 items-center justify-center gap-2.5 rounded-full px-6 py-2 text-[15px] font-bold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-magenta disabled:cursor-not-allowed ${styles} ${className}`}
       {...props}
     />
   );
@@ -65,7 +65,7 @@ export function StatusPill({ status }: { status: string }) {
   const s = STATUS[status] ?? { label: status, tone: "neutral" as const };
   return (
     <span className="chip">
-      <span aria-hidden className={`sw ${s.live ? "sw-live" : ""}`} style={{ background: TONE_COLOR[s.tone] }} />
+      <span key={status} aria-hidden className={`sw pop-in ${s.live ? "sw-live" : ""}`} style={{ background: TONE_COLOR[s.tone] }} />
       {s.label}
     </span>
   );

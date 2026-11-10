@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { LedgerRow } from "@/server/ledger";
 import { api as call } from "../api";
-import { formatMoney } from "@/lib/money";
+import { CountUp } from "../motion";
 import { Button, Card, ErrorNote, PageHeader, StatusPill, inputClass } from "../ui";
 import { ensureGridModules, money, useGridTheme } from "./setup";
 
@@ -95,7 +95,7 @@ export function LedgerGrid() {
                 <span className="chip"><span className="sw" style={{ background: t.color }} />{t.label}</span>
                 <span className="label text-subtle">{t.count} milestone{t.count === 1 ? "" : "s"}</span>
               </div>
-              <span className="money text-[68px] leading-[0.9]" style={{ color: t.color === "#6a4560" ? "var(--color-muted)" : t.color }}>{formatMoney(t.minor)}</span>
+              <span className="money text-[68px] leading-[0.9]" style={{ color: t.color === "#6a4560" ? "var(--color-muted)" : t.color }}><CountUp minor={t.minor} /></span>
               <div aria-hidden className="flex max-w-[320px] flex-wrap gap-2">
                 {Array.from({ length: Math.min(60, Math.round(t.minor / 1_000_000)) }, (_, i) => (
                   <span key={i} className={`ldot ${t.cls}`} style={{ animationDelay: `${i * 0.04}s` }} />

@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import { formatMoney } from "@/lib/money";
 import type { ContractView } from "@/server/contracts";
+import { CountUp } from "../motion";
 
 type Milestone = ContractView["milestones"][number];
 
@@ -22,9 +23,16 @@ const CHECKING = ["submitted", "needs_review", "verified"];
 /**
  * "Where the money is": every milestone is a gooey drop sized by its price. Unfunded drops wait on
  * the client's side, funded ones sit in PayPal's ring, and paid ones merge into the freelancer's pool.
- * Drops are keyed by milestone, so when a status changes the drop slides to its new zone.
+ * Drops are keyed by milestone, so when a status changes the drop slides to its new zone, the pool
+ * swells and a ring bursts from it. Each drop's chip opens its milestone.
  */
-export function MoneyStage({ view, heldMinor, paidMinor, toFundMinor }: { view: ContractView; heldMinor: number; paidMinor: number; toFundMinor: number }) {
+export function MoneyStage({ view, heldMinor, paidMinor, toFundMinor, onPick }: {
+  view: ContractView;
+  heldMinor: number;
+  paidMinor: number;
+  toFundMinor: number;
+  onPick: (milestoneId: string) => void;
+}) {
   const live = view.milestones.filter((m) => m.status !== "voided" && m.status !== "cancelled");
   const max = Math.max(1, ...live.map((m) => m.priceMinor));
   const total = Math.max(1, view.contract.subtotalMinor);
@@ -33,14 +41,16 @@ export function MoneyStage({ view, heldMinor, paidMinor, toFundMinor }: { view: 
   const poolSize = paidMinor > 0 ? 96 + 110 * Math.sqrt(paidMinor / total) : 0;
   const freelancer = view.freelancer?.name.split(" ")[0] ?? "Freelancer";
 
-  const drops = live.map((m) => {
+  const drops = live.map((m, i) => {
     const zone = zoneOf(m);
     const peers = byZone[zone];
     const k = peers.indexOf(m);
     const left = ZONE[zone] + (k - (peers.length - 1) / 2) * SPREAD[zone];
     const size = 40 + 58 * Math.sqrt(m.priceMinor / max);
     const color = zone === "paid" ? "#fff7ad" : zone === "client" ? "#6a4560" : CHECKING.includes(m.status) ? "#ffb3ae" : "#ff49c1";
-    return { m, zone, left, size, color, above: k % 2 === 1 };
+    // First value delays the entrance pop; the second desynchronises the bobbing of held drops.
+    const animationDelay = zone === "held" ? `${i * 0.09}s, ${-m.position * 0.7}s` : `${i * 0.09}s`;
+    return { m, zone, left, size, color, above: k % 2 === 1, animationDelay };
   });
 
   return (
@@ -50,32 +60,44 @@ export function MoneyStage({ view, heldMinor, paidMinor, toFundMinor }: { view: 
         <span className="text-right">Stops<br /><span className="opacity-75">{live.length}</span></span>
       </div>
       <div className="relative h-[300px] overflow-hidden sm:h-[380px]">
+        <svg aria-hidden className="absolute inset-0 size-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+          <path className="flow-dash" vectorEffect="non-scaling-stroke" d="M16 50 C 26 40, 34 40, 41 50 M59 50 C 66 60, 72 60, 76 50" />
+        </svg>
         <span aria-hidden className="money-ring" style={{ width: fit(270), height: fit(270) }} />
         <span aria-hidden className="absolute left-[82%] top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-paper/30" style={{ width: fit(110), height: fit(110) }} />
+        {poolSize > 0 && (
+          <>
+            <span key={`a${paidMinor}`} aria-hidden className="pool-ripple" style={{ width: fit(poolSize), height: fit(poolSize) }} />
+            <span key={`b${paidMinor}`} aria-hidden className="pool-ripple" style={{ width: fit(poolSize), height: fit(poolSize) }} />
+          </>
+        )}
         <div aria-hidden className="goo-lg absolute inset-0 max-sm:[filter:url(#goo-md)]">
           {poolSize > 0 && <span className="money-drop" style={{ left: `${ZONE.paid}%`, width: fit(poolSize), height: fit(poolSize), background: "#fff7ad" }} />}
           {drops.map((d) => (
             <span
               key={d.m.id}
               className={`money-drop ${d.zone === "held" ? "money-bob" : ""}`}
-              style={{ left: `${d.left}%`, width: fit(d.size), height: fit(d.size), background: d.color, animationDelay: `${-d.m.position * 0.7}s` } as CSSProperties}
+              style={{ left: `${d.left}%`, width: fit(d.size), height: fit(d.size), background: d.color, animationDelay: d.animationDelay } as CSSProperties}
             />
           ))}
         </div>
         {drops
           .filter((d) => d.zone !== "paid")
           .map((d) => (
-            <span
+            <button
               key={d.m.id}
-              className={`chip chip-glass absolute -translate-x-1/2 transition-[left] duration-[1500ms] max-sm:text-[10px] ${d.zone === "client" ? "max-sm:hidden" : ""}`}
+              type="button"
+              onClick={() => onPick(d.m.id)}
+              aria-label={`Open milestone ${d.m.position + 1}: ${d.m.draft.title}, ${formatMoney(d.m.priceMinor)}`}
+              className={`chip chip-glass stage-chip absolute -translate-x-1/2 max-sm:text-[10px] ${d.zone === "client" ? "max-sm:hidden" : ""}`}
               style={{ left: `${d.left}%`, top: d.above ? `calc(50% - ${fit(d.size / 2)} - 44px)` : `calc(50% + ${fit(d.size / 2)} + 12px)` }}
             >
-              <span className="sw" style={{ background: d.color }} />#{String(d.m.position + 1).padStart(2, "0")} {formatMoney(d.m.priceMinor)}
-            </span>
+              <span className="sw transition-colors duration-700" style={{ background: d.color }} />#{String(d.m.position + 1).padStart(2, "0")} {formatMoney(d.m.priceMinor)}
+            </button>
           ))}
-        <span className="chip chip-glass absolute left-[82%] -translate-x-1/2" style={{ top: `calc(50% + ${fit(Math.max(poolSize, 110) / 2)} + 14px)` }}>
+        <span className="chip chip-glass absolute left-[82%] -translate-x-1/2 transition-[top] duration-1000" style={{ top: `calc(50% + ${fit(Math.max(poolSize, 110) / 2)} + 14px)` }}>
           <span className="sw" style={{ background: "#fff7ad" }} />
-          {formatMoney(paidMinor)} paid
+          <CountUp minor={paidMinor} /> paid
         </span>
       </div>
       <div className="label grid grid-cols-3 gap-4 border-t border-paper/20 px-6 pb-6 pt-4 sm:px-9">

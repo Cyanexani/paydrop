@@ -1,55 +1,74 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { formatMoney } from "@/lib/money";
 import type { ContractView } from "@/server/contracts";
+import { GooLoader } from "../goo";
 import { Button, Card, StatusPill, inputClass } from "../ui";
 import { useAction } from "./use-action";
 
-const VERDICT: Record<string, { label: string; cls: string }> = {
-  in_scope: { label: "In scope", cls: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300" },
-  out_of_scope: { label: "Out of scope → change order", cls: "bg-violet-100 text-violet-800 dark:bg-violet-950 dark:text-violet-300" },
-  unclear: { label: "Unclear", cls: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300" },
-  not_a_request: { label: "Not a request", cls: "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300" },
+const VERDICT: Record<string, { label: string; color: string }> = {
+  in_scope: { label: "In scope", color: "#fff7ad" },
+  out_of_scope: { label: "Out of scope → change order", color: "#e6b9f8" },
+  unclear: { label: "Unclear", color: "#ffb3ae" },
+  not_a_request: { label: "Not a request", color: "#6a4560" },
 };
 
 export function MessagesPanel({ view, onChange, onError }: { view: ContractView; onChange: () => void; onError: (m: string | null) => void }) {
   const { busy, run } = useAction(onChange, onError);
   const [body, setBody] = useState("");
+  const list = useRef<HTMLUListElement>(null);
+  const count = view.messages.length;
+  // Keep the newest message in view, like a chat.
+  useEffect(() => {
+    list.current?.scrollTo({ top: list.current.scrollHeight, behavior: "smooth" });
+  }, [count]);
+  const fromClient = (sender: string) => sender.startsWith(view.clientName);
   return (
-    <Card className="space-y-3">
-      <div>
+    <Card className="flex flex-col gap-4">
+      <div className="space-y-1.5">
         <h2 className="cond text-[32px] font-extrabold leading-none">Messages</h2>
-        <p className="text-xs text-zinc-500">The client&apos;s requests are checked against the contract. WhatsApp and email come in through Zapier.</p>
+        <p className="text-sm text-subtle">The client&apos;s requests are checked against the contract. WhatsApp and email come in through Zapier.</p>
       </div>
-      <ul className="max-h-80 space-y-2 overflow-y-auto text-sm">
-        {view.messages.length === 0 && <li className="text-zinc-500">No messages yet.</li>}
-        {view.messages.map((m) => (
-          <li key={m.id} className="rounded-md bg-zinc-50 p-2 dark:bg-zinc-950">
-            <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-zinc-500">
-              <span>{m.sender}{m.channel === "zapier" ? " · via Zapier" : ""}</span>
-              <span>{new Date(m.at).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" })}</span>
-            </div>
-            <p>{m.body}</p>
-            {m.scope && (
-              <p className="mt-1 text-xs">
-                <span className={`rounded px-1.5 py-0.5 font-medium ${VERDICT[m.scope.verdict]?.cls ?? ""}`}>{VERDICT[m.scope.verdict]?.label ?? m.scope.verdict}</span>{" "}
-                <span className="text-zinc-500">{m.scope.reasoning} (search: {m.scope.searchMode})</span>
-              </p>
-            )}
-          </li>
-        ))}
+      <ul ref={list} className="flex max-h-96 flex-col gap-3 overflow-y-auto pr-1">
+        {count === 0 && <li className="label py-6 text-center text-subtle">No messages yet</li>}
+        {view.messages.map((m) => {
+          const mine = fromClient(m.sender) === (view.role === "client");
+          const verdict = m.scope ? VERDICT[m.scope.verdict] : null;
+          return (
+            <li key={m.id} className={`bubble-in flex max-w-[88%] flex-col gap-1.5 ${mine ? "items-end self-end [--origin:right_bottom]" : "items-start self-start"}`}>
+              <p className={`px-4 py-3 text-[15px] leading-normal [overflow-wrap:anywhere] ${mine ? "rounded-[22px_22px_6px_22px] bg-plum" : "rounded-[22px_22px_22px_6px] bg-well"}`}>{m.body}</p>
+              {m.scope && (
+                <p className={`flex flex-wrap items-center gap-2 text-xs text-subtle ${mine ? "justify-end text-right" : ""}`}>
+                  <span className="chip whitespace-normal text-[11px]"><span className="sw size-3" style={{ background: verdict?.color ?? "#6a4560" }} />{verdict?.label ?? m.scope.verdict}</span>
+                  <span>{m.scope.reasoning}</span>
+                </p>
+              )}
+              <span className="label text-[10px] text-subtle/80">
+                {mine ? "You" : m.sender}{m.channel === "zapier" ? " · via Zapier" : ""} · {new Date(m.at).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" })}
+              </span>
+            </li>
+          );
+        })}
       </ul>
       {view.contract.status !== "cancelled" && (
         <form
-          className="flex gap-2"
+          className="mt-auto flex gap-2"
           onSubmit={(e) => {
             e.preventDefault();
             void run("msg", `/api/contracts/${view.contract.id}/messages`, { body }).then(() => setBody(""));
           }}
         >
-          <input className={`${inputClass} flex-1`} value={body} onChange={(e) => setBody(e.target.value)} placeholder={view.role === "client" ? "e.g. Can you also add a blog?" : "Write a message"} />
-          <Button type="submit" disabled={!!busy || !body.trim()}>{busy ? "Checking…" : "Send"}</Button>
+          <input
+            className="min-h-12 min-w-0 flex-1 rounded-full border border-line bg-[#120810] px-5 text-[15px] text-paper placeholder:text-subtle/70 focus:border-magenta focus:outline-none focus:ring-4 focus:ring-magenta/15"
+            aria-label="Message"
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            placeholder={view.role === "client" ? "e.g. Can you also add a blog?" : "Write a message"}
+          />
+          <button type="submit" disabled={!!busy || !body.trim()} className="jelly min-h-12 rounded-full bg-magenta px-6 font-bold text-[#22071d] disabled:cursor-not-allowed disabled:opacity-40">
+            {busy ? <GooLoader kind="drip" size={9} label="Checking scope" showLabel={false} /> : "Send"}
+          </button>
         </form>
       )}
     </Card>
@@ -64,11 +83,11 @@ export function ChangeRequestsPanel({ view, viewerId, onChange, onError }: { vie
   const crs = view.changeRequests;
   void viewerId;
   return (
-    <Card className="space-y-3">
-      <div className="flex items-center justify-between gap-2">
-        <div>
+    <Card className="space-y-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="space-y-1.5">
           <h2 className="cond text-[32px] font-extrabold leading-none">Change requests</h2>
-          <p className="text-xs text-zinc-500">Out-of-scope work becomes a priced change order; dragging a deadline on the timeline proposes a schedule change.</p>
+          <p className="text-sm text-subtle">Out-of-scope work becomes a priced change order; dragging a deadline on the timeline proposes a schedule change.</p>
         </div>
         {!isClient && view.contract.status === "active" && <Button variant="secondary" onClick={() => setOpen(!open)}>Raise one</Button>}
       </div>
@@ -101,20 +120,26 @@ export function ChangeRequestsPanel({ view, viewerId, onChange, onError }: { vie
           <Button type="submit" disabled={!!busy}>Propose change order</Button>
         </form>
       )}
-      <ul className="space-y-2 text-sm">
-        {crs.length === 0 && <li className="text-zinc-500">None.</li>}
+      <ul className="space-y-3 [overflow-wrap:anywhere]">
+        {crs.length === 0 && <li className="label py-6 text-center text-subtle">None yet</li>}
         {crs.map((c) => (
-          <li key={c.id} className="rounded-md border border-zinc-200 p-3 dark:border-zinc-800">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="font-medium">{c.title}</span>
-              <span className="text-xs text-zinc-500">
-                {c.source === "detector" ? "flagged by the scope detector" : c.source === "gantt" ? "schedule change" : "raised by the freelancer"} · {c.status.replace("_", " ")}
-                {c.priceMinor !== null ? ` · ${formatMoney(c.priceMinor)} + ${formatMoney(c.feeMinor ?? 0)} fee` : ""}
-              </span>
+          <li key={c.id} className="bubble-in space-y-2.5 rounded-[22px] border border-line-soft bg-well p-4">
+            <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+              <strong className="cond text-2xl font-bold leading-none">{c.title}</strong>
+              {c.priceMinor !== null && (
+                <span className="flex items-baseline gap-2">
+                  <span className="money text-[28px] leading-none">{formatMoney(c.priceMinor)}</span>
+                  <span className="label text-subtle">+ {formatMoney(c.feeMinor ?? 0)} fee</span>
+                </span>
+              )}
             </div>
-            <p className="text-zinc-600 dark:text-zinc-400">{c.description}</p>
+            <span className="chip whitespace-normal text-left text-[11px]">
+              <span className={`sw size-3 ${c.status === "proposed" ? "sw-live" : ""}`} style={{ background: c.status === "proposed" ? "#ff49c1" : c.status === "accepted" ? "#fff7ad" : "#6a4560" }} />
+              {c.source === "detector" ? "Flagged by the scope detector" : c.source === "gantt" ? "Schedule change" : "Raised by the freelancer"} · {c.status.replace("_", " ")}
+            </span>
+            <p className="text-sm leading-normal text-muted">{c.description}</p>
             {c.status === "proposed" && (
-              <div className="mt-2 flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 pt-1">
                 {c.source === "gantt" ? (
                   <>
                     <Button disabled={!!busy} onClick={() => run("cra", `/api/change-requests/${c.id}/accept`)}>Accept new date</Button>
@@ -141,33 +166,47 @@ export function OfferPanel({ view, onChange, onError }: { view: ContractView; on
   const isWorker = view.role !== "client";
   const [collab, setCollab] = useState({ name: "", email: "", pct: "" });
   const collaborators = view.contract.collaborators;
+  const offered = view.contract.status === "offered";
+  const canSplit = isWorker && ["offered", "active"].includes(view.contract.status);
+  if (!offered && !canSplit && collaborators.length === 0) return null;
+  const leadPct = 100 - collaborators.reduce((a, c) => a + c.bps, 0) / 100;
   return (
-    <Card className="space-y-3">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm">
-          {view.contract.status === "offered"
-            ? isWorker
-              ? "Review the milestones. Counter-offer a price if needed, then accept to start."
-              : "Waiting for the freelancer to accept (offers expire after 48 hours)."
-            : `Contract ${view.contract.status}.`}
-        </p>
-        {isWorker && view.contract.status === "offered" && (
-          <div className="flex gap-2">
-            <Button disabled={!!busy} onClick={() => run("accept", `/api/contracts/${view.contract.id}/accept`)}>Accept contract</Button>
-            <Button variant="secondary" disabled={!!busy} onClick={() => run("decline", `/api/contracts/${view.contract.id}/decline`)}>Decline</Button>
-          </div>
-        )}
-      </div>
-      {(collaborators.length > 0 || (isWorker && ["offered", "active"].includes(view.contract.status))) && (
-        <div className="border-t border-zinc-200 pt-3 text-sm dark:border-zinc-800">
-          <h3 className="font-medium">Payout split</h3>
-          <p className="text-xs text-zinc-500">
-            Lead freelancer {100 - collaborators.reduce((a, c) => a + c.bps, 0) / 100}%
-            {collaborators.map((c) => ` · ${c.name} ${c.bps / 100}%`).join("")}. Each milestone locks the split when it&apos;s funded.
+    <Card className="space-y-5">
+      {offered && (
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <p className="cond max-w-2xl text-[28px] font-bold leading-[1.05]">
+            {isWorker ? "Review the milestones. Counter-offer a price if needed, then accept to start." : "Waiting for the freelancer to accept. Offers expire after 48 hours."}
           </p>
-          {isWorker && ["offered", "active"].includes(view.contract.status) && (
+          {isWorker && (
+            <div className="flex gap-2">
+              <Button disabled={!!busy} onClick={() => run("accept", `/api/contracts/${view.contract.id}/accept`)}>Accept contract</Button>
+              <Button variant="secondary" disabled={!!busy} onClick={() => run("decline", `/api/contracts/${view.contract.id}/decline`)}>Decline</Button>
+            </div>
+          )}
+        </div>
+      )}
+      {(collaborators.length > 0 || canSplit) && (
+        <div className={`space-y-3 ${offered ? "border-t border-line-soft pt-5" : ""}`}>
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h3 className="label text-peach">Payout split</h3>
+            <span className="label text-subtle">Each milestone locks the split when it&apos;s funded</span>
+          </div>
+          {/* One bar, split in proportion: the lead's share, then each collaborator's. */}
+          <div className="flex h-3.5 gap-1 overflow-hidden rounded-full" aria-hidden>
+            <span className="rounded-full bg-magenta transition-[flex-grow] duration-700" style={{ flexGrow: leadPct }} />
+            {collaborators.map((c, i) => (
+              <span key={c.name} className="rounded-full transition-[flex-grow] duration-700" style={{ flexGrow: c.bps / 100, background: i % 2 ? "#fff7ad" : "#ffb3ae" }} />
+            ))}
+          </div>
+          <ul className="flex flex-wrap gap-2">
+            <li className="chip"><span className="sw" style={{ background: "#ff49c1" }} />Lead freelancer {leadPct}%</li>
+            {collaborators.map((c, i) => (
+              <li key={c.name} className="chip"><span className="sw" style={{ background: i % 2 ? "#fff7ad" : "#ffb3ae" }} />{c.name} {c.bps / 100}%</li>
+            ))}
+          </ul>
+          {canSplit && (
             <form
-              className="mt-2 flex flex-wrap gap-2"
+              className="flex flex-wrap gap-2 pt-1"
               onSubmit={(e) => {
                 e.preventDefault();
                 void run("collab", `/api/contracts/${view.contract.id}/collaborators`, {
@@ -175,9 +214,9 @@ export function OfferPanel({ view, onChange, onError }: { view: ContractView; on
                 }).then((r) => r && setCollab({ name: "", email: "", pct: "" }));
               }}
             >
-              <input className={`${inputClass} w-40`} placeholder="Collaborator" value={collab.name} onChange={(e) => setCollab({ ...collab, name: e.target.value })} />
-              <input className={`${inputClass} w-56`} placeholder="PayPal email" value={collab.email} onChange={(e) => setCollab({ ...collab, email: e.target.value })} />
-              <input className={`${inputClass} w-20`} placeholder="%" value={collab.pct} onChange={(e) => setCollab({ ...collab, pct: e.target.value })} />
+              <input className={`${inputClass} w-40!`} placeholder="Collaborator" aria-label="Collaborator name" value={collab.name} onChange={(e) => setCollab({ ...collab, name: e.target.value })} />
+              <input className={`${inputClass} w-56!`} placeholder="PayPal email" aria-label="Collaborator PayPal email" value={collab.email} onChange={(e) => setCollab({ ...collab, email: e.target.value })} />
+              <input className={`${inputClass} w-20!`} placeholder="%" aria-label="Collaborator share in percent" value={collab.pct} onChange={(e) => setCollab({ ...collab, pct: e.target.value })} />
               <Button variant="secondary" type="submit" disabled={!!busy || !collab.name || !collab.email || !Number(collab.pct)}>Add</Button>
             </form>
           )}
@@ -187,27 +226,40 @@ export function OfferPanel({ view, onChange, onError }: { view: ContractView; on
   );
 }
 
+const TRAIL_PREVIEW = 6;
+
+/** The event log: the latest few lines, with the rest one tap away. */
 export function AuditTrail({ view }: { view: ContractView }) {
+  const [all, setAll] = useState(false);
+  const events = all ? view.events : view.events.slice(0, TRAIL_PREVIEW);
   return (
-    <Card>
-      <h2 className="cond mb-4 text-[32px] font-extrabold leading-none">Audit trail</h2>
+    <Card className="space-y-4">
+      <div className="flex flex-wrap items-baseline justify-between gap-3">
+        <h2 className="cond text-[32px] font-extrabold leading-none">Audit trail</h2>
+        <span className="label text-subtle">{view.events.length} events · every money move is logged</span>
+      </div>
       {view.events.length === 0 ? (
-        <p className="text-sm text-zinc-500">No events yet.</p>
+        <p className="label py-4 text-center text-subtle">No events yet</p>
       ) : (
-        <ul className="space-y-1.5 font-mono text-xs">
-          {view.events.map((e) => {
+        <ol className="font-mono text-xs">
+          {events.map((e, i) => {
             const ms = view.milestones.find((x) => x.id === e.milestoneId);
             return (
-              <li key={e.eventId} className="flex flex-wrap gap-x-3 text-zinc-600 dark:text-zinc-400">
-                <span className="tabular-nums">{new Date(e.at).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "medium" })}</span>
-                <span className="text-zinc-900 dark:text-zinc-100">{e.type}</span>
-                <span>{ms ? `#${ms.position + 1}` : ""}</span>
+              <li key={e.eventId} className="rise grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1 border-t border-line-soft py-2.5 first:border-0 sm:grid-cols-[9.5rem_2.5rem_minmax(0,1fr)_auto_auto]" style={{ animationDelay: `${Math.min(i, 8) * 40}ms` }}>
+                <span className="text-subtle">{new Date(e.at).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" })}</span>
+                <span className="text-magenta max-sm:text-right">{ms ? `#${String(ms.position + 1).padStart(2, "0")}` : ""}</span>
+                <span className="text-paper">{e.type.replaceAll("_", " ").toLowerCase()}</span>
+                <span className="text-subtle max-sm:hidden">by {e.actorKind.replaceAll("_", " ")}</span>
                 <StatusPill status={e.toStatus} />
-                <span>by {e.actorKind}</span>
               </li>
             );
           })}
-        </ul>
+        </ol>
+      )}
+      {view.events.length > TRAIL_PREVIEW && (
+        <button type="button" onClick={() => setAll(!all)} aria-expanded={all} className="label py-2 text-peach hover:text-butter">
+          {all ? "Show fewer" : `Show all ${view.events.length}`}
+        </button>
       )}
     </Card>
   );

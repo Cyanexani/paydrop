@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { formatMoney } from "@/lib/money";
 import { SKILL_LABELS } from "@/lib/pricing/config";
 import type { QuoteView } from "@/server/quotes";
@@ -88,20 +88,40 @@ export function NewProject() {
         </form>
       </section>
 
-      {busy && (
-        <section className="rise flex flex-col items-center gap-7 py-16">
-          <GooLoader size={36} label="Scoping" showLabel={false} />
-          <p className="cond text-center text-[40px] font-bold">Cutting your brief into milestones</p>
-          <div className="flex flex-wrap justify-center gap-2.5">
-            <span className="chip"><span className="sw" style={{ background: "#fff7ad" }} />Reading brief</span>
-            <span className="chip"><span className="sw sw-live" style={{ background: "#ff49c1" }} />Estimating hours</span>
-            <span className="chip opacity-55"><span className="sw" style={{ background: "#6a1452" }} />Pricing</span>
-          </div>
-        </section>
-      )}
+      {busy && <Scoping />}
 
       {quote && <QuoteResult quote={quote} onContract={(id) => router.push(`/contracts/${id}`)} />}
     </div>
+  );
+}
+
+const SCOPING_STEPS = [
+  { label: "Reading the brief", color: "#fff7ad", headline: "Reading your brief" },
+  { label: "Cutting milestones", color: "#ffb3ae", headline: "Cutting it into milestones" },
+  { label: "Estimating hours", color: "#ff49c1", headline: "Estimating the hours" },
+  { label: "Pricing", color: "#fff1f7", headline: "Pricing each milestone" },
+];
+
+/** Shown while the scoper runs: the steps light up one after another. */
+function Scoping() {
+  const [step, setStep] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setStep((s) => Math.min(s + 1, SCOPING_STEPS.length - 1)), 1100);
+    return () => clearInterval(t);
+  }, []);
+  return (
+    <section className="rise flex flex-col items-center gap-7 py-16">
+      <GooLoader size={36} label="Scoping" showLabel={false} />
+      <p key={step} className="cond rise text-center text-[40px] font-bold leading-none">{SCOPING_STEPS[step].headline}</p>
+      <ol className="flex flex-wrap justify-center gap-2.5">
+        {SCOPING_STEPS.map((s, i) => (
+          <li key={s.label} className="chip transition-opacity duration-500" style={{ opacity: i <= step ? 1 : 0.4 }}>
+            <span className={`sw transition-colors duration-500 ${i === step ? "sw-live" : ""}`} style={{ background: i <= step ? s.color : "#6a1452" }} />
+            {s.label}
+          </li>
+        ))}
+      </ol>
+    </section>
   );
 }
 
@@ -186,7 +206,7 @@ function QuoteResult({ quote, onContract }: { quote: QuoteView; onContract: (id:
 
         <ol className="grid sm:grid-cols-2 lg:grid-cols-[repeat(auto-fit,minmax(240px,1fr))]">
           {scope.milestones.map((m, i) => (
-            <li key={m.title} className="flex flex-col gap-3 border-t border-line py-5 pr-5">
+            <li key={m.title} className="rise flex flex-col gap-3 border-t border-line py-5 pr-5" style={{ animationDelay: `${300 + i * 250}ms` }}>
               <div className="flex items-baseline justify-between gap-2">
                 <span className="label" style={{ color: DROP_COLORS[i % DROP_COLORS.length] }}>0{i + 1} · {m.durationDays} days</span>
                 {values[i] !== null && <span className="money text-[34px] leading-none">{formatMoney(values[i]!)}</span>}
@@ -272,7 +292,7 @@ function PricingSection({ quote, onContract }: { quote: QuoteView; onContract: (
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {pricing.candidates.map(({ candidate, quote: q, receipts }, i) => (
-          <article key={candidate.id} className="flex flex-col gap-[18px] rounded-[28px] border border-line-soft bg-raised p-6 transition-all duration-300 hover:-translate-y-1 hover:border-wine">
+          <article key={candidate.id} className="rise flex flex-col gap-[18px] rounded-[28px] border border-line-soft bg-raised p-6 transition-[border-color,translate] duration-300 hover:-translate-y-1 hover:border-wine" style={{ animationDelay: `${i * 110}ms` }}>
             <div className="flex items-center gap-3.5">
               <span aria-hidden className="relative size-[52px] flex-none">
                 <span className="absolute inset-0 rounded-full" style={{ background: DROP_COLORS[i % DROP_COLORS.length] }} />
@@ -311,7 +331,7 @@ function PricingSection({ quote, onContract }: { quote: QuoteView; onContract: (
               type="button"
               disabled={busyId !== null || !urlOk}
               onClick={() => offer(candidate.id)}
-              className="mt-auto min-h-12 rounded-full border border-butter font-bold text-butter transition-colors hover:bg-butter hover:text-plum disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-butter"
+              className="jelly mt-auto min-h-12 rounded-full border border-butter font-bold text-butter hover:bg-butter hover:text-plum disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-butter"
             >
               {busyId === candidate.id ? "Creating contract…" : `Offer to ${candidate.name.split(" ")[0]}`}
             </button>

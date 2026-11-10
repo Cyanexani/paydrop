@@ -10,6 +10,10 @@ export function GooFilters() {
           <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 26 -11" result="goo" />
           <feComposite in="SourceGraphic" in2="goo" operator="atop" />
         </filter>
+        <filter id="goo-sm">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur" />
+          <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -8" />
+        </filter>
         <filter id="goo-md">
           <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur" />
           <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -9" />
