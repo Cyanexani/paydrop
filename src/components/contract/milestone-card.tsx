@@ -16,9 +16,9 @@ type Milestone = ContractView["milestones"][number];
 type Role = ContractView["role"];
 
 const OUTCOME = {
-  pass: { color: "var(--tone-paid)", label: "passed" },
-  fail: { color: "var(--tone-bad)", label: "failed" },
-  couldnt_check: { color: "var(--tone-white)", label: "couldn't check" },
+  pass: { color: "var(--tone-paid)", ink: "var(--ink-paid)", label: "Passed" },
+  fail: { color: "var(--tone-bad)", ink: "var(--ink-bad)", label: "Failed" },
+  couldnt_check: { color: "var(--tone-white)", ink: "var(--ink-white)", label: "Couldn't check" },
 } as const;
 
 export function MilestoneCard({
@@ -114,8 +114,8 @@ export function MilestoneCard({
                 return (
                   <li key={c.text} className="relative pl-6">
                     <span key={r?.outcome ?? "none"} aria-hidden className={`absolute left-0 top-1.5 size-3 rounded-full ${r ? "pop-in" : ""}`} style={{ background: r ? OUTCOME[r.outcome].color : "var(--tone-empty)", animationDelay: `${i * 90}ms` }} />
-                    {r && <span className="sr-only">{OUTCOME[r.outcome].label}: </span>}
                     {c.text}
+                    {r && <span className="ml-2 whitespace-nowrap text-xs font-semibold" style={{ color: OUTCOME[r.outcome].ink }}>{OUTCOME[r.outcome].label}</span>}
                     {c.method === "client_judged" && <span className="text-xs text-subtle"> (client-judged)</span>}
                     {r?.note && <span className="block pl-6 text-xs text-subtle">{r.note}</span>}
                   </li>
@@ -136,17 +136,22 @@ export function MilestoneCard({
             {m.status === "submitted" && <GooLoader kind="orbit" size={14} label="The checker is testing the delivery in a browser" className="mt-3" />}
           </div>
           <div className="space-y-2">
-            <div className="rounded-lg bg-well p-4 font-mono text-xs leading-relaxed">
-              <div className="font-semibold">{m.receipt.title}</div>
-              {m.receipt.lines.map((l) => (
-                <div key={l.text}>  {l.text}{l.amountMinor !== null ? ` = ${formatMoney(l.amountMinor)}` : ""}</div>
-              ))}
-              <div className="text-subtle">  {m.receipt.fairBand}</div>
-              <div className="mt-2 text-subtle">
-                Client funds {formatMoney(m.fundMinor, m.chargeCurrency)} · freelancer receives {formatMoney(m.payoutMinor, m.chargeCurrency)}
-                {m.split && m.split.length > 1 ? ` split ${m.split.map((s) => `${s.name} ${s.bps / 100}%`).join(", ")}` : ""}
+            <p className="text-sm leading-relaxed text-muted">
+              Client funds <strong className="text-paper">{formatMoney(m.fundMinor, m.chargeCurrency)}</strong>; the freelancer receives <strong className="text-paper">{formatMoney(m.payoutMinor, m.chargeCurrency)}</strong>
+              {m.split && m.split.length > 1 ? `, split ${m.split.map((s) => `${s.name} ${s.bps / 100}%`).join(", ")}` : ""}.
+            </p>
+            <details className="rounded-lg bg-well">
+              <summary className="flex items-center justify-between gap-3 px-4 py-3 text-sm font-medium hover:text-butter">
+                How this price was worked out <span aria-hidden className="text-subtle">+</span>
+              </summary>
+              <div className="px-4 pb-4 font-mono text-xs leading-relaxed">
+                <div className="font-semibold">{m.receipt.title}</div>
+                {m.receipt.lines.map((l) => (
+                  <div key={l.text}>  {l.text}{l.amountMinor !== null ? ` = ${formatMoney(l.amountMinor)}` : ""}</div>
+                ))}
+                <div className="text-subtle">  {m.receipt.fairBand}</div>
               </div>
-            </div>
+            </details>
             {m.materials.length > 0 && (
               <ul className="text-xs text-muted">
                 {m.materials.map((x) => (
@@ -281,15 +286,21 @@ export function MilestoneCard({
               </div>
             ) : (
               <form
-                className="flex flex-wrap gap-2"
+                className="flex flex-wrap gap-3"
                 onSubmit={(e) => {
                   e.preventDefault();
                   void run("submit", `/api/milestones/${m.id}/submit`, { evidenceUrl, actualHours: Number(actualHours) || undefined });
                 }}
               >
-                <input className={`${inputClass} min-w-64 flex-1`} type="url" value={evidenceUrl} onChange={(e) => setEvidenceUrl(e.target.value)} aria-label="Delivered URL" />
-                <input className={`${inputClass} w-32!`} inputMode="decimal" placeholder="Hours spent" value={actualHours} onChange={(e) => setActualHours(e.target.value)} aria-label="Hours actually spent" />
-                <Button type="submit" disabled={!!busy}>{busy === "submit" ? "Submitting…" : "Submit for checking"}</Button>
+                <label className="flex min-w-64 flex-1 flex-col gap-1.5">
+                  <span className="text-sm font-medium">Link to the finished work</span>
+                  <input className={inputClass} type="url" value={evidenceUrl} onChange={(e) => setEvidenceUrl(e.target.value)} placeholder="https://" />
+                </label>
+                <label className="flex w-48 flex-col gap-1.5">
+                  <span className="text-sm font-medium">Hours spent <span className="font-normal text-subtle">(optional)</span></span>
+                  <input className={inputClass} inputMode="decimal" value={actualHours} onChange={(e) => setActualHours(e.target.value)} />
+                </label>
+                <Button type="submit" disabled={!!busy} className="self-end">{busy === "submit" ? "Submitting…" : "Submit for checking"}</Button>
               </form>
             )}
             {m.delivery && (

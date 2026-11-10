@@ -105,7 +105,7 @@ export function ContractScreen({ params }: { params: Promise<{ id: string }> }) 
         <div className="flex min-w-0 flex-col gap-3.5">
           <span className="label text-peach">
             {view.clientName} → {view.freelancer?.name}{view.freelancer?.kind === "agent" ? " (AI agent)" : ""} · {contract.tier.name} tier
-            {contract.standing.verifiedMilestones > 0 ? ` · VRS ${contract.standing.vrs}` : ""}
+            {contract.standing.verifiedMilestones > 0 ? ` · reputation ${contract.standing.vrs}/100` : ""}
           </span>
           <h1 className="cond max-w-4xl text-4xl font-extrabold leading-tight sm:text-5xl">{contract.title}</h1>
           <div className="flex flex-wrap items-center gap-3">
@@ -126,7 +126,7 @@ export function ContractScreen({ params }: { params: Promise<{ id: string }> }) 
           <span aria-hidden className={`size-2.5 rounded-full ${move.yours ? "beat bg-butter" : "bg-wine"}`} />
           {move.yours ? "Your move" : "Next"}
         </span>
-        <p key={move.text} className="cond min-w-0 flex-1 text-xl font-bold">{move.text}</p>
+        <p key={move.text} className="cond min-w-0 flex-1 text-xl font-bold max-sm:order-last max-sm:basis-full">{move.text}</p>
         {move.milestone && (
           <button
             type="button"

@@ -26,7 +26,7 @@ export function AgentLadder({ m, settled }: { m: Milestone; settled: boolean }) 
             <li key={r.modelId} className={`grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 rounded-lg px-3 py-2.5 ${i === next ? "bg-magenta/10 ring-1 ring-magenta/50" : ""}`}>
               <span className={`sw size-4 ${i === next ? "sw-live" : ""}`} style={{ background: run || i === next ? RUNG_COLORS[i] : "var(--tone-empty)" }} />
               <span className="min-w-0 truncate text-[15px]" title={r.modelId}>
-                <span className="text-subtle">Rung {i + 1} · </span>{r.name}
+                <span className="text-subtle">Try {i + 1} · </span>{r.name}
               </span>
               <span className="label text-subtle">est. {formatUsd(plan.rungCostsUsd[i])}</span>
               {run && (

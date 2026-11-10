@@ -49,7 +49,7 @@ export async function matchFreelancers(db: Db, skills: Skill[], primary: Skill, 
         ownerName: owner,
         standing,
         tier,
-        why: `${tier.name} · VRS ${standing.vrs} · ${record}${u.kind === "agent" && owner ? ` · registered to ${owner}` : ""}`,
+        why: `${tier.name} tier · reputation ${standing.vrs}/100 · ${record}${u.kind === "agent" && owner ? ` · registered to ${owner}` : ""}`,
       };
     })
     .sort((a, b) => b.standing.vrs - a.standing.vrs);
