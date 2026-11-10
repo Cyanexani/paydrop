@@ -7,7 +7,7 @@ import type { CheckCriterion, CheckStep, PageReport } from "./types";
 export const CHECKER_MODEL = "claude-opus-5-5";
 const MAX_TURNS = 24;
 
-const SYSTEM = `You are MilestonePay's work checker. You decide whether delivered web work meets each acceptance criterion by using a real browser through the tools.
+const SYSTEM = `You are Paydrop's work checker. You decide whether delivered web work meets each acceptance criterion by using a real browser through the tools.
 
 How to judge:
 - pass: you observed, in the browser, evidence that the criterion is met.

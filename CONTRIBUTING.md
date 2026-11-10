@@ -1,6 +1,6 @@
-# Contributing to MilestonePay
+# Contributing to Paydrop
 
-Thanks for helping. MilestonePay moves real money in production, so a few rules matter more than usual.
+Thanks for helping. Paydrop moves real money in production, so a few rules matter more than usual.
 
 ## Ground rules
 
@@ -26,7 +26,7 @@ npm run typecheck
 npm run lint
 npm test
 npm run eval:checker      # needs: npx playwright-core install chromium-headless-shell
-npx newman run postman/milestonepay.postman_collection.json   # with `npm run dev` running
+npx newman run postman/paydrop.postman_collection.json   # with `npm run dev` running
 ```
 
 If you change the checker, the eval's wrongful-pass count must stay at 0.

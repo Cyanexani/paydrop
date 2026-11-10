@@ -1,10 +1,11 @@
 openapi: 3.1.0
 info:
-  title: MilestonePay API
+  title: Paydrop API
   version: 0.1.0
   summary: Milestone payments held in PayPal and released only for AI-verified work.
   description: |
-    Session auth is a demo persona cookie (`mp_user`) set by `POST /api/session`.
+    Session auth is an httpOnly session cookie (`mp_session`, a random token; the server stores only
+    its SHA-256) set by sign-up, sign-in, password reset or, for demo personas, `POST /api/auth/demo`.
     Money is always an integer number of minor units (paise for INR, cents for USD).
     Errors are `{ "error": { "code": string, "message": string } }`.
     Generate an SDK and docs from this file with APIMatic (see README).
@@ -12,7 +13,7 @@ info:
     name: MIT
 servers:
   - url: http://localhost:3000
-  - url: https://milestonepay-web.onrender.com
+  - url: https://paydrop-web.onrender.com
 tags:
   - name: Session
   - name: Quotes
@@ -26,7 +27,7 @@ components:
     persona:
       type: apiKey
       in: cookie
-      name: mp_user
+      name: mp_session
     cron:
       type: http
       scheme: bearer
@@ -101,16 +102,81 @@ paths:
       summary: App and database health
       responses:
         "200": { description: OK }
+  /api/auth/signup:
+    post:
+      tags: [Session]
+      security: []
+      summary: Create an account (client or freelancer) and sign in
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, password, role, acceptTerms]
+              properties:
+                name: { type: string }
+                email: { type: string, format: email }
+                password: { type: string, minLength: 10, maxLength: 128 }
+                role: { type: string, enum: [client, freelancer] }
+                skills: { type: array, items: { type: string, enum: [web_dev, ui_design, video_editing] }, description: Freelancers }
+                paypalEmail: { type: string, description: Freelancers; payouts go here (default the sign-in email) }
+                acceptTerms: { type: boolean, enum: [true] }
+      responses: { "200": { description: Signed in }, "400": { $ref: "#/components/responses/Error" }, "409": { $ref: "#/components/responses/Error" }, "429": { $ref: "#/components/responses/Error" } }
+  /api/auth/login:
+    post:
+      tags: [Session]
+      security: []
+      summary: Sign in with email and password (5 wrong tries per email and address per 15 minutes)
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object, required: [email, password], properties: { email: { type: string }, password: { type: string } } }
+      responses: { "200": { description: Signed in }, "401": { $ref: "#/components/responses/Error" }, "429": { $ref: "#/components/responses/Error" } }
+  /api/auth/logout:
+    post:
+      tags: [Session]
+      summary: Sign out (the session is deleted on the server)
+      responses: { "200": { description: OK } }
+  /api/auth/demo:
+    post:
+      tags: [Session]
+      security: []
+      summary: Sign in as a demo persona, no password (off with DEMO_LOGIN=off)
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object, required: [userId], properties: { userId: { type: string } } }
+      responses: { "200": { description: Signed in }, "400": { $ref: "#/components/responses/Error" }, "403": { $ref: "#/components/responses/Error" } }
+  /api/auth/forgot:
+    post:
+      tags: [Session]
+      security: []
+      summary: Send a one-time reset link (same answer whether or not the email has an account)
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object, required: [email], properties: { email: { type: string } } }
+      responses: { "200": { description: "{ ok, delivery: email | log | none }" }, "429": { $ref: "#/components/responses/Error" } }
+  /api/auth/reset:
+    post:
+      tags: [Session]
+      security: []
+      summary: Set a new password with a reset token; signs out every other session and signs in
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object, required: [token, password], properties: { token: { type: string }, password: { type: string } } }
+      responses: { "200": { description: Signed in }, "400": { $ref: "#/components/responses/Error" } }
   /api/session:
     get:
       tags: [Session]
       security: []
-      summary: Current persona and the list of demo personas
+      summary: Who is signed in, and the demo personas (when demo sign-in is on)
       responses: { "200": { description: OK } }
     post:
       tags: [Session]
       security: []
-      summary: Act as a persona
+      summary: Sign in as a demo persona (same as POST /api/auth/demo; kept for scripts)
       requestBody:
         content:
           application/json:
@@ -133,7 +199,7 @@ paths:
   /api/contracts:
     get:
       tags: [Contracts]
-      summary: Contracts the viewer is party to
+      summary: Contracts the viewer is party to, each with client and freelancer names and its milestones (position, status, priceMinor)
       responses: { "200": { description: OK } }
     post:
       tags: [Contracts]

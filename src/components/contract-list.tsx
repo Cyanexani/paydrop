@@ -4,14 +4,30 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { formatMoney } from "@/lib/money";
 import { api } from "./api";
-import { Card, ErrorNote, StatusPill } from "./ui";
+import { HELD, PAID } from "./contract/money-stage";
+import { GooBlock } from "./goo";
+import { Card, ErrorNote, PageHeader, StatusPill } from "./ui";
 
 interface Row {
   id: string;
   title: string;
   status: string;
+  subtotalMinor: number;
   totalMinor: number;
   createdAt: string;
+  clientName: string;
+  freelancerName: string;
+  milestones: Array<{ position: number; status: string; priceMinor: number }>;
+}
+
+const CHECKING = ["submitted", "needs_review", "verified"];
+
+/** A milestone's segment: green when paid, amber while being checked, sky when held, grey before funding. */
+function dropStyle(status: string): { background: string; live: boolean } {
+  if (PAID.includes(status)) return { background: "var(--tone-paid)", live: false };
+  if (CHECKING.includes(status)) return { background: "var(--tone-check)", live: true };
+  if (HELD.includes(status)) return { background: "var(--tone-held)", live: false };
+  return { background: "var(--tone-empty)", live: false };
 }
 
 export function ContractList() {
@@ -26,30 +42,66 @@ export function ContractList() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold tracking-tight">Contracts</h1>
+      <PageHeader eyebrow="02 · Contracts" title="Contracts">
+        Each one is a set of milestones. The money for each is held at PayPal until the work checks out.
+      </PageHeader>
       <ErrorNote error={error} />
-      {rows === null && !error && <p className="text-sm text-zinc-500">Loading…</p>}
+      {rows === null && !error && <GooBlock label="Loading contracts" />}
       {rows?.length === 0 && (
-        <Card className="text-sm">
-          No contracts yet. <Link className="text-emerald-700 underline dark:text-emerald-400" href="/new">Start a project</Link>.
+        <Card className="flex flex-col items-center gap-4 px-6 py-14 text-center">
+          <div className="space-y-1">
+            <p className="cond text-2xl font-extrabold">No contracts yet</p>
+            <p className="text-sm text-muted">Scope your first project to create one.</p>
+          </div>
+          <Link className="jelly inline-flex min-h-10 items-center gap-2 rounded-lg bg-butter px-4 text-sm font-semibold text-plum hover:bg-white" href="/new">Start a project <span aria-hidden>→</span></Link>
         </Card>
       )}
-      <ul className="space-y-3">
-        {rows?.map((c) => (
-          <li key={c.id}>
-            <Link href={`/contracts/${c.id}`} className="block rounded-lg border border-zinc-200 bg-white p-4 hover:border-emerald-600 dark:border-zinc-800 dark:bg-zinc-900">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="font-medium">{c.title}</span>
-                <span className="flex items-center gap-3">
-                  <span className="text-sm tabular-nums">{formatMoney(c.totalMinor)}</span>
-                  <StatusPill status={c.status} />
-                </span>
-              </div>
-              <p className="mt-1 text-xs text-zinc-500">{new Date(c.createdAt).toLocaleString()}</p>
-            </Link>
-          </li>
-        ))}
-      </ul>
+      {rows && rows.length > 0 && (
+        <div className="overflow-hidden rounded-xl border border-line-soft bg-raised shadow-[var(--shadow-card)]">
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-6 border-b border-line-soft bg-well px-5 py-2.5 text-xs font-medium text-subtle md:grid-cols-[minmax(0,1fr)_150px_130px_150px]">
+            <span>Contract</span>
+            <span className="max-md:hidden">Milestones</span>
+            <span className="max-md:hidden">Status</span>
+            <span className="text-right">Released</span>
+          </div>
+          <ul className="divide-y divide-line-soft">
+            {rows.map((c) => {
+              const paidCount = c.milestones.filter((m) => PAID.includes(m.status)).length;
+              const paid = c.milestones.filter((m) => PAID.includes(m.status)).reduce((a, m) => a + m.priceMinor, 0);
+              return (
+                <li key={c.id}>
+                  <Link
+                    href={`/contracts/${c.id}`}
+                    className="group grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-6 gap-y-2 px-5 py-4 transition-colors hover:bg-white/5 md:grid-cols-[minmax(0,1fr)_150px_130px_150px]"
+                  >
+                    <span className="flex min-w-0 flex-col gap-0.5">
+                      <strong className="cond truncate text-xl font-bold group-hover:text-butter">{c.title}</strong>
+                      <span className="truncate text-[13px] text-subtle">
+                        {c.clientName} → {c.freelancerName} · {new Date(c.createdAt).toLocaleDateString("en-IN", { dateStyle: "medium" })}
+                      </span>
+                    </span>
+                    {/* One segment per milestone, coloured by where its money is */}
+                    <span className="flex items-center gap-2.5 max-md:hidden" role="img" aria-label={`${paidCount} of ${c.milestones.length} milestones paid`}>
+                      <span className="flex items-center gap-1">
+                        {c.milestones.map((m) => {
+                          const d = dropStyle(m.status);
+                          return <span key={m.position} className={`h-2 w-5 rounded-full ${d.live ? "sw-live" : ""}`} style={{ background: d.background }} />;
+                        })}
+                      </span>
+                      <span className="text-xs text-subtle">{paidCount}/{c.milestones.length}</span>
+                    </span>
+                    <span className="max-md:col-start-1 max-md:row-start-2"><StatusPill status={c.status} /></span>
+                    <span className="flex flex-col items-end gap-0.5 max-md:row-span-2 max-md:row-start-1 max-md:col-start-2">
+                      <span className="money text-2xl leading-none">{formatMoney(paid)}</span>
+                      <span className="text-xs text-subtle">of {formatMoney(c.subtotalMinor)}</span>
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }

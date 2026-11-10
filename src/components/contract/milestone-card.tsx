@@ -6,13 +6,20 @@ import type { MaterialOption } from "@/lib/materials/channel3";
 import type { ContractView } from "@/server/contracts";
 import { api, type PublicConfig } from "../api";
 import { PayPalFundButton } from "../paypal-button";
-import { Button, Card, StatusPill, inputClass } from "../ui";
+import { Button, Card, StatusPill, TONE_INK, inputClass, statusTone } from "../ui";
+import { GooLoader } from "../goo";
+import { AgentLadder } from "./agent-ladder";
+import { Journey } from "./journey";
 import { useAction } from "./use-action";
 
 type Milestone = ContractView["milestones"][number];
 type Role = ContractView["role"];
 
-const ICON = { pass: "✅", fail: "❌", couldnt_check: "❔" } as const;
+const OUTCOME = {
+  pass: { color: "var(--tone-paid)", ink: "var(--ink-paid)", label: "Passed" },
+  fail: { color: "var(--tone-bad)", ink: "var(--ink-bad)", label: "Failed" },
+  couldnt_check: { color: "var(--tone-white)", ink: "var(--ink-white)", label: "Couldn't check" },
+} as const;
 
 export function MilestoneCard({
   m,
@@ -20,6 +27,8 @@ export function MilestoneCard({
   contractStatus,
   workerIsAgent,
   config,
+  open,
+  onToggle,
   onChange,
   onError,
 }: {
@@ -28,6 +37,9 @@ export function MilestoneCard({
   contractStatus: string;
   workerIsAgent: boolean;
   config: PublicConfig | null;
+  /** Collapsed cards show one summary row; the body stays mounted so typed input survives. */
+  open: boolean;
+  onToggle: () => void;
   onChange: () => void;
   onError: (message: string | null) => void;
 }) {
@@ -46,6 +58,10 @@ export function MilestoneCard({
   const canFund = isClient && ["accepted", "funding", "release_failed"].includes(m.status) && m.canFundNow;
   const openCounter = m.negotiations.find((n) => n.status === "open");
   const lastRun = m.checkRuns[0];
+  const tone = statusTone(m.status);
+  // An agent climbs its model ladder one rung per attempt.
+  const nextRung = m.agentPlan ? m.agentPlan.ladder[m.agentRuns.length] ?? null : true;
+  const color = TONE_INK[tone];
 
   async function searchMaterials(e: React.FormEvent) {
     e.preventDefault();
@@ -54,73 +70,98 @@ export function MilestoneCard({
   }
 
   return (
-    <li>
-      <Card className="space-y-4">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h3 className="font-semibold">
-              {m.position + 1}. {m.draft.title}
-              {m.kind === "change_order" && <span className="ml-2 rounded bg-violet-100 px-1.5 py-0.5 text-xs font-medium text-violet-800 dark:bg-violet-950 dark:text-violet-300">Change order</span>}
-            </h3>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">{m.draft.description}</p>
-            {m.dueAt && <p className="mt-1 text-xs text-zinc-500">Due {new Date(m.dueAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</p>}
-          </div>
-          <div className="text-right">
-            <div className="text-lg font-semibold tabular-nums">{formatMoney(m.priceMinor)}</div>
+    <li id={`m-${m.id}`} className="scroll-mt-24">
+      <Card className={`p-0 transition-colors duration-500 ${open ? "border-wine" : "hover:border-line"}`}>
+        <button
+          type="button"
+          aria-expanded={open}
+          aria-controls={`m-body-${m.id}`}
+          onClick={onToggle}
+          className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-4 gap-y-2 rounded-xl px-5 py-4 text-left focus-visible:outline-2 focus-visible:outline-magenta sm:grid-cols-[auto_minmax(0,1fr)_auto_auto_auto] sm:gap-x-5 sm:px-6 sm:py-5"
+        >
+          <span className="money text-3xl leading-tight transition-colors duration-700 sm:text-3xl" style={{ color }}>
+            {String(m.position + 1).padStart(2, "0")}
+          </span>
+          <span className="flex min-w-0 flex-col gap-1.5">
+            <span className="cond text-xl font-semibold leading-tight sm:text-xl">
+              {m.draft.title}
+              {m.kind === "change_order" && <span className="chip ml-3 align-middle text-[11px]"><span className="sw size-3" style={{ background: "var(--tone-lilac)" }} />Change order</span>}
+            </span>
+            {m.dueAt && <span className="label text-subtle">Due {new Date(m.dueAt).toLocaleDateString("en-IN", { dateStyle: "medium" })}</span>}
+          </span>
+          <svg aria-hidden viewBox="0 0 24 24" className="acc-chevron size-6 flex-none text-subtle sm:order-last" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+          <span className="col-span-3 flex flex-wrap items-center justify-between gap-3 sm:col-span-1 sm:contents">
             <StatusPill status={m.status} />
-          </div>
-        </div>
+            <span className="money text-2xl leading-none sm:min-w-36 sm:text-right sm:text-2xl">{formatMoney(m.priceMinor)}</span>
+          </span>
+        </button>
+
+        <div id={`m-body-${m.id}`} className="acc" data-open={open}>
+          <div inert={!open}>
+            <div className="space-y-5 px-5 pb-6 sm:px-6">
+              <p className="max-w-3xl text-[15px] leading-relaxed text-muted">{m.draft.description}</p>
+              {m.draft.briefQuote && <p className="border-l-2 border-magenta/60 pl-3 text-sm italic leading-snug text-muted"><span className="not-italic text-subtle">From the brief: </span>“{m.draft.briefQuote}”</p>}
+              <Journey status={m.status} color={color} />
+              <AgentLadder m={m} settled={settled} />
 
         <div className="grid gap-4 md:grid-cols-2">
           <div>
-            <h4 className="mb-1 text-xs font-semibold uppercase tracking-wide text-zinc-500">Acceptance criteria</h4>
-            <ul className="space-y-1.5 text-sm">
+            <h4 className="label mb-2 text-peach">Acceptance criteria</h4>
+            <ul className="space-y-2 text-[15px]">
               {m.draft.criteria.map((c, i) => {
                 const r = m.lastCheck?.results.find((x) => x.criterionId === `c${i + 1}`);
                 return (
-                  <li key={c.text}>
-                    <span className="mr-1.5" aria-hidden>{r ? ICON[r.outcome] : "•"}</span>
+                  <li key={c.text} className="relative pl-6">
+                    <span key={r?.outcome ?? "none"} aria-hidden className={`absolute left-0 top-1.5 size-3 rounded-full ${r ? "pop-in" : ""}`} style={{ background: r ? OUTCOME[r.outcome].color : "var(--tone-empty)", animationDelay: `${i * 90}ms` }} />
                     {c.text}
-                    {c.method === "client_judged" && <span className="text-xs text-zinc-500"> (client-judged)</span>}
-                    {r?.note && <span className="block pl-6 text-xs text-zinc-500">{r.note}</span>}
+                    {r && <span className="ml-2 whitespace-nowrap text-xs font-semibold" style={{ color: OUTCOME[r.outcome].ink }}>{OUTCOME[r.outcome].label}</span>}
+                    {c.method === "client_judged" && <span className="text-xs text-subtle"> (client-judged)</span>}
+                    {r?.note && <span className="block pl-6 text-xs text-subtle">{r.note}</span>}
                   </li>
                 );
               })}
             </ul>
             {lastRun && (
-              <p className="mt-2 text-xs text-zinc-500">
+              <p className="mt-2 text-xs text-subtle">
                 Check attempt {lastRun.attempt} · {lastRun.mode === "kernel" ? "Kernel cloud browser" : lastRun.mode === "local" ? "local browser" : "reachability only"}
                 {lastRun.replayUrl && (
                   <>
                     {" · "}
-                    <a href={lastRun.replayUrl} target="_blank" rel="noreferrer" className="text-emerald-700 underline dark:text-emerald-400">Watch replay</a>
+                    <a href={lastRun.replayUrl} target="_blank" rel="noreferrer" className="text-peach underline hover:text-butter">Watch replay</a>
                   </>
                 )}
               </p>
             )}
-            {m.status === "submitted" && <p className="mt-2 text-sm text-sky-700 dark:text-sky-400">The checker is testing the delivery in a browser…</p>}
+            {m.status === "submitted" && <GooLoader kind="orbit" size={14} label="The checker is testing the delivery in a browser" className="mt-3" />}
           </div>
           <div className="space-y-2">
-            <div className="rounded-md bg-zinc-50 p-3 font-mono text-xs leading-relaxed dark:bg-zinc-950">
-              <div className="font-semibold">{m.receipt.title}</div>
-              {m.receipt.lines.map((l) => (
-                <div key={l.text}>  {l.text}{l.amountMinor !== null ? ` = ${formatMoney(l.amountMinor)}` : ""}</div>
-              ))}
-              <div className="text-zinc-500">  {m.receipt.fairBand}</div>
-              <div className="mt-2 text-zinc-500">
-                Client funds {formatMoney(m.fundMinor, m.chargeCurrency)} · freelancer receives {formatMoney(m.payoutMinor, m.chargeCurrency)}
-                {m.split && m.split.length > 1 ? ` split ${m.split.map((s) => `${s.name} ${s.bps / 100}%`).join(", ")}` : ""}
+            <p className="text-sm leading-relaxed text-muted">
+              Client funds <strong className="text-paper">{formatMoney(m.fundMinor, m.chargeCurrency)}</strong>; the freelancer receives <strong className="text-paper">{formatMoney(m.payoutMinor, m.chargeCurrency)}</strong>
+              {m.split && m.split.length > 1 ? `, split ${m.split.map((s) => `${s.name} ${s.bps / 100}%`).join(", ")}` : ""}.
+            </p>
+            <details className="rounded-lg bg-well">
+              <summary className="flex items-center justify-between gap-3 px-4 py-3 text-sm font-medium hover:text-butter">
+                How this price was worked out <span aria-hidden className="text-subtle">+</span>
+              </summary>
+              <div className="px-4 pb-4 font-mono text-xs leading-relaxed">
+                <div className="font-semibold">{m.receipt.title}</div>
+                {m.receipt.lines.map((l) => (
+                  <div key={l.text}>  {l.text}{l.amountMinor !== null ? ` = ${formatMoney(l.amountMinor)}` : ""}</div>
+                ))}
+                <div className="text-subtle">  {m.receipt.fairBand}</div>
               </div>
-            </div>
+            </details>
             {m.materials.length > 0 && (
-              <ul className="text-xs text-zinc-600 dark:text-zinc-400">
+              <ul className="text-xs text-muted">
                 {m.materials.map((x) => (
                   <li key={x.id}>Materials: <a href={x.url} target="_blank" rel="noreferrer" className="underline">{x.title}</a> {formatMoney(x.priceMinor)}</li>
                 ))}
               </ul>
             )}
             {m.payouts.length > 0 && (
-              <ul className="text-xs text-zinc-600 dark:text-zinc-400">
+              <ul className="text-xs text-muted">
                 {m.payouts.map((p) => (
                   <li key={p.id}>Payout to {p.name}: {formatMoney(p.amountMinor, p.currency)} · {p.status}{p.failure ? ` (${p.failure})` : ""}</li>
                 ))}
@@ -130,14 +171,14 @@ export function MilestoneCard({
         </div>
 
         {m.authorizationHealth !== "none" && m.authorizationExpiresAt && !settled && !["voided"].includes(m.status) && (
-          <p className="text-xs text-zinc-500">PayPal hold: {m.authorizationHealth.replaceAll("_", " ")}, expires {new Date(m.authorizationExpiresAt).toLocaleDateString("en-IN")}.</p>
+          <p className="text-xs text-subtle">PayPal hold: {m.authorizationHealth.replaceAll("_", " ")}, expires {new Date(m.authorizationExpiresAt).toLocaleDateString("en-IN")}.</p>
         )}
 
         {/* Negotiation (before the contract is accepted) */}
         {contractStatus === "offered" && (
-          <div className="space-y-2 border-t border-zinc-200 pt-3 text-sm dark:border-zinc-800">
+          <div className="space-y-2 border-t border-line-soft pt-4 text-sm">
             {m.negotiations.map((n) => (
-              <p key={n.id} className="text-zinc-600 dark:text-zinc-400">
+              <p key={n.id} className="text-muted">
                 Counter-offer {n.round}: {formatMoney(n.priceMinor)} ({n.fair ? "inside the fair band" : "outside the band"}) · {n.status}
                 {n.reason ? ` — “${n.reason}”` : ""}
                 {n.aiEstimate ? ` · AI re-estimate ${n.aiEstimate.likely} h → ${formatMoney(n.aiEstimate.suggestedMinor)}` : ""}
@@ -157,7 +198,7 @@ export function MilestoneCard({
                   void run("counter", `/api/milestones/${m.id}/counter`, { priceMinor: Math.round(Number(counter) * 100), reason: counterReason || undefined });
                 }}
               >
-                <input className={`${inputClass} w-32`} inputMode="decimal" placeholder="₹ counter" value={counter} onChange={(e) => setCounter(e.target.value)} aria-label="Counter-offer in rupees" />
+                <input className={`${inputClass} w-32!`} inputMode="decimal" placeholder="₹ counter" value={counter} onChange={(e) => setCounter(e.target.value)} aria-label="Counter-offer in rupees" />
                 <input className={`${inputClass} min-w-48 flex-1`} placeholder={`Reason (needed outside ${formatMoney(m.fairBand.lowMinor)}–${formatMoney(m.fairBand.highMinor)})`} value={counterReason} onChange={(e) => setCounterReason(e.target.value)} />
                 <Button variant="secondary" type="submit" disabled={!!busy || !Number(counter)}>Counter</Button>
               </form>
@@ -167,7 +208,7 @@ export function MilestoneCard({
 
         {/* Change order acceptance by the freelancer */}
         {isWorker && m.status === "offered" && m.kind === "change_order" && (
-          <div className="flex items-center gap-3 border-t border-zinc-200 pt-3 dark:border-zinc-800">
+          <div className="flex items-center gap-3 border-t border-line-soft pt-4">
             <p className="flex-1 text-sm">The client accepted this change order. Agree to do it?</p>
             <Button disabled={!!busy} onClick={() => run("accept", `/api/milestones/${m.id}/accept`)}>Accept change order</Button>
           </div>
@@ -175,15 +216,15 @@ export function MilestoneCard({
 
         {/* Materials (freelancer, before funding) */}
         {isWorker && ["offered", "accepted"].includes(m.status) && (
-          <details className="border-t border-zinc-200 pt-3 text-sm dark:border-zinc-800">
-            <summary className="cursor-pointer text-zinc-600 dark:text-zinc-400">Add materials to this milestone&apos;s budget (Channel3)</summary>
+          <details className="border-t border-line-soft pt-4 text-sm">
+            <summary className="cursor-pointer text-muted">Add materials to this milestone&apos;s budget (Channel3)</summary>
             <form onSubmit={searchMaterials} className="mt-2 flex gap-2">
               <input className={`${inputClass} flex-1`} value={materialQuery} onChange={(e) => setMaterialQuery(e.target.value)} placeholder="e.g. ring light, tripod, domain" />
               <Button variant="secondary" type="submit" disabled={!!busy || materialQuery.trim().length < 2}>Search</Button>
             </form>
             {materialResults && (
               <ul className="mt-2 space-y-1">
-                {materialResults.length === 0 && <li className="text-zinc-500">No matches.</li>}
+                {materialResults.length === 0 && <li className="text-subtle">No matches.</li>}
                 {materialResults.map((r) => (
                   <li key={r.productId} className="flex items-center justify-between gap-2">
                     <span>{r.title} · {r.currency} {r.price.toLocaleString("en-IN")} · {r.merchant}</span>
@@ -197,7 +238,7 @@ export function MilestoneCard({
 
         {/* Funding (client) */}
         {canFund && (
-          <div className="space-y-2 border-t border-zinc-200 pt-4 dark:border-zinc-800">
+          <div className="space-y-2 border-t border-line-soft pt-4">
             <p className="text-sm">Fund this milestone. PayPal holds the money; nothing is taken until you approve verified work.</p>
             {config?.paypalClientId ? (
               <div className="flex flex-wrap items-center gap-3">
@@ -220,41 +261,51 @@ export function MilestoneCard({
                 </Button>
               </div>
             ) : (
-              <p className="text-sm text-amber-700 dark:text-amber-400">PayPal isn&apos;t configured yet: add sandbox keys to .env.local.</p>
+              <p className="text-sm text-peach">PayPal isn&apos;t configured yet: add sandbox keys to .env.local.</p>
             )}
             {payLink && (
               <p className="break-all text-xs">
-                Send this link (WhatsApp, email): <a className="text-emerald-700 underline dark:text-emerald-400" href={payLink}>{payLink}</a>
+                Send this link (WhatsApp, email): <a className="text-peach underline hover:text-butter" href={payLink}>{payLink}</a>
               </p>
             )}
           </div>
         )}
-        {isClient && m.status === "accepted" && !m.canFundNow && <p className="text-sm text-zinc-500">Funds after the previous milestone is released.</p>}
-        {isWorker && m.status === "accepted" && <p className="text-sm text-zinc-500">Don&apos;t start until the client funds this milestone.</p>}
+        {isClient && m.status === "accepted" && !m.canFundNow && <p className="text-sm text-subtle">Funds after the previous milestone is released.</p>}
+        {isWorker && m.status === "accepted" && <p className="text-sm text-subtle">Don&apos;t start until the client funds this milestone.</p>}
 
         {/* Delivery (freelancer or agent) */}
         {isWorker && ["funded", "changes_requested", "needs_review"].includes(m.status) && (
-          <div className="space-y-2 border-t border-zinc-200 pt-4 dark:border-zinc-800">
+          <div className="space-y-2 border-t border-line-soft pt-4">
             {workerIsAgent && role === "agent_owner" && ["funded", "changes_requested"].includes(m.status) ? (
               <div className="flex flex-wrap items-center gap-3">
-                <p className="flex-1 text-sm">BuildBot builds this milestone, hosts it, and submits it for checking. It&apos;s paid only if every criterion is verified.</p>
-                <Button disabled={!!busy} onClick={() => run("agent", `/api/milestones/${m.id}/agent-run`)}>{busy === "agent" ? "BuildBot is building…" : "Run BuildBot"}</Button>
+                <p className="flex-1 text-sm">
+                  BuildBot builds this milestone{nextRung && nextRung !== true ? ` on ${nextRung.name}` : ""}, hosts it, and submits it for checking. It&apos;s paid only if every criterion is verified.
+                </p>
+                <Button disabled={!!busy || !nextRung} onClick={() => run("agent", `/api/milestones/${m.id}/agent-run`)}>
+                  {busy === "agent" ? <><GooLoader kind="orbit" size={10} label="BuildBot is building" showLabel={false} /> BuildBot is building…</> : nextRung ? `Run BuildBot · rung ${m.agentRuns.length + 1}` : "Ladder used up"}
+                </Button>
               </div>
             ) : (
               <form
-                className="flex flex-wrap gap-2"
+                className="flex flex-wrap gap-3"
                 onSubmit={(e) => {
                   e.preventDefault();
                   void run("submit", `/api/milestones/${m.id}/submit`, { evidenceUrl, actualHours: Number(actualHours) || undefined });
                 }}
               >
-                <input className={`${inputClass} min-w-64 flex-1`} type="url" value={evidenceUrl} onChange={(e) => setEvidenceUrl(e.target.value)} aria-label="Delivered URL" />
-                <input className={`${inputClass} w-32`} inputMode="decimal" placeholder="Hours spent" value={actualHours} onChange={(e) => setActualHours(e.target.value)} aria-label="Hours actually spent" />
-                <Button type="submit" disabled={!!busy}>{busy === "submit" ? "Submitting…" : "Submit for checking"}</Button>
+                <label className="flex min-w-64 flex-1 flex-col gap-1.5">
+                  <span className="text-sm font-medium">Link to the finished work</span>
+                  <input className={inputClass} type="url" value={evidenceUrl} onChange={(e) => setEvidenceUrl(e.target.value)} placeholder="https://" />
+                </label>
+                <label className="flex w-48 flex-col gap-1.5">
+                  <span className="text-sm font-medium">Hours spent <span className="font-normal text-subtle">(optional)</span></span>
+                  <input className={inputClass} inputMode="decimal" value={actualHours} onChange={(e) => setActualHours(e.target.value)} />
+                </label>
+                <Button type="submit" disabled={!!busy} className="self-end">{busy === "submit" ? "Submitting…" : "Submit for checking"}</Button>
               </form>
             )}
             {m.delivery && (
-              <p className="text-xs text-zinc-500">Latest agent build: {new Date(m.delivery.createdAt).toLocaleString("en-IN")}</p>
+              <p className="text-xs text-subtle">Latest agent build: {new Date(m.delivery.createdAt).toLocaleString("en-IN")}</p>
             )}
           </div>
         )}
@@ -273,7 +324,7 @@ export function MilestoneCard({
 
         {/* Release (client) */}
         {isClient && (m.status === "verified" || m.status === "needs_review") && (
-          <div className="flex flex-wrap items-center gap-3 border-t border-zinc-200 pt-4 dark:border-zinc-800">
+          <div className="flex flex-wrap items-center gap-3 border-t border-line-soft pt-4">
             <p className="flex-1 text-sm">
               {m.status === "verified" ? "Every criterion passed. Approve to release payment (it auto-releases after 72 hours)." : "The checker couldn't verify everything. Review the delivery and decide."}
             </p>
@@ -282,19 +333,22 @@ export function MilestoneCard({
           </div>
         )}
         {isClient && settled && (
-          <div className="flex items-center gap-2 border-t border-zinc-200 pt-3 text-sm dark:border-zinc-800">
+          <div className="flex items-center gap-2 border-t border-line-soft pt-4 text-sm">
             {m.rating ? (
               <span>You rated this {"★".repeat(m.rating)}</span>
             ) : (
               <>
                 <span>Rate the work:</span>
                 {[1, 2, 3, 4, 5].map((s) => (
-                  <button key={s} className="text-lg text-amber-500 hover:scale-110" aria-label={`${s} stars`} disabled={!!busy} onClick={() => run("rate", `/api/milestones/${m.id}/rate`, { stars: s })}>★</button>
+                  <button key={s} className="jelly px-0.5 text-2xl text-butter" aria-label={`${s} stars`} disabled={!!busy} onClick={() => run("rate", `/api/milestones/${m.id}/rate`, { stars: s })}>★</button>
                 ))}
               </>
             )}
           </div>
         )}
+            </div>
+          </div>
+        </div>
       </Card>
     </li>
   );

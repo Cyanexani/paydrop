@@ -19,7 +19,7 @@ export type SiteFiles = Record<string, string>;
 const MAX_BYTES = 300_000;
 const PATH = /^\/[a-z0-9\-_/]*(\.(xml|txt|html|css))?$/i;
 
-const SYSTEM = `You are BuildBot, an AI web developer working one milestone of a client project on MilestonePay. You are paid only if an independent checker verifies every acceptance criterion in a browser.
+const SYSTEM = `You are BuildBot, an AI web developer working one milestone of a client project on Paydrop. You are paid only if an independent checker verifies every acceptance criterion in a browser.
 
 Build static files that meet every criterion:
 - Paths start with "/" ("/" is the home page; use "/classes", not "/classes.html"). Add "/sitemap.xml" listing every page when any criterion mentions a sitemap.
@@ -29,8 +29,26 @@ Build static files that meet every criterion:
 Previous files from earlier milestones are given; keep them working and extend them.`;
 
 
-export async function buildMilestone(projectTitle: string, draft: MilestoneDraft, previous: SiteFiles): Promise<{ files: SiteFiles; notes: string; mode: "claude" | "mock" }> {
-  if (isMockAI()) return { files: { ...previous, ...templateSite(projectTitle, draft) }, notes: "Demo build from BuildBot's template.", mode: "mock" };
+export interface BuildUsage {
+  inputTokens: number | null;
+  outputTokens: number | null;
+  costUsd: number | null;
+}
+
+export interface BuildResult {
+  files: SiteFiles;
+  notes: string;
+  mode: "openrouter" | "claude" | "mock";
+  usage: BuildUsage | null;
+}
+
+/**
+ * Build a milestone. With `model` (an OpenRouter id) and OPENROUTER_API_KEY set, that model does
+ * the work; otherwise Claude does, or, without any AI key, BuildBot's offline template.
+ */
+export async function buildMilestone(projectTitle: string, draft: MilestoneDraft, previous: SiteFiles, model?: string): Promise<BuildResult> {
+  if (model && process.env.OPENROUTER_API_KEY) return buildWithOpenRouter(model, projectTitle, draft, previous);
+  if (isMockAI()) return { files: { ...previous, ...templateSite(projectTitle, draft) }, notes: "Demo build from BuildBot's template.", mode: "mock", usage: null };
   try {
     const stream = new Anthropic().beta.messages.stream({
       model: SCOPING_MODEL,
@@ -42,29 +60,105 @@ export async function buildMilestone(projectTitle: string, draft: MilestoneDraft
       messages: [
         {
           role: "user",
-          content:
-            `<project>${projectTitle}</project>\n<milestone>\n${JSON.stringify({ title: draft.title, description: draft.description, criteria: draft.criteria.map((c) => c.text) }, null, 2)}\n</milestone>\n` +
-            `<previous_files>\n${JSON.stringify(previous).slice(0, 60_000)}\n</previous_files>`,
+          content: userPrompt(projectTitle, draft, previous),
         },
       ],
     });
     const message = await stream.finalMessage();
     const text = message.content.flatMap((b) => (b.type === "text" ? [b.text] : [])).join("");
-    const parsed = AgentOutput.safeParse(JSON.parse(text));
-    if (!parsed.success) throw new ScopingUnavailableError("BuildBot's output failed validation", true);
-    const files: SiteFiles = { ...previous };
-    let bytes = 0;
-    for (const f of parsed.data.files) {
-      if (!PATH.test(f.path)) continue;
-      bytes += f.content.length;
-      if (bytes > MAX_BYTES) throw new ScopingUnavailableError("BuildBot's output is too large", false);
-      files[f.path.replace(/\.html$/, "").replace(/(.)\/$/, "$1")] = f.content;
-    }
-    return { files, notes: parsed.data.notes, mode: "claude" };
+    const out = parseOutput(text, previous);
+    return { ...out, mode: "claude", usage: { inputTokens: message.usage.input_tokens, outputTokens: message.usage.output_tokens, costUsd: null } };
   } catch (error) {
     if (error instanceof ScopingUnavailableError) throw error;
     throw new ScopingUnavailableError(error instanceof Error ? `BuildBot: ${error.message}` : "BuildBot failed", true);
   }
+}
+
+function userPrompt(projectTitle: string, draft: MilestoneDraft, previous: SiteFiles): string {
+  return (
+    `<project>${projectTitle}</project>\n<milestone>\n${JSON.stringify({ title: draft.title, description: draft.description, criteria: draft.criteria.map((c) => c.text) }, null, 2)}\n</milestone>\n` +
+    `<previous_files>\n${JSON.stringify(previous).slice(0, 60_000)}\n</previous_files>`
+  );
+}
+
+/** Validate the agent's reply and merge its files over the earlier ones. */
+function parseOutput(text: string, previous: SiteFiles): { files: SiteFiles; notes: string } {
+  // Some models wrap JSON in a code fence even when asked not to.
+  const json = text.trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
+  let raw: unknown;
+  try {
+    raw = JSON.parse(json);
+  } catch {
+    throw new ScopingUnavailableError("BuildBot's reply wasn't valid JSON", true);
+  }
+  const parsed = AgentOutput.safeParse(raw);
+  if (!parsed.success) throw new ScopingUnavailableError("BuildBot's output failed validation", true);
+  const files: SiteFiles = { ...previous };
+  let bytes = 0;
+  for (const f of parsed.data.files) {
+    if (!PATH.test(f.path)) continue;
+    bytes += f.content.length;
+    if (bytes > MAX_BYTES) throw new ScopingUnavailableError("BuildBot's output is too large", false);
+    files[f.path.replace(/\.html$/, "").replace(/(.)\/$/, "$1")] = f.content;
+  }
+  return { files, notes: parsed.data.notes };
+}
+
+/** JSON Schema for AgentOutput, for OpenRouter's structured output. */
+const AGENT_JSON_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  required: ["files", "notes"],
+  properties: {
+    files: {
+      type: "array",
+      items: { type: "object", additionalProperties: false, required: ["path", "content"], properties: { path: { type: "string" }, content: { type: "string" } } },
+    },
+    notes: { type: "string" },
+  },
+} as const;
+
+const OPENROUTER_CHAT = "https://openrouter.ai/api/v1/chat/completions";
+
+/** One attempt by any OpenRouter model, with its real token use and cost (OpenRouter reports both). */
+async function buildWithOpenRouter(model: string, projectTitle: string, draft: MilestoneDraft, previous: SiteFiles): Promise<BuildResult> {
+  let res: Response;
+  try {
+    res = await fetch(OPENROUTER_CHAT, {
+      method: "POST",
+      signal: AbortSignal.timeout(300_000),
+      headers: {
+        Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+        "Content-Type": "application/json",
+        "HTTP-Referer": process.env.APP_URL ?? "https://github.com/Cyanexani/paydrop",
+        "X-Title": "Paydrop BuildBot",
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: "system", content: `${SYSTEM}\n\nReply with only a JSON object: {"files":[{"path":"/","content":"..."}],"notes":"..."}.` },
+          { role: "user", content: userPrompt(projectTitle, draft, previous) },
+        ],
+        response_format: { type: "json_schema", json_schema: { name: "milestone_files", strict: true, schema: AGENT_JSON_SCHEMA } },
+        max_tokens: 32_000,
+        usage: { include: true },
+      }),
+    });
+  } catch (error) {
+    throw new ScopingUnavailableError(`BuildBot (${model}): ${error instanceof Error ? error.message : "request failed"}`, true);
+  }
+  const body = (await res.json().catch(() => ({}))) as {
+    choices?: Array<{ message?: { content?: string | null } }>;
+    usage?: { prompt_tokens?: number; completion_tokens?: number; cost?: number };
+    error?: { message?: string };
+  };
+  if (!res.ok) throw new ScopingUnavailableError(`BuildBot (${model}): ${body.error?.message ?? `OpenRouter HTTP ${res.status}`}`, res.status === 429 || res.status >= 500);
+  const out = parseOutput(body.choices?.[0]?.message?.content ?? "", previous);
+  return {
+    ...out,
+    mode: "openrouter",
+    usage: { inputTokens: body.usage?.prompt_tokens ?? null, outputTokens: body.usage?.completion_tokens ?? null, costUsd: body.usage?.cost ?? null },
+  };
 }
 
 const svg = (i: number) =>

@@ -1,0 +1,47 @@
+name: Background jobs
+
+# Render's free plan has no background worker, so this calls the deployed app's job endpoint on a
+# schedule: auto-release, PayPal hold renewal, stale checkouts, offer expiry, silent freelancers,
+# payout retries, stuck checks and reconciliation. Every 14 minutes also keeps the free instance
+# from going to sleep (it sleeps after about 15 idle minutes).
+#
+# Needs two repository secrets (Settings → Secrets and variables → Actions):
+#   PAYDROP_URL  the site's address, e.g. https://paydrop-web.onrender.com
+#   CRON_SECRET  the value of CRON_SECRET on the Render web service (Environment tab)
+# Until both are set, each run does nothing and passes.
+
+on:
+  schedule:
+    - cron: "*/14 * * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: background-jobs
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Call /api/cron/all
+        env:
+          PAYDROP_URL: ${{ secrets.PAYDROP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$PAYDROP_URL" ] || [ -z "$CRON_SECRET" ]; then
+            echo "::notice::PAYDROP_URL or CRON_SECRET is not set; skipping."
+            exit 0
+          fi
+          # A sleeping free instance can take about a minute to wake, so allow time and retry once.
+          for attempt in 1 2; do
+            code=$(curl -sS -o response.json -w '%{http_code}' --max-time 150 -X POST \
+              -H "Authorization: Bearer $CRON_SECRET" "${PAYDROP_URL%/}/api/cron/all" || echo 000)
+            echo "Attempt $attempt: HTTP $code"
+            if [ "$code" = "200" ]; then head -c 2000 response.json; echo; exit 0; fi
+            sleep 20
+          done
+          head -c 2000 response.json 2>/dev/null; echo
+          exit 1

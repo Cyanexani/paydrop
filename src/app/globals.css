@@ -1,24 +1,561 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* Paydrop — poster UI. Near-black plum ground, Retro Magic accents (magenta, peach, butter),
+   condensed grotesk headlines, italic serif money, mono labels. Money is drawn as gooey drops. */
+@custom-variant dark (&:where(.dark, .dark *));
 
+/* Theme colours resolve where they're used ("inline"), so a poster can keep its dark values
+   inside a light page by redefining the --c-* variables for its subtree. */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-ink: var(--c-ink);
+  --color-raised: var(--c-raised);
+  --color-well: var(--c-well);
+  --color-line: var(--c-line);
+  --color-line-soft: var(--c-line-soft);
+  --color-paper: var(--c-paper);
+  --color-muted: var(--c-muted);
+  --color-subtle: var(--c-subtle);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+@theme {
+  --font-sans: var(--font-display-face), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-serif-face), Georgia, serif;
+  --font-mono: var(--font-mono-face), ui-monospace, monospace;
+  --radius-lg: 0.875rem;
+  --radius-xl: 1.25rem;
+
+  --color-plum: #44113e;
+  --color-wine: #6a1452;
+  --color-magenta: #ff49c1;
+  --color-peach: #ffb3ae;
+  --color-butter: #fff7ad;
+  --color-danger: #ff6b6b;
+
+  /* Existing zinc/emerald/sky/amber utilities follow the theme */
+  --color-zinc-50: #fff4fa;
+  --color-zinc-100: #fff1f7;
+  --color-zinc-200: #f0d6e6;
+  --color-zinc-300: #e2c3d6;
+  --color-zinc-400: #d9bdcf;
+  --color-zinc-500: #c7a9bc;
+  --color-zinc-600: #9c7a90;
+  --color-zinc-700: #5a3550;
+  --color-zinc-800: #3a1f33;
+  --color-zinc-900: #160a13;
+  --color-zinc-950: #0e070c;
+
+  --color-emerald-50: #fff0fa;
+  --color-emerald-100: #ffd9f2;
+  --color-emerald-300: #ffa3df;
+  --color-emerald-400: #ff7fd3;
+  --color-emerald-500: #ff49c1;
+  --color-emerald-600: #e62fa8;
+  --color-emerald-700: #c21a8c;
+  --color-emerald-800: #9e1172;
+  --color-emerald-900: #6a1452;
+  --color-emerald-950: #3a0c2f;
+
+  --color-sky-50: #fff3f2;
+  --color-sky-100: #ffe1df;
+  --color-sky-200: #ffc9c5;
+  --color-sky-300: #ffb3ae;
+  --color-sky-400: #ff9d97;
+  --color-sky-700: #b5524c;
+  --color-sky-800: #8a3a35;
+  --color-sky-900: #4d1f2a;
+  --color-sky-950: #2a1020;
+
+  --color-amber-100: #fffbd6;
+  --color-amber-300: #fff7ad;
+  --color-amber-400: #ffe98a;
+  --color-amber-500: #f5d55c;
+  --color-amber-700: #8a6d00;
+  --color-amber-800: #6b5400;
+  --color-amber-950: #2e2410;
+
+  --color-violet-100: #f3dcfb;
+  --color-violet-300: #e6b9f8;
+  --color-violet-800: #6c2a86;
+  --color-violet-950: #36113f;
+}
+
+:root,
+[data-theme="dark"] {
+  color-scheme: dark;
+  --c-ink: #0e070c;
+  --c-raised: #160a13;
+  --c-well: #1a0d17;
+  --c-line: #3a1f33;
+  --c-line-soft: #2a1524;
+  --c-paper: #fff1f7;
+  --c-muted: #d9bdcf;
+  --c-subtle: #c7a9bc;
+  /* Tints for chips and swatch rings, as "r g b" */
+  --c-overlay: 255 241 247;
+  /* Status and drop colours: magenta = held, peach = checking, butter = paid */
+  --tone-held: #ff49c1;
+  --tone-check: #ffb3ae;
+  --tone-paid: #fff7ad;
+  --tone-neutral: #6a4560;
+  --tone-bad: #ff6b6b;
+  --tone-lilac: #e6b9f8;
+  --tone-white: #fff1f7;
+  --tone-empty: #4a2a42;
+  /* The same tones when they colour text: equal to the tones on dark, darkened on light */
+  --ink-held: #ff49c1;
+  --ink-check: #ffb3ae;
+  --ink-paid: #fff7ad;
+  --ink-bad: #ff6b6b;
+  --ink-white: #fff1f7;
+  --c-input: #120810;
+  --c-bubble: #44113e;
+  /* Two-series chart colours, checked for colour-blind separation and 3:1 against the surface */
+  --shadow-card: none;
+  --c-accent: #ff49c1;
+  --chart-base: #f0479f;
+  --chart-premium: #b98a18;
+}
+
+/* Light: warm white ground, plum ink; accents darkened where they're text so they stay readable */
+[data-theme="light"] {
+  color-scheme: light;
+  --c-ink: #fbf5f8;
+  --c-raised: #ffffff;
+  --c-well: #f5ebf1;
+  --c-line: #e3cfdc;
+  --c-line-soft: #eee1e9;
+  --c-paper: #24081f;
+  --c-muted: #563a4f;
+  --c-subtle: #6c5264;
+  --c-overlay: 36 8 31;
+  --tone-held: #e6249f;
+  --tone-check: #f0857d;
+  --tone-paid: #f2c230;
+  --tone-neutral: #cbb3c3;
+  --tone-bad: #e5484d;
+  --tone-lilac: #b97fdb;
+  --tone-white: #d9c3d1;
+  --tone-empty: #e6d6e0;
+  --ink-held: #b5107b;
+  --ink-check: #b0352e;
+  --ink-paid: #8a5d00;
+  --ink-bad: #b42318;
+  --ink-white: #563a4f;
+  --c-input: #ffffff;
+  --c-bubble: #f7dcee;
+  --shadow-card: 0 1px 2px rgb(36 8 31 / 0.06);
+  --c-accent: #b5107b;
+  --chart-base: #d81b8f;
+  --chart-premium: #b68600;
+}
+
+/* Posters are colourful gradient panels with light text, in both themes. */
+.poster {
+  --c-paper: #fff1f7;
+  --c-muted: #f1d9e6;
+  --c-subtle: #e4c6d8;
+  --c-line: #5a2a50;
+  --c-overlay: 255 241 247;
+  --tone-held: #ff49c1;
+  --tone-check: #ffb3ae;
+  --tone-paid: #fff7ad;
+  --tone-neutral: #6a4560;
+  --tone-white: #fff1f7;
+  /* The same tones when they colour text: equal to the tones on dark, darkened on light */
+  --ink-held: #ff49c1;
+  --ink-check: #ffb3ae;
+  --ink-paid: #fff7ad;
+  --ink-bad: #ff6b6b;
+  --ink-white: #fff1f7;
+  color: var(--c-paper);
+}
+
+[data-theme="light"] .text-butter,
+[data-theme="light"] .hover\:text-butter:hover { color: #8a5d00; }
+[data-theme="light"] .text-peach,
+[data-theme="light"] .hover\:text-peach:hover { color: #b0352e; }
+[data-theme="light"] .text-magenta { color: #b5107b; }
+[data-theme="light"] .poster .text-butter { color: #fff7ad; }
+[data-theme="light"] .poster .text-peach { color: #ffb3ae; }
+[data-theme="light"] .poster .text-magenta { color: #ff49c1; }
+[data-theme="light"] .text-\[\#ffc2c2\],
+[data-theme="light"] .text-\[\#ffd6d6\] { color: #b42318; }
+[data-theme="light"] .bg-butter { background-color: #ffe25a; }
+[data-theme="light"] .hover\:bg-white:hover { background-color: #ffd21f; }
+[data-theme="light"] .bg-white\/5,
+[data-theme="light"] .hover\:bg-white\/5:hover,
+[data-theme="light"] .focus\:bg-white\/5:focus { background-color: rgb(36 8 31 / 0.05); }
+[data-theme="light"] .bg-white\/10 { background-color: rgb(36 8 31 / 0.08); }
+
+html {
+  background: var(--color-ink);
 }
 
 body {
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-family: var(--font-sans);
+  background: var(--color-ink);
+  color: var(--color-paper);
 }
+
+::selection {
+  background: rgb(255 73 193 / 0.45);
+  color: #fff;
+}
+
+@layer components {
+/* ---------- Type ---------- */
+
+/* Condensed grotesk for headlines */
+.cond {
+  font-stretch: 80%;
+  font-variation-settings: "wdth" 80;
+  letter-spacing: -0.02em;
+}
+
+/* Italic serif for money and big numbers */
+.money {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+/* Captions and metadata: small, but sentence case and easy to read */
+.label {
+  font-size: 12.5px;
+  line-height: 1.45;
+  font-weight: 500;
+}
+span.label, a.label { display: inline-block; }
+.label::first-letter { text-transform: uppercase; }
+
+/* ---------- Surfaces ---------- */
+
+.poster {
+  position: relative;
+  overflow: hidden;
+  border-radius: 40px;
+  isolation: isolate;
+  background:
+    radial-gradient(55% 65% at 22% 38%, #ff49c1 0%, transparent 62%),
+    radial-gradient(45% 55% at 82% 18%, #ffb3ae 0%, transparent 58%),
+    radial-gradient(40% 50% at 72% 96%, #fff7ad 0%, transparent 60%),
+    radial-gradient(70% 80% at 30% 112%, #6a1452 0%, transparent 70%),
+    #44113e;
+  background-size: 150% 150%;
+  animation: wash 24s ease-in-out infinite alternate;
+}
+.poster::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(rgb(42 10 36 / 0.8), rgb(42 10 36 / 0.1) 22%, rgb(42 10 36 / 0.1) 70%, rgb(42 10 36 / 0.86));
+}
+.poster-money {
+  background:
+    radial-gradient(50% 70% at 10% 50%, #6a1452 0%, transparent 70%),
+    radial-gradient(40% 60% at 50% 40%, #ff49c1 0%, transparent 65%),
+    radial-gradient(40% 60% at 92% 60%, #ffb3ae 0%, transparent 60%),
+    #44113e;
+  background-size: 150% 150%;
+}
+@keyframes wash {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 100% 70%; }
+}
+
+.ring {
+  position: absolute;
+  border-radius: 9999px;
+  border: 1px solid rgb(255 241 247 / 0.22);
+  pointer-events: none;
+}
+
+/* Swatch chip (from the gradient palette cards) */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 12px 3px 4px;
+  border-radius: 9999px;
+  background: rgb(var(--c-overlay) / 0.07);
+  border: 1px solid rgb(var(--c-overlay) / 0.16);
+  color: var(--c-paper);
+  font-size: 12.5px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.chip-glass {
+  background: rgb(var(--c-overlay) / 0.16);
+  border-color: rgb(var(--c-overlay) / 0.26);
+  backdrop-filter: blur(12px);
+}
+.sw {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  border-radius: 9999px;
+  box-shadow: 0 0 0 2px rgb(var(--c-overlay) / 0.14);
+}
+/* Inside grid cells: a compact chip that sits on the row's centre line */
+.ag-cell .chip {
+  vertical-align: middle;
+  line-height: 1.3;
+  padding: 2px 10px 2px 3px;
+  gap: 6px;
+  font-size: 11px;
+}
+.ag-cell .sw { width: 12px; height: 12px; }
+.sw-live { animation: live 2s ease-out infinite; }
+@keyframes live {
+  0% { box-shadow: 0 0 0 0 rgb(255 73 193 / 0.7); }
+  100% { box-shadow: 0 0 0 12px rgb(255 73 193 / 0); }
+}
+}
+
+.float { animation: float 7s ease-in-out infinite; }
+@keyframes float {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -12px; }
+}
+
+.rise { animation: rise 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+@keyframes rise {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ---------- Gooey dots (filters live in the root layout) ---------- */
+
+@layer components {
+  .goo-lg { filter: url(#goo-lg); }
+  .goo-md { filter: url(#goo-md); }
+  .goo-sm { filter: url(#goo-sm); }
+}
+
+/* Loader 1 — glide: a magenta dot slides along three, merging with each */
+.gl { position: relative; width: calc(var(--s, 18px) * 5.8); height: calc(var(--s, 18px) * 1.6); filter: url(#goo-md); flex: none; }
+.gl > span { position: absolute; top: calc(var(--s, 18px) * 0.3); width: var(--s, 18px); height: var(--s, 18px); border-radius: 9999px; background: var(--color-paper); }
+.gl > span:nth-child(1) { left: calc(var(--s, 18px) * 0.2); }
+.gl > span:nth-child(2) { left: calc(var(--s, 18px) * 2.4); }
+.gl > span:nth-child(3) { left: calc(var(--s, 18px) * 4.6); }
+.gl > span:nth-child(4) { left: calc(var(--s, 18px) * 0.2); background: var(--color-magenta); animation: glide 1.9s cubic-bezier(0.7, 0, 0.3, 1) infinite alternate; }
+@keyframes glide { to { left: calc(var(--s, 18px) * 4.6); } }
+
+/* Loader 2 — orbit: two dots circle a core and fuse with it */
+.go { position: relative; width: calc(var(--s, 20px) * 2.8); height: calc(var(--s, 20px) * 2.8); filter: url(#goo-md); flex: none; }
+.go > span { position: absolute; left: calc(var(--s, 20px) * 0.9); top: calc(var(--s, 20px) * 0.9); width: var(--s, 20px); height: var(--s, 20px); border-radius: 9999px; background: var(--color-peach); }
+.go > span:nth-child(2) { background: var(--color-magenta); animation: orb 1.6s cubic-bezier(0.6, 0, 0.4, 1) infinite; }
+.go > span:nth-child(3) { background: var(--tone-paid); animation: orb 1.6s cubic-bezier(0.6, 0, 0.4, 1) infinite reverse; }
+@keyframes orb {
+  0% { transform: rotate(0) translateX(0); }
+  50% { transform: rotate(180deg) translateX(calc(var(--s, 20px) * 0.9)); }
+  100% { transform: rotate(360deg) translateX(0); }
+}
+
+/* Loader 3 — drip: three dots sway through each other */
+.gd { position: relative; width: calc(var(--s, 20px) * 3.6); height: calc(var(--s, 20px) * 1.4); filter: url(#goo-md); flex: none; }
+.gd > span { position: absolute; top: calc(var(--s, 20px) * 0.2); left: calc(var(--s, 20px) * 1.3); width: var(--s, 20px); height: var(--s, 20px); border-radius: 9999px; background: var(--tone-paid); animation: drip 1.4s ease-in-out infinite; }
+.gd > span:nth-child(2) { animation-delay: -0.47s; background: var(--color-peach); }
+.gd > span:nth-child(3) { animation-delay: -0.94s; background: var(--color-magenta); }
+@keyframes drip {
+  0%, 100% { transform: translateX(calc(var(--s, 20px) * -1.2)) scale(0.7); }
+  50% { transform: translateX(calc(var(--s, 20px) * 1.2)) scale(1.1); }
+}
+
+/* Hero metaballs */
+.mb { position: absolute; border-radius: 9999px; }
+.mb1 { animation: mb1 10s ease-in-out infinite; }
+.mb2 { animation: mb2 12s ease-in-out infinite; }
+.mb3 { animation: mb3 8s ease-in-out infinite; }
+.mb4 { animation: mb4 14s ease-in-out infinite; }
+@keyframes mb1 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(110px, 30px); } }
+@keyframes mb2 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-90px, 70px) scale(1.1); } }
+@keyframes mb3 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(40px, -90px) scale(1.25); } }
+@keyframes mb4 { 0%, 100% { transform: translate(0, 0); } 33% { transform: translate(-70px, -40px); } 66% { transform: translate(60px, -10px); } }
+.logo-dot { animation: logo-dot 4s ease-in-out infinite; }
+@keyframes logo-dot { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(7px, 3px); } }
+
+/* Step 01 — one brief splits into milestones */
+.split { position: absolute; left: 50%; top: 50%; width: 30px; height: 30px; margin: -15px 0 0 -15px; border-radius: 9999px; background: var(--color-magenta); animation: split 3.6s cubic-bezier(0.7, 0, 0.3, 1) infinite; }
+.s1 { --x: -52px; --y: 0px; }
+.s2 { --x: 52px; --y: 0px; background: var(--color-peach); }
+.s3 { --x: 0px; --y: -44px; background: var(--tone-paid); }
+.s4 { --x: 0px; --y: 44px; }
+@keyframes split {
+  0%, 18% { transform: translate(0, 0) scale(1.5); }
+  50%, 72% { transform: translate(var(--x), var(--y)) scale(0.85); }
+  100% { transform: translate(0, 0) scale(1.5); }
+}
+
+/* Step 02 — PayPal guards the drop: dots orbit and touch it */
+.hold-core { position: absolute; left: 50%; top: 50%; width: 50px; height: 50px; margin: -25px 0 0 -25px; border-radius: 9999px; background: var(--color-magenta); }
+.hold-orb { position: absolute; left: 50%; top: 50%; width: 18px; height: 18px; margin: -9px 0 0 -9px; border-radius: 9999px; background: var(--tone-paid); animation: guard 3s cubic-bezier(0.6, 0, 0.4, 1) infinite; }
+.o1 { --a: 0deg; }
+.o2 { --a: 120deg; background: var(--tone-white); }
+.o3 { --a: 240deg; }
+@keyframes guard {
+  0% { transform: rotate(var(--a)) translateX(52px); }
+  30% { transform: rotate(calc(var(--a) + 110deg)) translateX(30px); }
+  55% { transform: rotate(calc(var(--a) + 200deg)) translateX(54px); }
+  100% { transform: rotate(calc(var(--a) + 360deg)) translateX(52px); }
+}
+
+/* Step 03 — a drop travels and merges into the payout */
+.rel-drop { position: absolute; top: 50%; width: 30px; height: 30px; margin-top: -15px; border-radius: 9999px; background: var(--color-magenta); animation: travel 3.4s cubic-bezier(0.65, 0, 0.35, 1) infinite; }
+.rel-pool { position: absolute; top: 50%; right: 14%; width: 84px; height: 84px; margin-top: -42px; border-radius: 9999px; background: var(--tone-paid); animation: gulp 3.4s ease-in-out infinite; }
+@keyframes travel { 0% { left: 10%; opacity: 0; } 12% { opacity: 1; } 68%, 100% { left: calc(86% - 70px); opacity: 1; } }
+@keyframes gulp { 0%, 62% { transform: scale(1); } 78% { transform: scale(1.14); } 100% { transform: scale(1); } }
+
+/* Scoped milestones: a liquid chain of drops sized by price */
+.chain-drop { position: absolute; top: 50%; border-radius: 9999px; transform: translate(-50%, -50%) scale(0); animation: grow 0.9s cubic-bezier(0.3, 1.5, 0.5, 1) forwards; }
+@keyframes grow { to { transform: translate(-50%, -50%) scale(1); } }
+.chain-string { position: absolute; top: 50%; height: 36px; margin-top: -18px; border-radius: 18px; background: var(--color-wine); transform-origin: left; transform: scaleX(0); animation: stretch 1s 0.2s cubic-bezier(0.6, 0, 0.3, 1) forwards; }
+@keyframes stretch { to { transform: scaleX(1); } }
+
+/* Contract money stage */
+.money-drop { position: absolute; top: 50%; border-radius: 9999px; transform: translate(-50%, -50%); transition: left 1.5s cubic-bezier(0.65, 0, 0.35, 1), width 1s cubic-bezier(0.3, 1.4, 0.5, 1), height 1s cubic-bezier(0.3, 1.4, 0.5, 1), background-color 0.8s; animation: drop-in 0.8s cubic-bezier(0.3, 1.5, 0.5, 1) backwards; }
+.money-bob { animation: drop-in 0.8s cubic-bezier(0.3, 1.5, 0.5, 1) backwards, bob 3.4s ease-in-out infinite; }
+@keyframes drop-in { from { scale: 0; } }
+/* A ring bursts from the pool each time money lands in it */
+.pool-ripple { position: absolute; left: 82%; top: 50%; border-radius: 9999px; border: 2px solid var(--color-butter); translate: -50% -50%; pointer-events: none; animation: ripple 1.5s cubic-bezier(0.2, 0.7, 0.3, 1) 1.1s both; }
+.pool-ripple + .pool-ripple { animation-delay: 1.35s; }
+@keyframes ripple { from { scale: 0.7; opacity: 0.9; } to { scale: 2.2; opacity: 0; } }
+/* Dotted path the money follows, client → PayPal → payout */
+.flow-dash { stroke: rgb(255 241 247 / 0.35); stroke-width: 3; stroke-dasharray: 1 16; stroke-linecap: round; fill: none; animation: flow-dash 1.4s linear infinite; }
+@keyframes flow-dash { to { stroke-dashoffset: -34; } }
+.stage-chip { cursor: pointer; transition: left 1.5s cubic-bezier(0.65, 0, 0.35, 1), background-color 0.2s, scale 0.2s; }
+.stage-chip:hover { background: rgb(255 241 247 / 0.3); scale: 1.06; }
+@keyframes bob { 0%, 100% { margin-top: -6px; } 50% { margin-top: 6px; } }
+.money-ring { position: absolute; top: 50%; left: 50%; border-radius: 9999px; border: 1.5px dashed rgb(255 241 247 / 0.45); transform: translate(-50%, -50%); }
+
+/* Ledger: one dot per ₹10,000 */
+.ldot { width: 22px; height: 22px; border-radius: 9999px; animation: pop 0.5s cubic-bezier(0.3, 1.6, 0.5, 1) both; }
+.ldot-held { background: var(--color-magenta); animation: pop 0.5s cubic-bezier(0.3, 1.6, 0.5, 1) both, breathe 3s ease-in-out infinite; }
+.ldot-paid { background: var(--tone-paid); }
+.ldot-none { background: transparent; box-shadow: inset 0 0 0 1.5px var(--tone-neutral); }
+@keyframes pop { from { transform: scale(0); } to { transform: scale(1); } }
+@keyframes breathe { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+
+/* ---------- Motion system ---------- */
+
+/* Scroll reveal. <Reveal> sets the attribute after hydration, so nothing is hidden without JS. */
+[data-reveal] {
+  transition: opacity 0.8s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.9s cubic-bezier(0.2, 0.8, 0.2, 1), filter 0.8s;
+  transition-delay: var(--reveal-delay, 0s);
+}
+[data-reveal="wait"] { opacity: 0; transform: translateY(36px); filter: blur(6px); }
+
+/* Jelly: buttons squash and settle on hover, squish on press */
+.jelly { border-radius: 9999px; transition: scale 0.15s, background-color 0.2s, border-color 0.2s, color 0.2s; }
+.jelly:active:not(:disabled) { scale: 0.95; }
+@media (hover: hover) {
+  .jelly:hover:not(:disabled) { animation: jelly 0.55s cubic-bezier(0.3, 0.6, 0.3, 1); }
+}
+@keyframes jelly {
+  0% { transform: scale(1, 1); }
+  28% { transform: scale(1.07, 0.9); }
+  48% { transform: scale(0.96, 1.05); }
+  68% { transform: scale(1.02, 0.98); }
+  100% { transform: scale(1, 1); }
+}
+
+/* Page transitions: each page is wrapped in React's <ViewTransition> */
+::view-transition-old(.page-exit) { animation: 160ms ease-in both page-out; }
+::view-transition-new(.page-enter) { animation: 420ms cubic-bezier(0.2, 0.8, 0.2, 1) 140ms both page-in; }
+@keyframes page-out { to { opacity: 0; filter: blur(8px); transform: translateY(-10px); } }
+@keyframes page-in { from { opacity: 0; filter: blur(8px); transform: translateY(22px); } }
+
+/* Nav: an ink bar that stretches toward the link you point at, then snaps under it */
+.nav-ink {
+  position: absolute;
+  bottom: 0;
+  height: 3px;
+  border-radius: 9999px;
+  background: var(--color-magenta);
+  pointer-events: none;
+  transition: left var(--tl, 0.3s) cubic-bezier(0.3, 0.9, 0.3, 1), right var(--tr, 0.3s) cubic-bezier(0.3, 0.9, 0.3, 1), opacity 0.3s;
+}
+
+/* Accordion: animates to the content's natural height */
+.acc { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.55s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.acc[data-open="true"] { grid-template-rows: 1fr; }
+.acc > div { min-height: 0; overflow: hidden; opacity: 0; transition: opacity 0.35s; }
+.acc[data-open="true"] > div { opacity: 1; transition-delay: 0.15s; }
+.acc-chevron { transition: rotate 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
+[aria-expanded="true"] .acc-chevron { rotate: 180deg; }
+
+/* A milestone's journey: agreed → funded → delivered → checked → paid */
+.track-fill { transition: width 1.1s cubic-bezier(0.3, 0.9, 0.3, 1), background-color 0.6s; }
+.track-dot { transition: background-color 0.6s, scale 0.6s cubic-bezier(0.3, 1.5, 0.5, 1); }
+.track-now { animation: track-now 2.2s ease-in-out infinite; }
+@keyframes track-now { 0%, 100% { scale: 1; } 50% { scale: 1.25; } }
+
+/* Small pops: status swatches on change, check results, chat bubbles */
+.pop-in { animation: pop 0.5s cubic-bezier(0.3, 1.6, 0.5, 1) both; }
+.bubble-in { animation: bubble-in 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.2) both; transform-origin: var(--origin, left bottom); }
+@keyframes bubble-in { from { opacity: 0; transform: scale(0.85) translateY(8px); } }
+
+/* Hero: a blob that follows the pointer and melts into the others */
+.mb-pointer { position: absolute; left: 0; top: 0; width: 110px; height: 110px; margin: -55px 0 0 -55px; border-radius: 9999px; background: var(--color-paper); scale: 0; transition: scale 0.6s cubic-bezier(0.3, 1.4, 0.5, 1); will-change: transform; }
+.mb-pointer[data-on="true"] { scale: 1; }
+
+/* Next-move strip: the dot beats while it is your turn */
+.beat { animation: beat 1.6s ease-in-out infinite; }
+@keyframes beat { 0%, 100% { scale: 1; } 40% { scale: 1.35; } }
+
+/* 404: a lost drop wanders */
+.lost { animation: lost 6s ease-in-out infinite; }
+@keyframes lost { 0%, 100% { transform: translate(-120px, 10px); } 30% { transform: translate(40px, -50px) scale(0.8); } 60% { transform: translate(130px, 30px) scale(1.1); } }
+
+/* ---------- Third-party widgets ---------- */
+
+details > summary { list-style: none; cursor: pointer; }
+details > summary::-webkit-details-marker { display: none; }
+
+.b-gantt { border-radius: 1.25rem; overflow: hidden; font-family: var(--font-sans); }
+.b-gantt .b-panel,
+.b-gantt .b-grid-cell { background-color: var(--color-raised); }
+.b-gantt .b-grid-header,
+.b-gantt .b-grid-footer { background-color: var(--c-well); }
+.b-gantt .b-grid-splitter,
+.b-gantt .b-grid-splitter-inner,
+.b-gantt [class*="b-grid-splitter-button"] { background-color: var(--color-line); }
+.b-gantt .b-grid-subgrid,
+.b-gantt .b-grid-body-container,
+.b-gantt .b-grid-panel-body,
+.b-gantt .b-grid-vertical-scroller { background-color: var(--color-raised) !important; }
+.b-gantt .b-sch-time-range.b-gantt-project-line { background-color: var(--color-peach) !important; border-color: var(--color-peach) !important; color: #2b0a26 !important; }
+.b-gantt .b-gantt-task { color: #22071d; font-weight: 600; }
+/* Bryntum's dark theme mixes each bar into the background; paint the app's own swatch colour instead */
+.b-gantt .b-gantt-task-wrap.b-sch-custom-color > .b-gantt-task { background-color: var(--b-primary); }
+
+/* Chart bars grow from their baseline */
+.bar-grow { transform-origin: left center; animation: bar-grow 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+@keyframes bar-grow { from { transform: scaleX(0); } }
+
+/* Grids: wrapped text gets real line spacing instead of the row's line-height */
+.ag-cell-wrap-text { line-height: 1.45; padding-top: 10px; padding-bottom: 10px; word-break: normal; }
+/* Header filter buttons appear on hover, on focus, or when a filter is on */
+@media (hover: hover) {
+  .ag-header-cell .ag-header-cell-filter-button { opacity: 0; transition: opacity 0.15s; }
+  .ag-header-cell:hover .ag-header-cell-filter-button,
+  .ag-header-cell:focus-within .ag-header-cell-filter-button,
+  .ag-header-cell-filtered .ag-header-cell-filter-button { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  [data-reveal="wait"] { opacity: 1; transform: none; filter: none; }
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
+}
+
+/* Spinner for small inline waits */
+.spin { width: var(--s, 16px); height: var(--s, 16px); flex: none; border-radius: 9999px; border: 2px solid rgb(var(--c-overlay) / 0.18); border-top-color: var(--color-magenta); animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }

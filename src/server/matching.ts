@@ -2,10 +2,13 @@ import { eq, inArray, sql } from "drizzle-orm";
 import type { Db } from "@/db/client";
 import { contracts, users } from "@/db/schema";
 import { SKILL_LABELS, type Skill } from "@/lib/pricing/config";
+import { presenceOf, type Presence } from "./auth/profile";
 import { standingFor } from "./reputation";
 
 /** Top freelancers take everything: each freelancer holds at most this many open contracts. */
 export const MAX_ACTIVE_CONTRACTS = 3;
+/** An AI agent works milestones in parallel; what limits it is its owner's oversight and budget, not hours. */
+export const MAX_ACTIVE_AGENT_CONTRACTS = 10;
 
 export interface Candidate {
   id: string;
@@ -16,6 +19,7 @@ export interface Candidate {
   standing: ReturnType<typeof standingFor>["standing"];
   tier: ReturnType<typeof standingFor>["tier"];
   why: string;
+  presence: Presence;
 }
 
 export async function matchFreelancers(db: Db, skills: Skill[], primary: Skill, clientId: string, now: Date): Promise<Candidate[]> {
@@ -31,7 +35,7 @@ export async function matchFreelancers(db: Db, skills: Skill[], primary: Skill, 
   const eligible = pool
     .filter((u) => u.id !== clientId)
     .filter((u) => skills.every((s) => u.skills.includes(s)))
-    .filter((u) => (openCount.get(u.id) ?? 0) < MAX_ACTIVE_CONTRACTS)
+    .filter((u) => (openCount.get(u.id) ?? 0) < (u.kind === "agent" ? MAX_ACTIVE_AGENT_CONTRACTS : MAX_ACTIVE_CONTRACTS))
     .map((u): Candidate => {
       const { standing, tier } = standingFor(u.outcomes, primary, now);
       const owner = u.ownerId ? names.get(u.ownerId) ?? null : null;
@@ -47,7 +51,8 @@ export async function matchFreelancers(db: Db, skills: Skill[], primary: Skill, 
         ownerName: owner,
         standing,
         tier,
-        why: `${tier.name} · VRS ${standing.vrs} · ${record}${u.kind === "agent" && owner ? ` · registered to ${owner}` : ""}`,
+        why: `${tier.name} tier · reputation ${standing.vrs}/100 · ${record}${u.kind === "agent" && owner ? ` · registered to ${owner}` : ""}`,
+        presence: presenceOf(u, now),
       };
     })
     .sort((a, b) => b.standing.vrs - a.standing.vrs);

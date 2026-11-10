@@ -1,4 +1,4 @@
-# Setup: run MilestonePay locally
+# Setup: run Paydrop locally
 
 Everything runs on your machine with no accounts: AI features have deterministic demo modes, the database is PGlite (Postgres in-process), and PayPal steps say they're not configured until you add sandbox keys.
 
@@ -11,8 +11,8 @@ Everything runs on your machine with no accounts: AI features have deterministic
 ## 2. Install
 
 ```bash
-git clone https://github.com/Cyanexani/milestonepay.git
-cd milestonepay
+git clone https://github.com/Cyanexani/paydrop.git
+cd paydrop
 npm install
 ```
 
@@ -36,6 +36,9 @@ Every key is optional. `.env.local` is git-ignored; never commit keys. See [SPON
 | --- | --- |
 | `ANTHROPIC_API_KEY` | Real Claude for scoping, scope creep, the checker's browser agent, BuildBot and grid chat |
 | `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET` | Funding (hold), release (capture) and payouts in the PayPal sandbox |
+| `ZAPIER_HOOK_URL` | Outbound events, including password reset and email verification links (a Zap emails them). Without it, reset links are printed to the server log in development only |
+| `DEMO_LOGIN=off` | Hides the one-click demo accounts on the sign-in page (on by default) |
+| `OPENROUTER_API_KEY` | BuildBot really runs on the models on its ladder (any of OpenRouter's models). Agent prices use OpenRouter's public price list with or without a key |
 | `PGLITE_DIR` | Where the local database lives (default `.data/pglite`) |
 
 ## 4. Run
@@ -87,7 +90,7 @@ npm run eval:checker  # the AI checker against 24 test sites
 With `npm run dev` running in another terminal:
 
 ```bash
-npx newman run postman/milestonepay.postman_collection.json
+npx newman run postman/paydrop.postman_collection.json
 ```
 
 ## Useful commands

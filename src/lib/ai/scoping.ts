@@ -5,7 +5,7 @@ import { mockScope } from "./mock-scoping";
 
 export const SCOPING_MODEL = "claude-opus-5-5";
 /** Bump whenever the prompt changes; stored on every quote so a price can be traced to its prompt. */
-export const SCOPING_PROMPT_VERSION = "scope-v1";
+export const SCOPING_PROMPT_VERSION = "scope-v2";
 
 export interface ScopeMeta {
   mode: "claude" | "mock";
@@ -21,7 +21,7 @@ export class ScopingUnavailableError extends Error {
   }
 }
 
-const SYSTEM_PROMPT = `You scope freelance projects for MilestonePay, a marketplace where a client's money is held in PayPal and released per milestone only after an AI checks the delivered work against agreed criteria.
+const SYSTEM_PROMPT = `You scope freelance projects for Paydrop, a marketplace where a client's money is held in PayPal and released per milestone only after an AI checks the delivered work against agreed criteria.
 
 Turn the client's brief into milestones a freelancer can deliver and a checker can verify.
 
@@ -32,6 +32,7 @@ Decide the status first:
 
 For "scoped":
 - 1 to 8 milestones in delivery order. Each must be useful on its own and take 1 to 25 calendar days (durationDays).
+- briefQuote: the words in the brief that ask for this milestone, copied exactly (a phrase or sentence, 8 to 300 characters; you may join two excerpts with "..."). Never paraphrase. If nothing in the brief asks for a milestone, leave the milestone out: the client pays only for what they asked for. Work that is needed but unstated (hosting, testing) belongs inside the milestone it supports, not in a milestone of its own.
 - skill: the closest of web_dev, ui_design, video_editing.
 - estimate: three-point hours for a competent mid-level freelancer (optimistic <= likely <= pessimistic), with one or two sentences of reasoning.
 - complexityTags: every tag that applies from standard (static pages, layout), data_or_auth (logins, databases), integrations (payments, third-party APIs), legacy_code (unclear existing code). Explain in complexityReason.
@@ -61,14 +62,14 @@ export interface CalibrationExample {
   actualHours: number;
 }
 
-export async function scopeBrief(brief: string, examples: CalibrationExample[] = []): Promise<{ result: ScopeResult; meta: ScopeMeta }> {
-  const mode = aiMode();
+export async function scopeBrief(brief: string, examples: CalibrationExample[] = [], opts: { demo?: boolean } = {}): Promise<{ result: ScopeResult; meta: ScopeMeta }> {
+  const mode = opts.demo ? "mock" : aiMode();
   if (mode === "mock") {
     return { result: mockScope(brief), meta: { mode, model: "mock", promptVersion: SCOPING_PROMPT_VERSION, attempts: 1 } };
   }
 
   const calibration = examples.length
-    ? `<calibration>\nSimilar milestones finished on MilestonePay (estimated likely hours → actual hours). Use them to calibrate:\n${examples
+    ? `<calibration>\nSimilar milestones finished on Paydrop (estimated likely hours → actual hours). Use them to calibrate:\n${examples
         .map((e) => `- ${e.title}: ${e.likelyHours} h → ${e.actualHours} h`)
         .join("\n")}\n</calibration>\n`
     : "";
@@ -97,12 +98,12 @@ export async function scopeBrief(brief: string, examples: CalibrationExample[] =
     const meta: ScopeMeta = { mode, model: response.model, promptVersion: SCOPING_PROMPT_VERSION, attempts: attempt };
 
     if (response.stop_reason === "refusal") {
-      return { result: { status: "refused", reason: "This brief can't be scoped on MilestonePay." }, meta };
+      return { result: { status: "refused", reason: "This brief can't be scoped on Paydrop." }, meta };
     }
 
     const parsed = response.parsed_output;
     if (parsed) {
-      const checked = toScopeResult(parsed);
+      const checked = toScopeResult(parsed, brief);
       if (checked.ok) return { result: checked.result, meta };
       lastIssues = checked.issues;
     } else {

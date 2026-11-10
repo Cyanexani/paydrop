@@ -6,6 +6,7 @@ import { formatMoney } from "@/lib/money";
 import type { disputePack } from "@/server/contract-actions";
 import { api } from "../api";
 import { Button, Card, ErrorNote, StatusPill } from "../ui";
+import { GooBlock } from "@/components/goo";
 
 type Pack = Awaited<ReturnType<typeof disputePack>>;
 
@@ -20,7 +21,7 @@ export function DisputePack({ params }: { params: Promise<{ id: string }> }) {
   }, [id]);
 
   if (error) return <ErrorNote error={error} />;
-  if (!pack) return <p className="text-sm text-zinc-500">Loading…</p>;
+  if (!pack) return <GooBlock />;
 
   const download = () => {
     const blob = new Blob([JSON.stringify(pack, null, 2)], { type: "application/json" });
@@ -33,10 +34,10 @@ export function DisputePack({ params }: { params: Promise<{ id: string }> }) {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <Link href={`/contracts/${id}`} className="text-sm text-zinc-500 hover:underline">← Contract</Link>
-          <h1 className="text-2xl font-semibold tracking-tight">Dispute pack: {pack.contract.title}</h1>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+        <div className="min-w-0">
+          <Link href={`/contracts/${id}`} className="label inline-block py-2 text-muted hover:text-butter">← Contract</Link>
+          <h1 className="cond rise my-3 text-2xl font-semibold leading-tight">Dispute pack: {pack.contract.title}</h1>
+          <p className="label leading-relaxed text-subtle">
             {pack.contract.parties.map((p) => `${p.name} (${p.role})`).join(" · ")} · generated {new Date(pack.generatedAt).toLocaleString("en-IN")}
           </p>
         </div>
@@ -47,40 +48,40 @@ export function DisputePack({ params }: { params: Promise<{ id: string }> }) {
       </div>
 
       {pack.milestones.map((m) => (
-        <Card key={m.position} className="space-y-2">
-          <div className="flex items-center justify-between gap-2">
-            <h2 className="font-semibold">{m.position}. {m.title}</h2>
+        <Card key={m.position} className="space-y-3 [overflow-wrap:anywhere]">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="cond text-xl font-semibold leading-tight">{m.position}. {m.title}</h2>
             <StatusPill status={m.status} />
           </div>
-          <p className="text-xs text-zinc-500">Due {m.dueAt ? new Date(m.dueAt).toLocaleString("en-IN") : "—"} · {m.receipt.title}</p>
-          <ul className="text-sm">
+          <p className="text-xs text-subtle">Due {m.dueAt ? new Date(m.dueAt).toLocaleString("en-IN") : "—"} · {m.receipt.title}</p>
+          <ul className="space-y-1.5 text-[15px]">
             {m.criteria.map((c) => {
               const r = m.lastCheck?.results.find((x) => x.criterionId === c.id);
               return (
                 <li key={c.id}>
                   <strong>{c.id}</strong> {c.text} — {r ? `${r.outcome}${r.note ? `: ${r.note}` : ""}` : "not checked"}
-                  {r?.replayUrl && <a className="ml-1 text-emerald-700 underline dark:text-emerald-400" href={r.replayUrl} target="_blank" rel="noreferrer">replay</a>}
+                  {r?.replayUrl && <a className="ml-1 text-magenta underline" href={r.replayUrl} target="_blank" rel="noreferrer">replay</a>}
                 </li>
               );
             })}
           </ul>
           {m.submissions.length > 0 && (
-            <p className="text-xs text-zinc-500">Submissions: {m.submissions.map((s) => `${s.evidenceUrl}${s.commitSha ? ` @${s.commitSha}` : ""} (${new Date(s.at).toLocaleString("en-IN")})`).join("; ")}</p>
+            <p className="text-xs text-subtle">Submissions: {m.submissions.map((s) => `${s.evidenceUrl}${s.commitSha ? ` @${s.commitSha}` : ""} (${new Date(s.at).toLocaleString("en-IN")})`).join("; ")}</p>
           )}
-          {m.payouts.length > 0 && <p className="text-xs text-zinc-500">Payouts: {m.payouts.map((p) => `${p.name} ${formatMoney(p.amountMinor, p.currency)} ${p.status}`).join("; ")}</p>}
+          {m.payouts.length > 0 && <p className="text-xs text-subtle">Payouts: {m.payouts.map((p) => `${p.name} ${formatMoney(p.amountMinor, p.currency)} ${p.status}`).join("; ")}</p>}
         </Card>
       ))}
 
       <Card>
-        <h2 className="mb-2 font-semibold">Timeline</h2>
-        <ol className="space-y-1 text-sm">
+        <h2 className="cond mb-3 text-2xl font-semibold leading-tight">Timeline</h2>
+        <ol className="text-sm [overflow-wrap:anywhere]">
           {pack.timeline.map((t, i) => (
-            <li key={i} className="grid grid-cols-[9rem_6rem_1fr] gap-2">
-              <span className="tabular-nums text-zinc-500">{new Date(t.at).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" })}</span>
-              <span className="text-zinc-500">{t.kind}{t.milestone ? ` #${t.milestone}` : ""}</span>
+            <li key={i} className="grid gap-x-3 gap-y-0.5 border-t border-line-soft py-2 first:border-0 sm:grid-cols-[9rem_7rem_minmax(0,1fr)]">
+              <span className="label text-subtle">{new Date(t.at).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" })}</span>
+              <span className="label text-peach">{t.kind}{t.milestone ? ` #${t.milestone}` : ""}</span>
               <span>
                 {t.text}
-                {t.link && <a className="ml-1 text-emerald-700 underline dark:text-emerald-400" href={t.link} target="_blank" rel="noreferrer">replay</a>}
+                {t.link && <a className="ml-1 text-magenta underline" href={t.link} target="_blank" rel="noreferrer">replay</a>}
               </span>
             </li>
           ))}

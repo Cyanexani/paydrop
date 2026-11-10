@@ -8,10 +8,15 @@ import type { ContractView } from "@/server/contracts";
 import { api, type PublicConfig, type Session } from "./api";
 import { MilestoneCard } from "./contract/milestone-card";
 import { AuditTrail, ChangeRequestsPanel, MessagesPanel, OfferPanel } from "./contract/panels";
-import { Card, ErrorNote, StatusPill } from "./ui";
+import { MoneyStage, HELD, PAID, UNFUNDED, sumWhere } from "./contract/money-stage";
+import { nextMove, stopNo } from "./contract/next-move";
+import { CountUp } from "./motion";
+import { Card, ErrorNote, PageHeader, SectionHead, StatusPill } from "./ui";
+import { PresenceBadge } from "./presence";
+import { GooBlock } from "./goo";
 
 // Browser-only widgets: load them on the client.
-const MilestoneGantt = dynamic(() => import("./gantt/milestone-gantt"), { ssr: false, loading: () => <p className="text-sm text-zinc-500">Loading timeline…</p> });
+const MilestoneGantt = dynamic(() => import("./gantt/milestone-gantt"), { ssr: false, loading: () => <GooBlock label="Loading timeline" /> });
 const ContractGrids = dynamic(() => import("./grid/contract-grids").then((m) => m.ContractGrids), { ssr: false });
 
 const WORKING = ["submitted", "releasing", "release_pending"];
@@ -24,6 +29,8 @@ export function ContractScreen({ params }: { params: Promise<{ id: string }> }) 
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [revision, setRevision] = useState(0);
+  // Cards the viewer opened or closed by hand; untouched cards follow the next move.
+  const [toggled, setToggled] = useState<Record<string, boolean>>({});
   const load = useCallback(() => setRevision((r) => r + 1), []);
 
   useEffect(() => {
@@ -62,50 +69,93 @@ export function ContractScreen({ params }: { params: Promise<{ id: string }> }) 
     [id, load],
   );
 
-  if (error && !view) return <ErrorNote error={error} />;
-  if (!view) return <p className="text-sm text-zinc-500">Loading…</p>;
+  if (error && !view) {
+    return (
+      <div className="space-y-6">
+        <PageHeader eyebrow="Contract" title="Can't open this one" />
+        <ErrorNote error={error} />
+        <Link href="/contracts" className="label inline-block py-2 text-muted hover:text-butter">← Back to your contracts</Link>
+      </div>
+    );
+  }
+  if (!view) return <GooBlock label="Loading contract" />;
   const { contract, role } = view;
 
+  const paidMinor = sumWhere(view.milestones, PAID);
+  const heldMinor = sumWhere(view.milestones, HELD);
+  const toFundMinor = sumWhere(view.milestones, UNFUNDED);
+  const move = nextMove(view);
+  const isOpen = (milestoneId: string) => toggled[milestoneId] ?? milestoneId === move.milestone?.id;
+  const pick = (milestoneId: string) => {
+    setToggled((t) => ({ ...t, [milestoneId]: true }));
+    // Wait a frame so the card has started opening before the page scrolls to it.
+    requestAnimationFrame(() => document.getElementById(`m-${milestoneId}`)?.scrollIntoView({ behavior: "smooth", block: "center" }));
+  };
+
   return (
-    <div className="space-y-6">
-      <div className="space-y-2">
-        <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
-          <Link href="/contracts" className="text-zinc-500 hover:underline">← Contracts</Link>
-          <span className="flex gap-3">
-            <Link href={`/contracts/${id}/dispute-pack`} className="text-zinc-600 underline dark:text-zinc-400">Dispute pack</Link>
-            <Link href="/ledger" className="text-zinc-600 underline dark:text-zinc-400">Ledger</Link>
+    <div className="space-y-7">
+      <nav aria-label="Contract" className="label flex flex-wrap items-center justify-between gap-2 text-muted">
+        <Link href="/contracts" className="py-2 hover:text-butter">← Contracts</Link>
+        <span className="flex gap-4">
+          <Link href={`/contracts/${id}/dispute-pack`} className="py-2 hover:text-butter">Dispute pack</Link>
+          <Link href="/ledger" className="py-2 hover:text-butter">Ledger</Link>
+        </span>
+      </nav>
+
+      <section className="rise flex flex-wrap items-end justify-between gap-6">
+        <div className="flex min-w-0 flex-col gap-3.5">
+          <span className="label text-peach">
+            {view.clientName} →{" "}
+            {view.freelancer ? <Link href={`/u/${view.freelancer.id}`} className="underline underline-offset-2 hover:text-butter">{view.freelancer.name}</Link> : null}
+            {view.freelancer?.kind === "agent" ? " (AI agent)" : ""} · {contract.tier.name} tier
+            {contract.standing.verifiedMilestones > 0 ? ` · reputation ${contract.standing.vrs}/100` : ""}
           </span>
+          <h1 className="cond max-w-4xl text-4xl font-extrabold leading-tight sm:text-5xl">{contract.title}</h1>
+          <div className="flex flex-wrap items-center gap-3">
+            <StatusPill status={contract.status} />
+            <span className="label text-subtle">You are the {role.replace("_", " ")}</span>
+            {view.freelancer && role !== "freelancer" && <PresenceBadge presence={view.freelancer.presence} kind={view.freelancer.kind} />}
+          </div>
         </div>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-2xl font-semibold tracking-tight">{contract.title}</h1>
-          <StatusPill status={contract.status} />
+        <div className="flex flex-col items-end gap-1.5 text-right">
+          <span className="money text-5xl leading-none text-butter"><CountUp minor={paidMinor} /></span>
+          <span className="label text-subtle">released of {formatMoney(contract.subtotalMinor)} · + {formatMoney(contract.feeMinor)} fee</span>
         </div>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          {view.clientName} → {view.freelancer?.name}{view.freelancer?.kind === "agent" ? " (AI agent)" : ""} · {contract.tier.name} tier
-          {contract.standing.verifiedMilestones > 0 ? ` (VRS ${contract.standing.vrs})` : ""} · price locked at signing ·{" "}
-          {formatMoney(contract.subtotalMinor)} + {formatMoney(contract.feeMinor)} fee = <strong>{formatMoney(contract.totalMinor)}</strong>
-        </p>
-        <p className="text-xs text-zinc-500">
-          You are the {role.replace("_", " ")}. Deliveries accepted from {contract.contractedOrigins.join(", ")}.
-          {contract.currency !== "INR" && config ? ` PayPal holds funds in ${contract.currency} at ₹${config.inrPerUsd}/$.` : ""}
-          {config?.aiMode === "mock" ? " AI is in demo mode (no API key)." : ""}
-        </p>
-      </div>
+      </section>
+
+      <MoneyStage view={view} heldMinor={heldMinor} paidMinor={paidMinor} toFundMinor={toFundMinor} onPick={pick} />
+
+      <section aria-label="Next move" className="flex flex-wrap items-center gap-x-4 gap-y-3 rounded-xl border border-line-soft bg-raised px-5 py-3.5 shadow-[var(--shadow-card)]">
+        <span className="label flex items-center gap-2.5 text-peach">
+          <span aria-hidden className={`size-2.5 rounded-full ${move.yours ? "beat bg-butter" : "bg-wine"}`} />
+          {move.yours ? "Your move" : "Next"}
+        </span>
+        <p key={move.text} className="cond min-w-0 flex-1 text-xl font-bold max-sm:order-last max-sm:basis-full">{move.text}</p>
+        {move.milestone && (
+          <button
+            type="button"
+            onClick={() => pick(move.milestone!.id)}
+            className={`jelly inline-flex min-h-9 items-center gap-2 rounded-lg px-3.5 text-sm font-semibold ${move.yours ? "bg-butter text-plum hover:bg-white" : "border border-line hover:bg-well"}`}
+          >
+            Open {stopNo(move.milestone)} <span aria-hidden>↓</span>
+          </button>
+        )}
+      </section>
+
+      <p className="label leading-relaxed text-subtle [overflow-wrap:anywhere]">
+        Price locked at signing · deliveries accepted from {contract.contractedOrigins.join(", ")}
+        {contract.currency !== "INR" && config ? ` · PayPal holds funds in ${contract.currency} at ₹${config.inrPerUsd}/$` : ""}
+        {config?.aiMode === "mock" ? " · AI in demo mode (no API key)" : ""}
+      </p>
 
       <ErrorNote error={error} />
-      {notice && <p className="rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-sm text-sky-900 dark:border-sky-900 dark:bg-sky-950 dark:text-sky-200">{notice}</p>}
+      {notice && <p className="flex items-start gap-3 rounded-lg border border-peach/30 bg-peach/10 px-4 py-3 text-[15px]"><span aria-hidden className="mt-1.5 size-2.5 flex-none rounded-full bg-peach" />{notice}</p>}
 
       <OfferPanel view={view} onChange={load} onError={setError} />
 
-      <Card className="space-y-2">
-        <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="font-semibold">Timeline</h2>
-          <p className="text-xs text-zinc-500">Bryntum Gantt · drag or stretch a milestone to propose a new due date</p>
-        </div>
-        <MilestoneGantt view={view} onProposeDue={proposeDue} />
-      </Card>
-
-      <ol className="space-y-4">
+      <section className="space-y-5">
+        <SectionHead title="Milestones" note={`${view.milestones.length} in total`} />
+        <ol className="space-y-3">
         {view.milestones.map((m) => (
           <MilestoneCard
             key={m.id}
@@ -114,13 +164,23 @@ export function ContractScreen({ params }: { params: Promise<{ id: string }> }) 
             contractStatus={contract.status}
             workerIsAgent={view.freelancer?.kind === "agent"}
             config={config}
+            open={isOpen(m.id)}
+            onToggle={() => setToggled((t) => ({ ...t, [m.id]: !isOpen(m.id) }))}
             onChange={load}
             onError={setError}
           />
         ))}
-      </ol>
+        </ol>
+      </section>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <section className="space-y-5">
+        <SectionHead title="Timeline" note="Drag or stretch a milestone to propose a new due date" />
+        <Card className="p-3 sm:p-4">
+          <MilestoneGantt view={view} onProposeDue={proposeDue} />
+        </Card>
+      </section>
+
+      <div className="grid gap-6 lg:grid-cols-2 [&>*]:min-w-0">
         <MessagesPanel view={view} onChange={load} onError={setError} />
         <ChangeRequestsPanel view={view} viewerId={viewerId} onChange={load} onError={setError} />
       </div>

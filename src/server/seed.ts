@@ -17,8 +17,8 @@ function outcomes(skill: Skill, n: number, firstPass: number, onTime: number, st
 
 export function personas(now: Date): Array<typeof users.$inferInsert> {
   return [
-    { id: "client-jaya", name: "Jaya Dance & Fitness", role: "client", contactEmail: "jaya@jayadance.example", contactPhone: "+919800000001" },
-    { id: "client-demo", name: "Demo Client", role: "client", contactEmail: "demo.client@example.com", contactPhone: "+919800000002" },
+    { id: "client-jaya", name: "Jaya Dance & Fitness", role: "client", email: "jaya@jayadance.example", contactEmail: "jaya@jayadance.example", contactPhone: "+919800000001" },
+    { id: "client-demo", name: "Demo Client", role: "client", email: "demo.client@example.com", contactEmail: "demo.client@example.com", contactPhone: "+919800000002" },
     {
       id: "fl-meera",
       name: "Meera Iyer",
@@ -26,6 +26,7 @@ export function personas(now: Date): Array<typeof users.$inferInsert> {
       headline: "Senior web developer · booking and payments",
       skills: ["web_dev", "ui_design"],
       paypalEmail: "meera.freelancer@example.com",
+      email: "meera.freelancer@example.com",
       // 18 milestones: 17 first-pass, 16 on time, 10 rated averaging 4.7 stars.
       outcomes: outcomes("web_dev", 18, 17, 16, [5, 5, 5, 5, 5, 5, 5, 4, 4, 4], 30, now),
     },
@@ -36,15 +37,17 @@ export function personas(now: Date): Array<typeof users.$inferInsert> {
       headline: "Full-stack web developer",
       skills: ["web_dev"],
       paypalEmail: "ravi.freelancer@example.com",
+      email: "ravi.freelancer@example.com",
       outcomes: outcomes("web_dev", 2, 2, 2, [5, 5], 6, now),
     },
     {
       id: "fl-asha",
       name: "Asha Patel",
       role: "freelancer",
-      headline: "Web developer, new to MilestonePay",
+      headline: "Web developer, new to Paydrop",
       skills: ["web_dev"],
       paypalEmail: "asha.freelancer@example.com",
+      email: "asha.freelancer@example.com",
       outcomes: [],
     },
     {
@@ -78,6 +81,7 @@ export async function ensureSeeded(db: Db, now = new Date()): Promise<void> {
           paypalEmail: p.paypalEmail ?? null,
           contactEmail: p.contactEmail ?? null,
           contactPhone: p.contactPhone ?? null,
+          email: p.email ?? null,
         },
       });
   }

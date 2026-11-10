@@ -6,69 +6,112 @@ export function Button({
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "primary" | "secondary" | "danger" }) {
   const styles = {
-    primary: "bg-emerald-700 text-white hover:bg-emerald-800 disabled:bg-emerald-700/50",
-    secondary:
-      "border border-zinc-300 bg-white text-zinc-900 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800",
-    danger: "border border-red-300 text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-950",
+    primary: "bg-butter text-plum shadow-sm hover:bg-white disabled:opacity-50",
+    secondary: "border border-paper/35 text-paper hover:border-paper/70",
+    danger: "border border-danger/40 text-[#ffc2c2] hover:bg-danger/10",
   }[variant];
   return (
     <button
-      className={`inline-flex items-center justify-center rounded-md px-3.5 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed ${styles} ${className}`}
+      className={`jelly inline-flex min-h-10 items-center justify-center gap-2 rounded-lg px-5 py-2 text-[15px] font-bold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-magenta disabled:cursor-not-allowed ${styles} ${className}`}
       {...props}
     />
   );
 }
 
 export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return (
-    <div className={`rounded-lg border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900 ${className}`}>
-      {children}
-    </div>
-  );
+  return <div className={`rounded-xl border border-line-soft bg-raised p-5 shadow-[var(--shadow-card)] ${className}`}>{children}</div>;
 }
 
-const STATUS: Record<string, { label: string; tone: "neutral" | "info" | "good" | "warn" | "bad" }> = {
+type Tone = "neutral" | "held" | "checking" | "paid" | "warn" | "bad";
+
+const STATUS: Record<string, { label: string; tone: Tone; live?: boolean }> = {
   offered: { label: "Offered", tone: "neutral" },
   accepted: { label: "Accepted · not funded", tone: "neutral" },
-  funding: { label: "Waiting for PayPal", tone: "info" },
-  funded: { label: "Funded · held in PayPal", tone: "info" },
-  submitted: { label: "Checking", tone: "info" },
+  funding: { label: "Waiting for PayPal", tone: "held", live: true },
+  funded: { label: "Funded · held", tone: "held" },
+  submitted: { label: "Checking", tone: "checking", live: true },
   changes_requested: { label: "Changes requested", tone: "warn" },
-  needs_review: { label: "Client review", tone: "warn" },
-  verified: { label: "Verified", tone: "good" },
-  releasing: { label: "Releasing", tone: "info" },
-  release_pending: { label: "Release pending at PayPal", tone: "info" },
+  needs_review: { label: "Your call", tone: "checking" },
+  verified: { label: "Verified", tone: "checking" },
+  releasing: { label: "Releasing", tone: "paid", live: true },
+  release_pending: { label: "Release pending", tone: "paid", live: true },
   release_failed: { label: "Release failed · re-fund", tone: "bad" },
-  released: { label: "Released", tone: "good" },
-  payout_pending: { label: "Payout pending", tone: "info" },
-  paid_out: { label: "Paid out", tone: "good" },
+  released: { label: "Released", tone: "paid" },
+  payout_pending: { label: "Payout pending", tone: "paid", live: true },
+  paid_out: { label: "Paid out", tone: "paid" },
   disputed: { label: "Disputed", tone: "bad" },
   voided: { label: "Voided", tone: "neutral" },
   cancelled: { label: "Cancelled", tone: "neutral" },
-  active: { label: "Active", tone: "info" },
-  completed: { label: "Completed", tone: "good" },
+  active: { label: "Active", tone: "held" },
+  completed: { label: "Completed", tone: "paid" },
 };
 
+/** Swatch colour per tone; the contract's money drops use the same colours. */
+export const TONE_COLOR: Record<Tone, string> = {
+  neutral: "var(--tone-neutral)",
+  held: "var(--tone-held)",
+  checking: "var(--tone-check)",
+  paid: "var(--tone-paid)",
+  warn: "var(--tone-check)",
+  bad: "var(--tone-bad)",
+};
+
+/** Text colour per tone: the swatch colour on dark, a darker shade of it on light. */
+export const TONE_INK: Record<Tone, string> = {
+  neutral: "var(--color-muted)",
+  held: "var(--ink-held)",
+  checking: "var(--ink-check)",
+  paid: "var(--ink-paid)",
+  warn: "var(--ink-check)",
+  bad: "var(--ink-bad)",
+};
+
+export function statusTone(status: string): Tone {
+  return STATUS[status]?.tone ?? "neutral";
+}
+
+/** A swatch chip, like the colour chips on a palette card. */
 export function StatusPill({ status }: { status: string }) {
   const s = STATUS[status] ?? { label: status, tone: "neutral" as const };
-  const tone = {
-    neutral: "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300",
-    info: "bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300",
-    good: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300",
-    warn: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300",
-    bad: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300",
-  }[s.tone];
-  return <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${tone}`}>{s.label}</span>;
+  return (
+    <span className="chip">
+      <span key={status} aria-hidden className={`sw pop-in ${s.live ? "sw-live" : ""}`} style={{ background: TONE_COLOR[s.tone] }} />
+      {s.label}
+    </span>
+  );
 }
 
 export function ErrorNote({ error }: { error: string | null }) {
   if (!error) return null;
   return (
-    <p role="alert" className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200">
+    <p role="alert" className="flex items-start gap-3 rounded-lg border border-danger/40 bg-danger/10 px-4 py-3 text-sm text-[#ffd6d6]">
+      <span aria-hidden className="mt-1.5 size-2.5 flex-none rounded-full bg-danger" />
       {error}
     </p>
   );
 }
 
+/** Page title with a one-line description under it. `eyebrow` is accepted and not shown. */
+export function PageHeader({ title, aside, children }: { eyebrow?: string; title: ReactNode; aside?: ReactNode; children?: ReactNode }) {
+  return (
+    <div className="flex flex-wrap items-end justify-between gap-4 border-b border-line-soft pb-5">
+      <div className="flex min-w-0 flex-col gap-1.5">
+        <h1 className="cond text-4xl font-extrabold sm:text-5xl [&_br]:hidden">{title}</h1>
+        {(aside || children) && <div className="max-w-2xl text-[15px] leading-relaxed text-muted">{aside ?? children}</div>}
+      </div>
+    </div>
+  );
+}
+
+/** Section heading with a hairline under it. */
+export function SectionHead({ title, note }: { title: ReactNode; note?: ReactNode }) {
+  return (
+    <div className="flex flex-wrap items-baseline justify-between gap-3">
+      <h2 className="cond text-[28px] font-extrabold">{title}</h2>
+      {note && <span className="label text-subtle">{note}</span>}
+    </div>
+  );
+}
+
 export const inputClass =
-  "w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-600/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100";
+  "w-full rounded-lg border border-line bg-[var(--c-input)] px-4 py-3 text-[15px] text-paper placeholder:text-subtle/70 transition-colors focus:border-magenta focus:outline-none focus:ring-4 focus:ring-magenta/15";

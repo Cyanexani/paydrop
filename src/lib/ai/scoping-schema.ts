@@ -15,6 +15,8 @@ export const AiScopeOutput = z.object({
     z.object({
       title: z.string(),
       description: z.string(),
+      /** The words in the client's brief that ask for this milestone, copied exactly. */
+      briefQuote: z.string(),
       skill: z.enum(SKILLS),
       complexityTags: z.array(z.enum(COMPLEXITY_TAGS)),
       complexityReason: z.string(),
@@ -50,6 +52,8 @@ const Estimate = z
 export const MilestoneDraft = z.object({
   title: z.string().trim().min(1).max(80),
   description: z.string().trim().min(1).max(600),
+  /** Verbatim excerpt of the brief this milestone answers. Absent on change orders and older contracts. */
+  briefQuote: z.string().trim().max(400).optional(),
   skill: z.enum(SKILLS),
   complexityTags: z.array(z.enum(COMPLEXITY_TAGS)),
   complexityReason: z.string(),
@@ -69,8 +73,46 @@ export type ScopeResult =
   /** AI output could not be validated twice: a person prices it by hand; no money moves on it. */
   | { status: "manual_quote"; reason: string };
 
-/** Apply the domain rules to Claude's output. Returns issues instead of throwing. */
-export function toScopeResult(out: AiScopeOutput): { ok: true; result: ScopeResult } | { ok: false; issues: string[] } {
+const QUOTE_MIN_CHARS = 8;
+
+/** Lower-case, straighten quotes and dashes, and collapse whitespace, so copying differences don't matter. */
+function normalizeForQuote(text: string): string {
+  return text
+    .normalize("NFKC")
+    .toLowerCase()
+    .replace(/[\u2018\u2019\u201a\u2032]/g, "'")
+    .replace(/[\u201c\u201d\u201e\u2033]/g, '"')
+    .replace(/[\u2010-\u2015]/g, "-")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/**
+ * Is `quote` really in the brief? An ellipsis may join two excerpts; each part must appear, in order.
+ * This is what stops the scoper inventing work: a milestone the client never asked for has nothing to quote.
+ */
+export function quoteInBrief(quote: string, brief: string): boolean {
+  const haystack = normalizeForQuote(brief);
+  const parts = normalizeForQuote(quote)
+    .replace(/^["']+|["']+$/g, "")
+    .split(/\s*(?:\.{3}|\u2026|\[\.{3}\])\s*/)
+    .map((part) => part.replace(/^["']+|["']+$/g, "").trim())
+    .filter(Boolean);
+  if (parts.length === 0 || parts.join("").length < QUOTE_MIN_CHARS) return false;
+  let from = 0;
+  for (const part of parts) {
+    const at = haystack.indexOf(part, from);
+    if (at < 0) return false;
+    from = at + part.length;
+  }
+  return true;
+}
+
+/**
+ * Apply the domain rules to Claude's output. Returns issues instead of throwing.
+ * With `brief`, every milestone must quote it: an unquoted milestone is rejected and the scoper retries.
+ */
+export function toScopeResult(out: AiScopeOutput, brief?: string): { ok: true; result: ScopeResult } | { ok: false; issues: string[] } {
   if (out.status === "refused") {
     return { ok: true, result: { status: "refused", reason: out.refusalReason.trim() || "This work can't be scoped here." } };
   }
@@ -88,6 +130,14 @@ export function toScopeResult(out: AiScopeOutput): { ok: true; result: ScopeResu
     .safeParse(out.milestones);
   if (!parsed.success) {
     return { ok: false, issues: parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`) };
+  }
+  if (brief !== undefined) {
+    const issues = parsed.data.flatMap((m, i) =>
+      m.briefQuote && quoteInBrief(m.briefQuote, brief)
+        ? []
+        : [`${i}.briefQuote: must be copied word for word from the client's brief (at least ${QUOTE_MIN_CHARS} characters). "${m.title}" quotes ${m.briefQuote ? `"${m.briefQuote.slice(0, 80)}", which is not in the brief` : "nothing"}. Remove the milestone if the brief doesn't ask for it.`],
+    );
+    if (issues.length) return { ok: false, issues };
   }
   return {
     ok: true,

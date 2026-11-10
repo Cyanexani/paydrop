@@ -1,4 +1,4 @@
-import { bigint, boolean, doublePrecision, integer, jsonb, pgTable, text, timestamp, index } from "drizzle-orm/pg-core";
+import { bigint, boolean, doublePrecision, integer, jsonb, pgTable, text, timestamp, index, uniqueIndex } from "drizzle-orm/pg-core";
 import type { CriterionResult } from "@/lib/milestones/state-machine";
 import type { ScopeMeta } from "@/lib/ai/scoping";
 import type { MilestoneDraft, ScopeResult } from "@/lib/ai/scoping-schema";
@@ -56,6 +56,52 @@ export const users = pgTable("users", {
   /** Used to match inbound WhatsApp/email (via Zapier) to the right client. */
   contactEmail: text("contact_email"),
   contactPhone: text("contact_phone"),
+  /** Sign-in email, lower-cased. Null for AI agents, which never sign in. */
+  email: text("email"),
+  /** scrypt hash; null for demo personas, which sign in only through the demo buttons */
+  passwordHash: text("password_hash"),
+  lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
+  /** Set when the owner opens the link we emailed to this address; cleared if the email changes. */
+  emailVerifiedAt: timestamp("email_verified_at", { withTimezone: true }),
+  /** Last request from any of this user's sessions (kept to the minute); drives "Online now". */
+  lastSeenAt: timestamp("last_seen_at", { withTimezone: true }),
+  createdAt: createdAt(),
+}, (t) => [uniqueIndex("users_email_idx").on(t.email)]);
+
+/** One-time email verification links. Only the SHA-256 of the token is stored. */
+export const emailVerifications = pgTable("email_verifications", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull(),
+  /** The address the link was sent to; the link is void if the account's email has changed since. */
+  email: text("email").notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  usedAt: timestamp("used_at", { withTimezone: true }),
+  createdAt: createdAt(),
+});
+
+/** A signed-in browser. The cookie holds a random token; only its SHA-256 is stored here. */
+export const sessions = pgTable(
+  "sessions",
+  {
+    /** SHA-256 of the cookie token, hex */
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull(),
+    /** Started from the demo buttons rather than a password */
+    demo: boolean("demo").notNull().default(false),
+    userAgent: text("user_agent"),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    lastSeenAt: timestamp("last_seen_at", { withTimezone: true }).notNull().defaultNow(),
+    createdAt: createdAt(),
+  },
+  (t) => [index("sessions_user_idx").on(t.userId)],
+);
+
+/** One-time password reset links. Only the SHA-256 of the token is stored. */
+export const passwordResets = pgTable("password_resets", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  usedAt: timestamp("used_at", { withTimezone: true }),
   createdAt: createdAt(),
 });
 
@@ -227,8 +273,23 @@ export const deliveries = pgTable("deliveries", {
   contractId: text("contract_id").notNull(),
   workerId: text("worker_id").notNull(),
   html: text("html").notNull(),
+  /** Which model built it and what it cost (agent runs only; null for older rows) */
+  run: jsonb("run").$type<AgentRun>(),
   createdAt: createdAt(),
 });
+
+/** One agent attempt at a milestone: the ladder rung, the model, and estimated vs actual cost. */
+export interface AgentRun {
+  rung: number;
+  modelId: string;
+  modelName: string;
+  /** openrouter = a real model call; claude = the built-in Claude path; demo = template, no model called */
+  mode: "openrouter" | "claude" | "demo";
+  inputTokens: number | null;
+  outputTokens: number | null;
+  costUsd: number | null;
+  estimatedUsd: number | null;
+}
 
 /** Materials a milestone needs (sourced through Channel3), added to its funded budget. */
 export const materials = pgTable(

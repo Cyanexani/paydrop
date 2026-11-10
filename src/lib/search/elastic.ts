@@ -5,7 +5,7 @@
  */
 import { Client } from "@elastic/elasticsearch";
 
-export const SCOPE_INDEX = process.env.ELASTIC_INDEX ?? "milestonepay-scope";
+export const SCOPE_INDEX = process.env.ELASTIC_INDEX ?? "paydrop-scope";
 
 export interface ScopeDoc {
   contractId: string;

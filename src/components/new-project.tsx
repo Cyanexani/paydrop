@@ -1,15 +1,20 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { formatMoney } from "@/lib/money";
 import { SKILL_LABELS } from "@/lib/pricing/config";
-import type { QuoteView } from "@/server/quotes";
 import { api } from "./api";
-import { Button, Card, ErrorNote, inputClass } from "./ui";
+import type { MilestoneDraft } from "@/lib/ai/scoping-schema";
+import type { AgentCatalogView, PricedCandidate, QuoteView } from "@/server/quotes";
+import { AgentCard, AgentModelPicker, useAgentQuote } from "./agent-quote";
+import { GooLoader } from "./goo";
+import { PresenceBadge } from "./presence";
+import { Button, Card, ErrorNote, PageHeader, inputClass } from "./ui";
 
 const EXAMPLE =
-  "Website for my dance studio, Jaya Dance & Fitness: home, classes and contact pages, online class booking with a deposit through PayPal, a photo gallery of our shows, and live on our own domain with good SEO. We have a logo and photos.";
+  "A website for my dance studio, Jaya Dance & Fitness: home, classes and contact pages, online class booking with a deposit through PayPal, a photo gallery of our shows, live on our own domain with good SEO. We have a logo and photos.";
 
 export function NewProject() {
   const router = useRouter();
@@ -26,9 +31,9 @@ export function NewProject() {
     setError(null);
     setQuote(null);
     try {
-      const budgetMinor = budget.trim() ? Math.round(Number(budget) * 100) : undefined;
+      const budgetMinor = budget.trim() ? Math.round(Number(budget.replaceAll(",", "")) * 100) : undefined;
       if (budgetMinor !== undefined && !(budgetMinor >= 0)) throw new Error("Budget must be a number");
-      setQuote(await api<QuoteView>("/api/quotes", { body: { brief, deadlineDays, budgetMinor } }));
+      setQuote(await api<QuoteView>("/api/quotes", { body: { brief: brief.trim().replace(/,$/, ""), deadlineDays, budgetMinor } }));
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -38,97 +43,165 @@ export function NewProject() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">New project</h1>
-        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">Describe it in plain language. The AI scopes it; the price is computed, not guessed.</p>
-      </div>
-
-      <Card>
-        <form onSubmit={submit} className="space-y-4">
-          <label className="block space-y-1.5">
-            <span className="text-sm font-medium">What do you need?</span>
-            <textarea className={`${inputClass} min-h-32`} value={brief} onChange={(e) => setBrief(e.target.value)} maxLength={5000} required />
+      <PageHeader title="New project">
+        Describe the work in plain language. It is scoped into milestones, and each price is computed from the estimated hours.
+      </PageHeader>
+      <section className="max-w-3xl rounded-xl border border-line-soft bg-raised">
+        <form onSubmit={submit} className="flex flex-col gap-5 p-5 sm:p-6">
+          <label className="flex flex-col gap-1.5">
+            <span className="text-sm font-medium">What do you need built?</span>
+            <textarea
+              className={`${inputClass} min-h-40 resize-y leading-relaxed`}
+              value={brief}
+              onChange={(e) => setBrief(e.target.value)}
+              maxLength={5000}
+              placeholder="Pages, features, and anything that must work when it's done"
+              required
+            />
+            <span className="text-xs text-subtle">The more specific the brief, the tighter the price. If it&apos;s too vague to price, you&apos;ll get questions instead of a guess.</span>
           </label>
           <div className="grid gap-4 sm:grid-cols-2">
-            <label className="block space-y-1.5">
+            <label className="flex flex-col gap-1.5">
               <span className="text-sm font-medium">Deadline (days from signing)</span>
               <input className={inputClass} type="number" min={1} max={365} value={deadlineDays} onChange={(e) => setDeadlineDays(Number(e.target.value))} required />
             </label>
-            <label className="block space-y-1.5">
-              <span className="text-sm font-medium">Budget in ₹ (optional)</span>
-              <input className={inputClass} inputMode="decimal" placeholder="e.g. 18000" value={budget} onChange={(e) => setBudget(e.target.value)} />
+            <label className="flex flex-col gap-1.5">
+              <span className="text-sm font-medium">Budget in ₹ <span className="font-normal text-subtle">(optional)</span></span>
+              <input className={inputClass} inputMode="decimal" placeholder="No limit" value={budget} onChange={(e) => setBudget(e.target.value)} />
             </label>
           </div>
           <ErrorNote error={error} />
-          <Button type="submit" disabled={busy}>{busy ? "Scoping…" : "Scope and price it"}</Button>
+          <div>
+            <Button type="submit" disabled={busy}>
+              {busy ? "Scoping…" : <>Scope and price it <span aria-hidden>→</span></>}
+            </Button>
+          </div>
         </form>
-      </Card>
+      </section>
+
+      {busy && <Scoping />}
 
       {quote && <QuoteResult quote={quote} onContract={(id) => router.push(`/contracts/${id}`)} />}
     </div>
   );
 }
 
+const SCOPING_STEPS = [
+  { label: "Reading the brief", color: "var(--tone-paid)", headline: "Reading your brief" },
+  { label: "Cutting milestones", color: "var(--tone-check)", headline: "Cutting it into milestones" },
+  { label: "Estimating hours", color: "var(--tone-held)", headline: "Estimating the hours" },
+  { label: "Pricing", color: "var(--tone-white)", headline: "Pricing each milestone" },
+];
+
+/** Shown while the scoper runs: the steps light up one after another. */
+function Scoping() {
+  const [step, setStep] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setStep((s) => Math.min(s + 1, SCOPING_STEPS.length - 1)), 1100);
+    return () => clearInterval(t);
+  }, []);
+  return (
+    <section className="flex flex-col items-center gap-4 py-12">
+      <GooLoader size={22} label="Scoping" showLabel={false} />
+      <p className="text-center text-base font-semibold">{SCOPING_STEPS[step].headline}</p>
+      <ol className="flex flex-wrap justify-center gap-2.5">
+        {SCOPING_STEPS.map((s, i) => (
+          <li key={s.label} className="chip transition-opacity duration-500" style={{ opacity: i <= step ? 1 : 0.4 }}>
+            <span className={`sw transition-colors duration-500 ${i === step ? "sw-live" : ""}`} style={{ background: i <= step ? s.color : "var(--tone-empty)" }} />
+            {s.label}
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
 function QuoteResult({ quote, onContract }: { quote: QuoteView; onContract: (id: string) => void }) {
-  const { scope, meta } = quote;
+  const { scope, meta, pricing } = quote;
   const mock = meta.mode === "mock";
   const badge = (
-    <p className="text-xs text-zinc-500">
-      Scoped by {mock ? "the demo scoper (no API key set)" : `${meta.model}, prompt ${meta.promptVersion}`}
+    <span className="label text-subtle">
+      Scoped by {mock ? "the demo scoper (no API key set)" : `${meta.model} · prompt ${meta.promptVersion}`}
       {meta.attempts > 1 ? ` · ${meta.attempts} attempts` : ""}
-    </p>
+    </span>
   );
 
   if (scope.status === "needs_info") {
     return (
-      <Card className="space-y-3">
-        <h2 className="font-semibold">A few questions before pricing</h2>
-        <ul className="list-disc space-y-1 pl-5 text-sm">{scope.questions.map((q) => <li key={q}>{q}</li>)}</ul>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">Add the answers to your brief and scope it again.</p>
+      <Card className="rise space-y-4">
+        <h2 className="text-lg font-semibold">A few questions before pricing</h2>
+        <ul className="space-y-2 text-[15px]">
+          {scope.questions.map((q) => (
+            <li key={q} className="flex gap-3"><span aria-hidden className="mt-2 size-2 flex-none rounded-full bg-peach" />{q}</li>
+          ))}
+        </ul>
+        <p className="text-muted">Add the answers to your brief and scope it again.</p>
         {badge}
       </Card>
     );
   }
   if (scope.status === "refused") {
-    return <Card className="space-y-2"><h2 className="font-semibold">We can&apos;t take this project</h2><p className="text-sm">{scope.reason}</p>{badge}</Card>;
+    return <Card className="rise space-y-3"><h2 className="text-lg font-semibold">We can&apos;t take this project</h2><p>{scope.reason}</p>{badge}</Card>;
   }
   if (scope.status === "manual_quote") {
-    return <Card className="space-y-2"><h2 className="font-semibold">This one needs a manual quote</h2><p className="text-sm">{scope.reason}</p><p className="text-sm text-zinc-600 dark:text-zinc-400">No money moves on an unvalidated AI quote.</p>{badge}</Card>;
+    return (
+      <Card className="rise space-y-3">
+        <h2 className="text-lg font-semibold">This one needs a manual quote</h2>
+        <p>{scope.reason}</p>
+        <p className="text-muted">No money moves on an unvalidated AI quote.</p>
+        {badge}
+      </Card>
+    );
   }
 
+  const priced = pricing.status === "priced" ? pricing.base : null;
+  const values = scope.milestones.map((m, i) => priced?.milestones.find((p) => p.title === m.title)?.taskValueMinor ?? priced?.milestones[i]?.taskValueMinor ?? null);
+  const n = scope.milestones.length;
+  const hours = scope.milestones.reduce((a, m) => [a[0] + m.estimate.optimistic, a[1] + m.estimate.pessimistic], [0, 0]);
+
   return (
-    <div className="space-y-6">
-      <Card className="space-y-4">
-        <div>
-          <h2 className="text-lg font-semibold">{scope.projectTitle}</h2>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">{scope.summary}</p>
-          {badge}
+    <section className="space-y-10">
+      <div className="space-y-5">
+        <div className="flex flex-wrap items-start justify-between gap-5 rounded-xl border border-line-soft bg-raised p-5 shadow-[var(--shadow-card)]">
+          <div className="flex min-w-0 flex-1 flex-col gap-1.5 max-sm:basis-full">
+            <h2 className="cond text-3xl font-extrabold">{scope.projectTitle}</h2>
+            <p className="max-w-3xl text-sm leading-relaxed text-muted">{scope.summary}</p>
+            <span className="pt-1 text-xs text-subtle">{n} milestones · {hours[0]}–{hours[1]} hours</span>
+            {badge}
+          </div>
+          {priced && (
+            <div className="sm:text-right">
+              <span className="money block text-5xl leading-none text-butter">{formatMoney(priced.baseSubtotalMinor)}</span>
+              <span className="text-xs text-subtle">Base pay for this scope · + 5% fee</span>
+            </div>
+          )}
         </div>
-        <ol className="space-y-4">
+
+        <ol className="grid gap-4 sm:grid-cols-2 lg:grid-cols-[repeat(auto-fit,minmax(240px,1fr))]">
           {scope.milestones.map((m, i) => (
-            <li key={m.title} className="border-t border-zinc-200 pt-4 first:border-0 first:pt-0 dark:border-zinc-800">
-              <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <h3 className="font-medium">{i + 1}. {m.title}</h3>
-                <span className="text-xs text-zinc-500">
-                  {SKILL_LABELS[m.skill]} · {m.estimate.optimistic}/{m.estimate.likely}/{m.estimate.pessimistic} hrs · {m.durationDays} days
-                </span>
+            <li key={m.title} className="flex flex-col gap-2.5 rounded-xl border border-line-soft bg-raised p-5 shadow-[var(--shadow-card)]">
+              <div className="flex items-baseline justify-between gap-2">
+                <span className="text-xs font-medium text-subtle">Milestone {i + 1} · {m.durationDays} days</span>
+                {values[i] !== null && <span className="money text-2xl leading-none">{formatMoney(values[i]!)}</span>}
               </div>
-              <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{m.description}</p>
-              <ul className="mt-2 space-y-1 text-sm">
+              <h3 className="cond text-xl font-bold">{m.title}</h3>
+              {m.briefQuote && <p className="border-l-2 border-magenta/60 pl-3 text-[13px] italic leading-snug text-muted"><span className="not-italic text-subtle">From your brief: </span>“{m.briefQuote}”</p>}
+              <span className="label text-subtle">{SKILL_LABELS[m.skill]} · {m.estimate.optimistic}/{m.estimate.likely}/{m.estimate.pessimistic} hrs</span>
+              <ul className="space-y-2 text-sm leading-snug text-muted">
                 {m.criteria.map((c) => (
-                  <li key={c.text} className="flex gap-2">
-                    <span aria-hidden className="text-emerald-700 dark:text-emerald-400">✓</span>
-                    <span>{c.text}{c.method === "client_judged" ? <em className="text-zinc-500"> (client-judged)</em> : null}</span>
+                  <li key={c.text} className="flex gap-2.5">
+                    <span aria-hidden className="mt-[7px] size-1.5 flex-none rounded-full bg-subtle" />
+                    <span>{c.text}{c.method === "client_judged" ? <em className="text-subtle"> (your call)</em> : null}</span>
                   </li>
                 ))}
               </ul>
             </li>
           ))}
         </ol>
-      </Card>
+      </div>
 
       <PricingSection quote={quote} onContract={onContract} />
-    </div>
+    </section>
   );
 }
 
@@ -139,24 +212,24 @@ function PricingSection({ quote, onContract }: { quote: QuoteView; onContract: (
   const { pricing } = quote;
 
   if (pricing.status === "not_priced") return null;
-  if (pricing.status === "error") return <Card><ErrorNote error={pricing.message} /></Card>;
+  if (pricing.status === "error") return <ErrorNote error={pricing.message} />;
   if (pricing.status === "needs_info") {
-    return <Card className="text-sm">The estimate range is too wide to price fairly (pessimistic is {pricing.ratio.toFixed(1)}× optimistic). Add detail to the brief.</Card>;
+    return <Card className="text-[15px]">The estimate range is too wide to price fairly (pessimistic is {pricing.ratio.toFixed(1)}× optimistic). Add detail to the brief.</Card>;
   }
   if (pricing.status === "infeasible") {
     return (
-      <Card className="text-sm">
+      <Card className="text-[15px]">
         {pricing.reason === "deadline_passed" ? "That deadline has already passed." : `${pricing.expectedHours.toFixed(0)} hours of work can't be done in ${pricing.availableDays} days.`}{" "}
         The earliest workable deadline is {pricing.earliestDays} days.
       </Card>
     );
   }
 
-  async function offer(freelancerId: string) {
+  async function offer(freelancerId: string, agentModels?: string[]) {
     setBusyId(freelancerId);
     setError(null);
     try {
-      const { id } = await api<{ id: string }>("/api/contracts", { body: { quoteId: quote.id, freelancerId, deliveryUrl, allowParallel: false } });
+      const { id } = await api<{ id: string }>("/api/contracts", { body: { quoteId: quote.id, freelancerId, deliveryUrl, allowParallel: false, agentModels } });
       onContract(id);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -165,59 +238,123 @@ function PricingSection({ quote, onContract }: { quote: QuoteView; onContract: (
   }
 
   const base = pricing.base;
+  const scopeDrafts = quote.scope.status === "scoped" ? quote.scope.milestones : [];
+  const humanPrices = base.milestones.map((m) => m.priceMinor);
+  const urlOk = /^https:\/\/[^/]+\.[^/]+/.test(deliveryUrl);
   return (
-    <div className="space-y-4">
-      <div>
-        <h2 className="text-lg font-semibold">Choose a freelancer</h2>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          Everyone earns the same {formatMoney(base.baseSubtotalMinor)} base for this work ({base.expectedHours.toFixed(1)} expected hours
-          {base.urgency.multiplier > 1 ? `, ×${base.urgency.multiplier.toFixed(2)} urgency` : ""}). A premium is paid only for verified track record. The 5% platform fee is shown separately.
+    <div className="space-y-6">
+      <div className="space-y-1.5">
+        <h2 className="cond text-[28px] font-extrabold">Choose who does the work</h2>
+        <p className="max-w-3xl text-sm leading-relaxed text-muted">
+          Same work, same base pay: everyone earns {formatMoney(base.baseSubtotalMinor)} for this scope ({base.expectedHours.toFixed(1)} expected hours
+          {base.urgency.multiplier > 1 ? `, ×${base.urgency.multiplier.toFixed(2)} urgency` : ""}). A premium is paid only for a verified track record, shown line by line on the receipt.
         </p>
       </div>
 
-      <label className="block max-w-xl space-y-1.5">
+      <label className="flex max-w-2xl flex-col gap-2">
         <span className="text-sm font-medium">Where will the work be delivered?</span>
-        <input className={inputClass} type="url" value={deliveryUrl} onChange={(e) => setDeliveryUrl(e.target.value)} placeholder="https://your-site.example" />
-        <span className="block text-xs text-zinc-500">The checker only accepts submissions from this site or repo.</span>
+        <input
+          className={inputClass}
+          type="url"
+          value={deliveryUrl}
+          onChange={(e) => setDeliveryUrl(e.target.value)}
+          placeholder="https://your-site.example"
+        />
+        <span className="text-xs text-subtle">The checker only accepts submissions from this site or repo.</span>
       </label>
       <ErrorNote error={error} />
 
-      <div className="grid gap-4 md:grid-cols-2">
-        {pricing.candidates.map(({ candidate, quote: q, receipts }) => (
-          <Card key={candidate.id} className="flex flex-col gap-3">
-            <div>
-              <div className="flex items-baseline justify-between gap-2">
-                <h3 className="font-semibold">{candidate.name}{candidate.kind === "agent" ? " · AI agent" : ""}</h3>
-                <span className="text-lg font-semibold tabular-nums">{formatMoney(q.subtotalMinor)}</span>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {pricing.candidates.map((pc) => {
+          const { candidate, quote: q, receipts } = pc;
+          const offerButton = (ids?: string[]) => (
+            <button
+              type="button"
+              disabled={busyId !== null || !urlOk}
+              onClick={() => offer(candidate.id, ids)}
+              className="jelly mt-auto min-h-10 rounded-lg bg-butter text-sm font-semibold text-plum hover:bg-white disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {busyId === candidate.id ? "Creating contract…" : `Offer to ${candidate.name.split(" ")[0]}`}
+            </button>
+          );
+          if (candidate.kind === "agent" && pc.agent && pricing.agentCatalog) {
+            return (
+              <AgentSlot
+                key={candidate.id}
+                pc={pc}
+                catalog={pricing.agentCatalog}
+                drafts={scopeDrafts}
+                humanPricesMinor={humanPrices}
+                humanBaseMinor={base.baseSubtotalMinor}
+                offerButton={offerButton}
+              />
+            );
+          }
+          return (
+          <article key={candidate.id} className="flex flex-col gap-4 rounded-xl border border-line-soft bg-raised p-5 shadow-[var(--shadow-card)] transition-colors hover:border-line">
+            <div className="flex items-center gap-3.5">
+              <span aria-hidden className="grid size-10 flex-none place-items-center rounded-full bg-magenta/15 text-sm font-semibold text-magenta">
+                {candidate.name.split(" ").map((w) => w[0]).slice(0, 2).join("")}
+              </span>
+              <div className="flex min-w-0 flex-col gap-0.5">
+                <Link href={`/u/${candidate.id}`} target="_blank" className="text-[15px] font-bold underline-offset-2 hover:text-butter hover:underline">{candidate.name}</Link>
+                <PresenceBadge presence={candidate.presence} kind={candidate.kind} />
               </div>
-              <p className="text-xs text-zinc-500">{candidate.why}</p>
-              <p className="mt-1 text-xs text-zinc-500 tabular-nums">+ {formatMoney(q.feeMinor)} platform fee = {formatMoney(q.totalMinor)} total</p>
-              {q.budget && !q.budget.withinBudget && (
-                <p className="mt-1 text-xs text-amber-700 dark:text-amber-400">
-                  {formatMoney(q.budget.shortfallMinor)} over budget. Options: {q.budget.options.map((o) => o.replace("_", " ")).join(", ")}.
-                </p>
-              )}
             </div>
+            <div className="flex items-baseline justify-between gap-2 border-y border-line-soft py-3">
+              <span className="label text-subtle">+ {formatMoney(q.feeMinor)} fee</span>
+              <span className="money text-3xl leading-none">{formatMoney(q.subtotalMinor)}</span>
+            </div>
+            <p className="text-sm leading-normal text-muted">{candidate.why}. <Link href={`/u/${candidate.id}`} target="_blank" className="font-semibold text-peach underline-offset-2 hover:text-butter hover:underline">View profile</Link></p>
+            {q.budget && !q.budget.withinBudget && (
+              <p className="text-sm text-butter">
+                {formatMoney(q.budget.shortfallMinor)} over budget. Options: {q.budget.options.map((o) => o.replace("_", " ")).join(", ")}.
+              </p>
+            )}
             <details className="text-sm">
-              <summary className="cursor-pointer text-zinc-600 dark:text-zinc-400">Price receipts</summary>
-              <div className="mt-2 space-y-3">
+              <summary className="label text-peach">Price receipt</summary>
+              <div className="mt-3 space-y-3">
                 {receipts.map((r) => (
-                  <div key={r.title} className="rounded-md bg-zinc-50 p-3 font-mono text-xs leading-relaxed dark:bg-zinc-950">
+                  <div key={r.title} className="rounded-lg bg-well p-3.5 font-mono text-xs leading-relaxed">
                     <div className="font-semibold">{r.title}</div>
                     {r.lines.map((l) => (
                       <div key={l.text}>  {l.text}{l.amountMinor !== null ? ` = ${formatMoney(l.amountMinor)}` : ""}</div>
                     ))}
-                    <div className="text-zinc-500">  {r.fairBand}</div>
+                    <div className="text-subtle">  {r.fairBand}</div>
                   </div>
                 ))}
               </div>
             </details>
-            <Button className="mt-auto" disabled={busyId !== null || !/^https:\/\/[^/]+\.[^/]+/.test(deliveryUrl)} onClick={() => offer(candidate.id)}>
-              {busyId === candidate.id ? "Creating contract…" : `Offer to ${candidate.name.split(" ")[0]}`}
-            </Button>
-          </Card>
-        ))}
+            {offerButton()}
+          </article>
+          );
+        })}
       </div>
+      {!urlOk && <p className="label text-subtle">Add a delivery link above to make an offer</p>}
     </div>
+  );
+}
+
+/** BuildBot's card plus, when open, the full model list on its own row under the cards. */
+function AgentSlot({ pc, catalog, drafts, humanPricesMinor, humanBaseMinor, offerButton }: {
+  pc: PricedCandidate;
+  catalog: AgentCatalogView;
+  drafts: MilestoneDraft[];
+  humanPricesMinor: number[];
+  humanBaseMinor: number;
+  offerButton: (ids?: string[]) => React.ReactNode;
+}) {
+  const [ids, setIds] = useState<string[]>(() => pc.agent?.ladder.map((r) => r.modelId) ?? []);
+  const [picking, setPicking] = useState(false);
+  const { quote, error } = useAgentQuote(catalog, drafts, ids, pc.candidate.ownerName ?? "the agent's owner", humanPricesMinor);
+  return (
+    <>
+      <AgentCard pc={pc} quote={quote} error={error} humanBaseMinor={humanBaseMinor} picking={picking} onPick={() => setPicking(!picking)} offer={offerButton(quote ? ids : undefined)} />
+      {picking && (
+        <div className="md:col-span-2 lg:col-span-3">
+          <AgentModelPicker catalog={catalog} drafts={drafts} ids={ids} onChange={setIds} />
+        </div>
+      )}
+    </>
   );
 }

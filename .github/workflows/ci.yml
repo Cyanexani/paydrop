@@ -6,6 +6,8 @@ on:
 
 permissions:
   contents: read
+  # The secret scan lists a pull request's commits, which needs this on pull_request runs.
+  pull-requests: read
 
 jobs:
   test:
@@ -45,7 +47,7 @@ jobs:
         run: |
           npm start &
           npx wait-on --timeout 60000 http://localhost:3000/api/health
-          npx newman run postman/milestonepay.postman_collection.json --env-var baseUrl=http://localhost:3000
+          npx newman run postman/paydrop.postman_collection.json --env-var baseUrl=http://localhost:3000
 
       - uses: actions/upload-artifact@v4
         if: always()

@@ -17,6 +17,7 @@ import { CURRENCIES, type CurrencyCode } from "@/lib/money";
 import { loadMilestoneFor } from "./contracts";
 import { AppError, badRequest, forbidden } from "./errors";
 import { defer } from "./defer";
+import { BlockedUrlError, assertPublicUrl } from "@/lib/checker/net-guard";
 import { runEffects } from "./effects";
 import { applyMilestoneEvent } from "./milestone-store";
 import type { Viewer } from "./session";
@@ -160,6 +161,11 @@ export const SubmitRequest = z.object({
 export async function submitWork(db: Db, viewer: Viewer, milestoneId: string, input: z.infer<typeof SubmitRequest>) {
   const { state, role, contract } = await loadMilestoneFor(db, viewer, milestoneId);
   const actor = workerActor(role, viewer, contract.freelancerId);
+  // Refuse links into our own network before the checker is ever pointed at them. A name that
+  // doesn't resolve right now is let through: the checker reports it as unreachable.
+  await assertPublicUrl(input.evidenceUrl).catch((error) => {
+    if (error instanceof BlockedUrlError && error.kind === "blocked") throw badRequest(error.message, "blocked_url");
+  });
   if (input.actualHours) await db.update(milestones).set({ actualHours: input.actualHours }).where(eq(milestones.id, milestoneId));
   return act(
     db,

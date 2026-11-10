@@ -1,4 +1,4 @@
-# MilestonePay
+# Paydrop
 
 **Pay for outcomes, not promises.**
 
@@ -11,8 +11,8 @@ Built for the PayPal AI Hackathon ("Build What's Next with PayPal and AI"). MIT 
 Needs Node 20+ (tested on 24). No accounts or database server needed.
 
 ```bash
-git clone https://github.com/Cyanexani/milestonepay.git
-cd milestonepay
+git clone https://github.com/Cyanexani/paydrop.git
+cd paydrop
 npm install
 npx playwright-core install chromium-headless-shell   # browser for the AI checker
 cp .env.example .env.local                            # every key is optional
@@ -62,7 +62,7 @@ npm test              # 57 tests
 npm run typecheck
 npm run lint
 npm run eval:checker  # checker eval; fails on any wrongful pass
-npx newman run postman/milestonepay.postman_collection.json   # with the app running
+npx newman run postman/paydrop.postman_collection.json   # with the app running
 ```
 
 CI (`.github/workflows/ci.yml`) runs all of these plus a gitleaks secret scan and a production build.

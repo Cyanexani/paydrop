@@ -202,7 +202,7 @@ export function createAuthorizeOrder(input: {
             payment_source: {
               paypal: {
                 experience_context: {
-                  brand_name: "MilestonePay",
+                  brand_name: "Paydrop",
                   shipping_preference: "NO_SHIPPING",
                   user_action: "CONTINUE",
                   return_url: input.returnUrl,
