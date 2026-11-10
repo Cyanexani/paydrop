@@ -104,7 +104,7 @@ function SignedInNotice() {
   const v = session?.viewer;
   if (!v) return null;
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-line bg-well px-4 py-3 text-[15px]">
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-line bg-well px-4 py-3 text-[15px]">
       <span>Signed in as <strong>{v.name}</strong></span>
       <button type="button" onClick={() => land(v.role)} className="label text-peach hover:text-butter">Continue →</button>
     </div>
@@ -143,7 +143,7 @@ function DemoAccounts() {
     }
   }
   return (
-    <section aria-labelledby="demo-h" className="space-y-3 rounded-[24px] border border-dashed border-line p-4">
+    <section aria-labelledby="demo-h" className="space-y-3 rounded-xl border border-dashed border-line p-4">
       <div className="flex items-baseline justify-between gap-3">
         <h2 id="demo-h" className="label text-peach">Explore with a demo account</h2>
         <span className="label text-subtle">No password</span>
@@ -155,9 +155,9 @@ function DemoAccounts() {
               type="button"
               onClick={() => use(p.id)}
               disabled={busy !== null}
-              className="flex w-full items-center gap-3 rounded-2xl border border-line-soft bg-well px-3 py-2.5 text-left transition-colors hover:border-wine disabled:opacity-60"
+              className="flex w-full items-center gap-3 rounded-lg border border-line-soft bg-well px-3 py-2.5 text-left transition-colors hover:border-wine disabled:opacity-60"
             >
-              <span aria-hidden className="grid size-9 flex-none place-items-center rounded-full text-sm font-bold text-plum" style={{ background: p.role === "client" ? "#fff7ad" : "#ffb3ae" }}>
+              <span aria-hidden className="grid size-9 flex-none place-items-center rounded-full text-sm font-semibold text-white" style={{ background: p.role === "client" ? "#4f46e5" : "#0f766e" }}>
                 {busy === p.id ? <GooLoader kind="orbit" size={6} label="Signing in" showLabel={false} /> : initials(p.name)}
               </span>
               <span className="min-w-0">
@@ -224,13 +224,13 @@ export function SignupForm() {
         <div className="grid grid-cols-2 gap-2">
           {(
             [
-              ["client", "Hire", "Get work done, pay per milestone", "#fff7ad"],
-              ["freelancer", "Work", "Get paid when the work passes", "#ffb3ae"],
+              ["client", "Hire", "Get work done, pay per milestone", "var(--tone-held)"],
+              ["freelancer", "Work", "Get paid when the work passes", "var(--tone-paid)"],
             ] as const
           ).map(([value, title, sub, color]) => (
             <label
               key={value}
-              className={`flex cursor-pointer flex-col gap-1 rounded-2xl border p-3.5 transition-colors has-[:focus-visible]:ring-4 has-[:focus-visible]:ring-magenta/25 ${role === value ? "border-magenta bg-magenta/10" : "border-line hover:border-wine"}`}
+              className={`flex cursor-pointer flex-col gap-1 rounded-lg border p-3.5 transition-colors has-[:focus-visible]:ring-4 has-[:focus-visible]:ring-magenta/25 ${role === value ? "border-magenta bg-magenta/10" : "border-line hover:border-wine"}`}
             >
               <input type="radio" name="role" value={value} checked={role === value} onChange={() => setRole(value)} className="sr-only" />
               <span className="flex items-center gap-2 font-semibold"><span aria-hidden className="sw size-3.5" style={{ background: color }} />{title}</span>
@@ -254,7 +254,7 @@ export function SignupForm() {
                 return (
                   <label key={s} className={`chip cursor-pointer py-1.5 pl-1.5 pr-3.5 text-[13px] has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-magenta ${on ? "border-magenta bg-magenta/15" : ""}`}>
                     <input type="checkbox" className="sr-only" checked={on} onChange={() => setSkills(on ? skills.filter((x) => x !== s) : [...skills, s])} />
-                    <span aria-hidden className="sw size-4" style={{ background: on ? "#ff49c1" : "#4a2a42" }} />
+                    <span aria-hidden className="sw size-4" style={{ background: on ? "var(--c-accent)" : "var(--tone-empty)" }} />
                     {SKILL_LABELS[s]}
                   </label>
                 );

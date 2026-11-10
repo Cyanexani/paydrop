@@ -18,7 +18,7 @@ type Role = ContractView["role"];
 const OUTCOME = {
   pass: { color: "var(--tone-paid)", label: "passed" },
   fail: { color: "var(--tone-bad)", label: "failed" },
-  couldnt_check: { color: "#c7a9bc", label: "couldn't check" },
+  couldnt_check: { color: "var(--tone-white)", label: "couldn't check" },
 } as const;
 
 export function MilestoneCard({
@@ -77,13 +77,13 @@ export function MilestoneCard({
           aria-expanded={open}
           aria-controls={`m-body-${m.id}`}
           onClick={onToggle}
-          className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-4 gap-y-2 rounded-[28px] px-5 py-4 text-left focus-visible:outline-2 focus-visible:outline-magenta sm:grid-cols-[auto_minmax(0,1fr)_auto_auto_auto] sm:gap-x-5 sm:px-6 sm:py-5"
+          className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-4 gap-y-2 rounded-xl px-5 py-4 text-left focus-visible:outline-2 focus-visible:outline-magenta sm:grid-cols-[auto_minmax(0,1fr)_auto_auto_auto] sm:gap-x-5 sm:px-6 sm:py-5"
         >
-          <span className="money text-[44px] leading-[0.9] transition-colors duration-700 sm:text-[52px]" style={{ color }}>
+          <span className="money text-3xl leading-tight transition-colors duration-700 sm:text-3xl" style={{ color }}>
             {String(m.position + 1).padStart(2, "0")}
           </span>
           <span className="flex min-w-0 flex-col gap-1.5">
-            <span className="cond text-[26px] font-bold leading-none sm:text-[30px]">
+            <span className="cond text-xl font-semibold leading-tight sm:text-xl">
               {m.draft.title}
               {m.kind === "change_order" && <span className="chip ml-3 align-middle text-[11px]"><span className="sw size-3" style={{ background: "var(--tone-lilac)" }} />Change order</span>}
             </span>
@@ -94,7 +94,7 @@ export function MilestoneCard({
           </svg>
           <span className="col-span-3 flex flex-wrap items-center justify-between gap-3 sm:col-span-1 sm:contents">
             <StatusPill status={m.status} />
-            <span className="money text-[32px] leading-none sm:min-w-36 sm:text-right sm:text-[36px]">{formatMoney(m.priceMinor)}</span>
+            <span className="money text-2xl leading-none sm:min-w-36 sm:text-right sm:text-2xl">{formatMoney(m.priceMinor)}</span>
           </span>
         </button>
 
@@ -136,7 +136,7 @@ export function MilestoneCard({
             {m.status === "submitted" && <GooLoader kind="orbit" size={14} label="The checker is testing the delivery in a browser" className="mt-3" />}
           </div>
           <div className="space-y-2">
-            <div className="rounded-2xl bg-well p-4 font-mono text-xs leading-relaxed">
+            <div className="rounded-lg bg-well p-4 font-mono text-xs leading-relaxed">
               <div className="font-semibold">{m.receipt.title}</div>
               {m.receipt.lines.map((l) => (
                 <div key={l.text}>  {l.text}{l.amountMinor !== null ? ` = ${formatMoney(l.amountMinor)}` : ""}</div>

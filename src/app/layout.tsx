@@ -1,16 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
-import { Bricolage_Grotesque, Instrument_Serif, JetBrains_Mono } from "next/font/google";
-import { GooFilters, Logo } from "@/components/goo";
+import { Inter, JetBrains_Mono } from "next/font/google";
+import { Logo } from "@/components/goo";
 import { NavLinks, NavList } from "@/components/nav-links";
 import { AccountMenu } from "@/components/account-menu";
 import { ThemeSync, ThemeToggle } from "@/components/theme";
 import { THEME_SCRIPT } from "@/lib/theme-script";
 import "./globals.css";
 
-const display = Bricolage_Grotesque({ variable: "--font-display-face", subsets: ["latin"], axes: ["opsz", "wdth"] });
-const serif = Instrument_Serif({ variable: "--font-serif-face", subsets: ["latin"], weight: "400", style: ["normal", "italic"] });
+const display = Inter({ variable: "--font-display-face", subsets: ["latin"] });
 const mono = JetBrains_Mono({ variable: "--font-mono-face", subsets: ["latin"] });
 
 export const metadata: Metadata = {
@@ -21,33 +20,33 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     // The theme script below sets data-theme and the "dark" class before React hydrates.
-    <html lang="en" data-theme="dark" suppressHydrationWarning className={`dark ${display.variable} ${serif.variable} ${mono.variable} h-full antialiased`}>
+    <html lang="en" data-theme="dark" suppressHydrationWarning className={`dark ${display.variable} ${mono.variable} h-full antialiased`}>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>
       <body className="flex min-h-full flex-col">
-        <GooFilters />
-        <header className="mx-auto flex w-full max-w-[1240px] flex-wrap items-center justify-between gap-x-6 gap-y-2 px-5 pb-2 pt-5">
-          <Link href="/" className="flex items-center gap-3 py-1.5" aria-label="MilestonePay home">
+        <header className="sticky top-0 z-40 border-b border-line-soft bg-ink/85 backdrop-blur">
+          <div className="mx-auto flex min-h-14 w-full max-w-[1200px] flex-wrap items-center gap-x-8 gap-y-0 px-5">
+          <Link href="/" className="flex items-center gap-2.5 py-3" aria-label="MilestonePay home">
             <Logo />
-            <span className="cond text-[26px] font-extrabold">milestone/pay</span>
+            <span className="text-[15px] font-semibold tracking-tight">MilestonePay</span>
           </Link>
           <Suspense fallback={<NavList path="" />}>
             <NavLinks />
           </Suspense>
-          <div className="flex items-center gap-2">
+          <div className="ml-auto flex items-center gap-2">
             <ThemeToggle />
             <ThemeSync />
             <Suspense fallback={<span className="w-10" />}>
               <AccountMenu />
             </Suspense>
           </div>
+          </div>
         </header>
-        <main className="mx-auto w-full max-w-[1240px] flex-1 px-5 pb-16 pt-6">{children}</main>
-        <footer className="label mx-auto flex w-full max-w-[1240px] flex-wrap justify-between gap-3 border-t border-line px-5 pb-9 pt-8 text-subtle">
-          <span>milestone/pay — PayPal AI Hackathon</span>
-          <span>Sandbox · PayPal Orders v2 + Payouts</span>
-          <span>No real money moves</span>
+        <main className="mx-auto w-full max-w-[1200px] flex-1 px-5 pb-16 pt-8">{children}</main>
+        <footer className="mx-auto flex w-full max-w-[1200px] flex-wrap justify-between gap-3 border-t border-line-soft px-5 py-6 text-[13px] text-subtle">
+          <span>© 2026 MilestonePay</span>
+          <span>PayPal sandbox · no real money moves</span>
         </footer>
       </body>
     </html>

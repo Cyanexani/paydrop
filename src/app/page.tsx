@@ -1,120 +1,106 @@
 import Link from "next/link";
-import type { CSSProperties } from "react";
-import { PointerBlob, Reveal } from "@/components/motion";
+import { Reveal } from "@/components/motion";
 import { PageTransition } from "@/components/page-transition";
 
-const chips = [
-  { label: "#01 Scope", color: "#ff49c1", style: { left: 0, top: "6%", rotate: "-12deg" } },
-  { label: "#02 Held", color: "#6a1452", style: { right: 0, top: "30%", rotate: "9deg", animationDelay: "-2s" } },
-  { label: "#03 Checked", color: "#ffb3ae", style: { left: "6%", bottom: "14%", rotate: "-6deg", animationDelay: "-4s" } },
-  { label: "#04 Paid", color: "#fff7ad", style: { right: "8%", bottom: "2%", rotate: "7deg", animationDelay: "-5s" } },
-] satisfies { label: string; color: string; style: CSSProperties }[];
+const PREVIEW = [
+  { n: 1, title: "Design and layout", price: "₹4,350", status: "Paid out", tone: "var(--tone-paid)" },
+  { n: 2, title: "Booking system", price: "₹6,120", status: "Checking", tone: "var(--tone-check)" },
+  { n: 3, title: "Gallery", price: "₹3,400", status: "Funded · held", tone: "var(--tone-held)" },
+  { n: 4, title: "Deploy and SEO", price: "₹3,455", status: "Not funded", tone: "var(--tone-neutral)" },
+];
+
+const STEPS = [
+  {
+    title: "Scope the work",
+    body: "Describe the project in plain words. The AI splits it into milestones, each with a price and criteria that can be checked, and asks when the brief is too vague to price.",
+    icon: "M4 6h16M4 12h10M4 18h13",
+  },
+  {
+    title: "Fund a milestone",
+    body: "The client funds each milestone before work starts. PayPal holds the money, not us, and the hold is renewed before it expires.",
+    icon: "M6 11V8a6 6 0 0 1 12 0v3M5 11h14v9H5z",
+  },
+  {
+    title: "Release on verified work",
+    body: "An AI checker opens the delivered site and tests every criterion. The client approves, and the payout goes to the freelancer's PayPal.",
+    icon: "M5 12.5l4.5 4.5L19 7.5",
+  },
+];
 
 export default function Home() {
   return (
     <PageTransition>
-    <div className="space-y-28">
-      <section data-pointer-zone className="poster flex min-h-[720px] flex-col">
-        <div aria-hidden className="ring right-[4%] top-20 size-[560px] max-lg:hidden" />
-        <div aria-hidden className="ring right-[calc(4%+100px)] top-[180px] size-[360px] max-lg:hidden" />
-        <div className="label flex justify-between gap-4 border-b border-paper/20 px-6 pb-4 pt-7 sm:px-9">
-          <span>MilestonePay<br /><span className="opacity-75">Pay per milestone</span></span>
-          <span className="text-right">Stops<br /><span className="opacity-75">4</span></span>
-        </div>
-        <div className="flex flex-1 flex-wrap items-end gap-8 px-6 pb-9 pt-10 sm:px-9">
-          <div className="flex min-w-0 flex-[1_1_560px] flex-col gap-7">
-            <h1 className="cond rise text-[clamp(64px,11vw,164px)] font-extrabold leading-[0.84] tracking-[-0.045em]">
-              Pay for<br />outcomes,<br />
-              <span className="money text-butter [font-stretch:100%]">not promises.</span>
+      <div className="space-y-20 pb-8">
+        <section className="grid items-center gap-10 pt-6 lg:grid-cols-[1.05fr_1fr] lg:pt-12">
+          <div className="flex min-w-0 flex-col gap-6">
+            <span className="chip self-start"><span className="sw" style={{ background: "var(--tone-paid)" }} />Milestone payments held at PayPal</span>
+            <h1 className="text-4xl font-semibold leading-[1.1] tracking-tight sm:text-5xl">
+              Pay for outcomes,<br />not promises.
             </h1>
-            <p className="max-w-[470px] text-lg leading-relaxed">
-              Describe the work. Claude cuts it into priced milestones. The client&apos;s money waits in PayPal and only moves when the work checks out.
+            <p className="max-w-[520px] text-lg leading-relaxed text-muted">
+              Describe the work. It&apos;s split into priced milestones. The client&apos;s money waits at PayPal and moves only when the work checks out.
             </p>
             <div className="flex flex-wrap gap-3">
-              <Link href="/new" className="jelly inline-flex min-h-[52px] items-center gap-3 rounded-full bg-butter px-7 font-bold text-plum hover:bg-white">
+              <Link href="/new" className="jelly inline-flex min-h-11 items-center gap-2 rounded-lg bg-butter px-5 text-[15px] font-semibold text-plum shadow-sm hover:bg-white">
                 Start a project <span aria-hidden>→</span>
               </Link>
-              <Link href="/contracts" className="jelly inline-flex min-h-[52px] items-center rounded-full border border-paper/50 px-7 font-semibold hover:border-paper">
-                Your contracts
+              <Link href="/contracts" className="jelly inline-flex min-h-11 items-center rounded-lg border border-line bg-raised px-5 text-[15px] font-semibold hover:bg-well">
+                View contracts
               </Link>
             </div>
-            <p className="label">Free to try: sign in, or explore with a demo account</p>
+            <p className="text-sm text-subtle">Free to try. Sign in, or explore with a demo account.</p>
           </div>
-          <div aria-hidden className="relative h-[460px] min-w-0 flex-[1_1_380px] max-sm:h-[380px]">
-            <div className="goo-lg absolute inset-0">
-              <div className="mb left-[30%] top-[24%] size-[200px] bg-paper" />
-              <div className="mb mb1 left-[14%] top-[40%] size-[90px] bg-paper" />
-              <div className="mb mb2 left-[62%] top-[16%] size-[110px] bg-butter" />
-              <div className="mb mb3 left-[50%] top-[64%] size-[72px] bg-peach" />
-              <div className="mb mb4 left-[26%] top-[74%] size-[52px] bg-paper" />
-              <PointerBlob />
+
+          <div aria-hidden className="min-w-0 rounded-2xl border border-line-soft bg-raised shadow-[0_24px_60px_-30px_rgb(0_0_0/0.45)]">
+            <div className="flex items-center justify-between gap-4 border-b border-line-soft px-5 py-4">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold">Dance studio website</p>
+                <p className="truncate text-xs text-subtle">Jaya Dance &amp; Fitness → Ravi Kumar</p>
+              </div>
+              <span className="chip"><span className="sw" style={{ background: "var(--tone-held)" }} />Active</span>
             </div>
-            {chips.map((c) => (
-              <span key={c.label} className="chip chip-glass float absolute py-1.5 pl-1.5 pr-[18px] text-sm font-medium" style={c.style}>
-                <span className="sw size-6" style={{ background: c.color }} />
-                {c.label}
-              </span>
+            <div className="grid grid-cols-3 divide-x divide-line-soft border-b border-line-soft text-center">
+              {[["To fund", "₹3,455"], ["Held at PayPal", "₹9,520"], ["Paid out", "₹4,350"]].map(([k, v]) => (
+                <div key={k} className="px-3 py-4">
+                  <p className="text-xs text-subtle">{k}</p>
+                  <p className="money pt-1 text-lg">{v}</p>
+                </div>
+              ))}
+            </div>
+            <ul className="divide-y divide-line-soft">
+              {PREVIEW.map((m) => (
+                <li key={m.n} className="flex items-center gap-3 px-5 py-3.5">
+                  <span className="grid size-6 flex-none place-items-center rounded-md bg-well text-xs font-semibold text-muted">{m.n}</span>
+                  <span className="min-w-0 flex-1 truncate text-sm font-medium">{m.title}</span>
+                  <span className="chip max-sm:hidden"><span className="sw" style={{ background: m.tone }} />{m.status}</span>
+                  <span className="money w-16 text-right text-sm">{m.price}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+
+        <section className="space-y-6">
+          <Reveal className="max-w-2xl space-y-2">
+            <h2 className="text-2xl font-semibold tracking-tight">How it works</h2>
+            <p className="leading-relaxed text-muted">Every milestone follows the same path: agreed, funded, delivered, checked, paid. You can see where the money is at each step.</p>
+          </Reveal>
+          <div className="grid gap-4 md:grid-cols-3">
+            {STEPS.map((s, i) => (
+              <Reveal key={s.title} as="article" delay={i * 80} className="flex flex-col gap-3 rounded-xl border border-line-soft bg-raised p-6 shadow-[var(--shadow-card)]">
+                <div className="flex items-center justify-between">
+                  <span className="grid size-10 place-items-center rounded-lg bg-magenta/10 text-magenta">
+                    <svg aria-hidden viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d={s.icon} /></svg>
+                  </span>
+                  <span className="text-sm font-medium text-subtle">Step {i + 1}</span>
+                </div>
+                <h3 className="text-lg font-semibold">{s.title}</h3>
+                <p className="text-sm leading-relaxed text-muted">{s.body}</p>
+              </Reveal>
             ))}
           </div>
-        </div>
-        <div className="label grid grid-cols-3 gap-4 border-t border-paper/20 px-6 pb-6 pt-4 sm:px-9">
-          <span>Sandbox demo<br /><span className="opacity-75">No real money moves</span></span>
-          <span>Held by<br /><span className="opacity-75">PayPal, not us</span></span>
-          <span className="text-right">Built for<br /><span className="opacity-75">PayPal AI Hackathon</span></span>
-        </div>
-      </section>
-
-      <section>
-        <Reveal className="flex flex-wrap items-end justify-between gap-6 border-b border-line pb-7">
-          <h2 className="cond text-[clamp(48px,7vw,96px)] font-extrabold leading-[0.9]">
-            Every rupee<br />is a <span className="money text-magenta [font-stretch:100%]">drop.</span>
-          </h2>
-          <p className="max-w-[360px] leading-relaxed text-muted">
-            Watch where it sits. It&apos;s split into milestones, guarded at PayPal, and merges into the freelancer&apos;s pool only when the work passes.
-          </p>
-        </Reveal>
-        <div className="grid md:grid-cols-3">
-          <Step n="01" delay={0} tag="Scope" color="text-magenta" title="One brief splits into milestones" className="md:border-r md:pr-7"
-            body="Claude scopes it and asks when the brief is too vague to price. Each drop gets checkable criteria and a computed price.">
-            <div className="goo-md absolute inset-0"><span className="split s1" /><span className="split s2" /><span className="split s3" /><span className="split s4" /></div>
-          </Step>
-          <Step n="02" delay={120} tag="Hold" color="text-peach" title="PayPal guards the money" className="md:border-r md:px-7"
-            body="The client funds a milestone before work starts. PayPal holds it, not us, and the hold is renewed before day 29.">
-            <div className="goo-md absolute inset-0"><span className="hold-core" /><span className="hold-orb o1" /><span className="hold-orb o2" /><span className="hold-orb o3" /></div>
-            <span className="label absolute left-[18px] top-3.5 text-subtle">PayPal</span>
-            <span className="label absolute right-[18px] top-3.5 text-subtle">Authorized</span>
-            <span className="label absolute bottom-3.5 left-[18px] text-subtle">Not taken until approved</span>
-          </Step>
-          <Step n="03" delay={240} tag="Release" color="text-butter" title="It merges when the work checks out" className="md:pl-7"
-            body="An AI checker opens the live site and tests every criterion. The client approves, and the drop flows into the payout.">
-            <div className="goo-md absolute inset-0"><span className="rel-drop" /><span className="rel-pool" /></div>
-          </Step>
-        </div>
-      </section>
-    </div>
-    </PageTransition>
-  );
-}
-
-function Step({ n, delay, tag, color, title, body, className, children }: {
-  n: string;
-  delay: number;
-  tag: string;
-  color: string;
-  title: string;
-  body: string;
-  className: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <Reveal as="article" delay={delay} className={`flex flex-col gap-[18px] border-line py-7 ${className}`}>
-      <div className="flex items-baseline justify-between">
-        <span className={`money text-[56px] leading-none ${color}`}>{n}</span>
-        <span className="label text-subtle">{tag}</span>
+        </section>
       </div>
-      <div aria-hidden className="relative h-[200px] overflow-hidden rounded-[28px] bg-well">{children}</div>
-      <h3 className="cond text-[32px] font-bold leading-none">{title}</h3>
-      <p className="text-[15px] leading-relaxed text-muted">{body}</p>
-    </Reveal>
+    </PageTransition>
   );
 }

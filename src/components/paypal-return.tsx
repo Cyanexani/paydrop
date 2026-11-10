@@ -64,19 +64,19 @@ export function PayPalReturn({ params }: { params: Promise<{ id: string }> }) {
           ) : (
             <span className="relative block size-24">
               <span className="absolute inset-0 rounded-full border-[1.5px] border-dashed border-paper/45" />
-              <span key={phase} className="pop-in absolute inset-5 rounded-full" style={{ background: error ? "#ff6b6b" : phase === "funded" ? "#ff49c1" : "#6a4560" }} />
+              <span key={phase} className="pop-in absolute inset-5 rounded-full" style={{ background: error ? "var(--tone-bad)" : phase === "funded" ? "var(--tone-held)" : "var(--tone-neutral)" }} />
             </span>
           )}
         </div>
-        <h1 key={phase} className="cond rise text-[clamp(52px,8vw,104px)] font-extrabold leading-[0.86]" aria-live="polite">
+        <h1 key={phase} className="cond rise text-2xl font-semibold leading-tight" aria-live="polite">
           {stray ? "Nothing" : error ? "That didn't" : copy.title}<br />
-          <span className="money text-butter [font-stretch:100%]">{stray ? "to confirm." : error ? "go through." : copy.accent}</span>
+          <span className="money text-butter">{stray ? "to confirm." : error ? "go through." : copy.accent}</span>
         </h1>
         <p className="max-w-md text-lg leading-relaxed">
           {stray ? "This page finishes a PayPal payment, and this link doesn't carry one." : error ? "PayPal didn't confirm the payment, so nothing is held. You can try funding the milestone again." : copy.body}
         </p>
         <ErrorNote error={error} />
-        <Link href={`/contracts/${id}`} className="jelly inline-flex min-h-12 items-center gap-2 rounded-full border border-paper/50 px-6 font-semibold hover:border-paper">
+        <Link href={`/contracts/${id}`} className="jelly inline-flex min-h-10 items-center gap-2 rounded-lg border border-paper/50 px-4 font-semibold hover:border-paper">
           <span aria-hidden>←</span> Back to the contract
         </Link>
       </div>

@@ -37,21 +37,20 @@ export function AgentCard({ pc, quote, error, humanBaseMinor, picking, onPick, o
 }) {
   const { candidate } = pc;
   return (
-    <article className={`rise flex flex-col gap-[18px] rounded-[28px] border bg-raised p-6 transition-colors duration-300 ${picking ? "border-magenta" : "border-line-soft hover:border-wine"}`}>
+    <article className={`flex flex-col gap-4 rounded-xl border bg-raised p-5 shadow-[var(--shadow-card)] transition-colors ${picking ? "border-magenta" : "border-line-soft hover:border-wine"}`}>
       <div className="flex items-center gap-3.5">
-        <span aria-hidden className="goo-md relative size-[52px] flex-none">
-          <span className="absolute inset-1 rounded-full bg-paper" />
-          <span className="logo-dot absolute -right-0.5 bottom-0 size-5 rounded-full bg-magenta" />
+        <span aria-hidden className="grid size-10 flex-none place-items-center rounded-full bg-magenta/15 text-magenta">
+          <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="8" width="14" height="11" rx="2.5" /><path d="M12 4v4M9.5 13v1.5M14.5 13v1.5" /></svg>
         </span>
         <div className="flex min-w-0 flex-col gap-0.5">
-          <strong className="text-[19px]">{candidate.name}</strong>
+          <strong className="text-[15px]">{candidate.name}</strong>
           <span className="label text-subtle">AI agent{candidate.ownerName ? ` · owned by ${candidate.ownerName}` : ""}</span>
         </div>
       </div>
 
       <div className="flex items-baseline justify-between gap-2 border-y border-dashed border-line py-3.5">
         <span className="label text-subtle">{quote ? `+ ${formatMoney(quote.feeMinor)} fee` : "No price"}</span>
-        <span className="money text-[36px] leading-none">{quote ? formatMoney(quote.subtotalMinor) : "—"}</span>
+        <span className="money text-2xl leading-none">{quote ? formatMoney(quote.subtotalMinor) : "—"}</span>
       </div>
       {quote && (
         <p className="text-sm leading-normal text-muted">
@@ -83,7 +82,7 @@ export function AgentCard({ pc, quote, error, humanBaseMinor, picking, onPick, o
           <summary className="label text-peach">Price receipt</summary>
           <div className="mt-3 space-y-3">
             {quote.milestones.map((m) => (
-              <div key={m.title} className="rounded-2xl bg-well p-3.5 font-mono text-xs leading-relaxed">
+              <div key={m.title} className="rounded-lg bg-well p-3.5 font-mono text-xs leading-relaxed">
                 <div className="font-semibold">{m.receipt.title}</div>
                 {m.receipt.lines.map((l) => (
                   <div key={l.text}>  {l.text}{l.amountMinor !== null ? ` = ${formatMoney(l.amountMinor)}` : ""}</div>
@@ -121,9 +120,9 @@ export function AgentModelPicker({ catalog, drafts, ids, onChange }: {
     [catalog, drafts],
   );
   return (
-    <section className="rise space-y-4 rounded-[28px] border border-magenta/50 bg-raised p-5 sm:p-6">
+    <section className="rise space-y-4 rounded-xl border border-magenta/50 bg-raised p-5 sm:p-6">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <h3 className="cond text-[32px] font-extrabold leading-none">Every model BuildBot can run on</h3>
+        <h3 className="cond text-lg font-semibold">Every model BuildBot can run on</h3>
         <span className="label text-subtle">
           {catalog.models.length} models · {catalog.source === "live" ? "live OpenRouter prices" : "saved OpenRouter prices"} · {new Date(catalog.fetchedAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}
         </span>

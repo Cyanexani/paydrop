@@ -14,7 +14,7 @@ export function AgentLadder({ m, settled }: { m: Milestone; settled: boolean }) 
   const waiting = !settled && runs.length < plan.ladder.length ? runs.length : -1;
   const next = ["funded", "changes_requested"].includes(m.status) ? waiting : -1;
   return (
-    <div className="space-y-3 rounded-[22px] border border-line-soft bg-well p-4">
+    <div className="space-y-3 rounded-xl border border-line-soft bg-well p-4">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h4 className="label text-peach">Model ladder · cheapest tries first</h4>
         <span className="label text-subtle">Expected model cost {formatUsd(plan.expectedUsd)} · worst case {formatUsd(plan.worstUsd)}</span>
@@ -23,7 +23,7 @@ export function AgentLadder({ m, settled }: { m: Milestone; settled: boolean }) 
         {plan.ladder.map((r, i) => {
           const run = runs.find((x) => x.rung === i + 1);
           return (
-            <li key={r.modelId} className={`grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 rounded-2xl px-3 py-2.5 ${i === next ? "bg-magenta/10 ring-1 ring-magenta/50" : ""}`}>
+            <li key={r.modelId} className={`grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 rounded-lg px-3 py-2.5 ${i === next ? "bg-magenta/10 ring-1 ring-magenta/50" : ""}`}>
               <span className={`sw size-4 ${i === next ? "sw-live" : ""}`} style={{ background: run || i === next ? RUNG_COLORS[i] : "var(--tone-empty)" }} />
               <span className="min-w-0 truncate text-[15px]" title={r.modelId}>
                 <span className="text-subtle">Rung {i + 1} · </span>{r.name}

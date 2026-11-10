@@ -27,7 +27,7 @@ export function MessagesPanel({ view, onChange, onError }: { view: ContractView;
   return (
     <Card className="flex flex-col gap-4">
       <div className="space-y-1.5">
-        <h2 className="cond text-[32px] font-extrabold leading-none">Messages</h2>
+        <h2 className="cond text-lg font-semibold">Messages</h2>
         <p className="text-sm text-subtle">The client&apos;s requests are checked against the contract. WhatsApp and email come in through Zapier.</p>
       </div>
       <ul ref={list} className="flex max-h-96 flex-col gap-3 overflow-y-auto pr-1">
@@ -37,7 +37,7 @@ export function MessagesPanel({ view, onChange, onError }: { view: ContractView;
           const verdict = m.scope ? VERDICT[m.scope.verdict] : null;
           return (
             <li key={m.id} className={`bubble-in flex max-w-[88%] flex-col gap-1.5 ${mine ? "items-end self-end [--origin:right_bottom]" : "items-start self-start"}`}>
-              <p className={`px-4 py-3 text-[15px] leading-normal [overflow-wrap:anywhere] ${mine ? "rounded-[22px_22px_6px_22px] bg-[var(--c-bubble)]" : "rounded-[22px_22px_22px_6px] bg-well"}`}>{m.body}</p>
+              <p className={`px-4 py-3 text-[15px] leading-normal [overflow-wrap:anywhere] ${mine ? "rounded-[14px_14px_4px_14px] bg-[var(--c-bubble)]" : "rounded-[14px_14px_14px_4px] bg-well"}`}>{m.body}</p>
               {m.scope && (
                 <p className={`flex flex-wrap items-center gap-2 text-xs text-subtle ${mine ? "justify-end text-right" : ""}`}>
                   <span className="chip whitespace-normal text-[11px]"><span className="sw size-3" style={{ background: verdict?.color ?? "var(--tone-neutral)" }} />{verdict?.label ?? m.scope.verdict}</span>
@@ -66,7 +66,7 @@ export function MessagesPanel({ view, onChange, onError }: { view: ContractView;
             onChange={(e) => setBody(e.target.value)}
             placeholder={view.role === "client" ? "e.g. Can you also add a blog?" : "Write a message"}
           />
-          <button type="submit" disabled={!!busy || !body.trim()} className="jelly min-h-12 rounded-full bg-magenta px-6 font-bold text-[#22071d] disabled:cursor-not-allowed disabled:opacity-40">
+          <button type="submit" disabled={!!busy || !body.trim()} className="jelly min-h-10 rounded-lg bg-butter px-4 font-semibold text-plum disabled:cursor-not-allowed disabled:opacity-40">
             {busy ? <GooLoader kind="drip" size={9} label="Checking scope" showLabel={false} /> : "Send"}
           </button>
         </form>
@@ -86,7 +86,7 @@ export function ChangeRequestsPanel({ view, viewerId, onChange, onError }: { vie
     <Card className="space-y-4">
       <div className="flex items-start justify-between gap-3">
         <div className="space-y-1.5">
-          <h2 className="cond text-[32px] font-extrabold leading-none">Change requests</h2>
+          <h2 className="cond text-lg font-semibold">Change requests</h2>
           <p className="text-sm text-subtle">Out-of-scope work becomes a priced change order; dragging a deadline on the timeline proposes a schedule change.</p>
         </div>
         {!isClient && view.contract.status === "active" && <Button variant="secondary" onClick={() => setOpen(!open)}>Raise one</Button>}
@@ -123,12 +123,12 @@ export function ChangeRequestsPanel({ view, viewerId, onChange, onError }: { vie
       <ul className="space-y-3 [overflow-wrap:anywhere]">
         {crs.length === 0 && <li className="label py-6 text-center text-subtle">None yet</li>}
         {crs.map((c) => (
-          <li key={c.id} className="bubble-in space-y-2.5 rounded-[22px] border border-line-soft bg-well p-4">
+          <li key={c.id} className="bubble-in space-y-2.5 rounded-xl border border-line-soft bg-well p-4">
             <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-              <strong className="cond text-2xl font-bold leading-none">{c.title}</strong>
+              <strong className="text-[15px] font-semibold">{c.title}</strong>
               {c.priceMinor !== null && (
                 <span className="flex items-baseline gap-2">
-                  <span className="money text-[28px] leading-none">{formatMoney(c.priceMinor)}</span>
+                  <span className="money text-xl leading-none">{formatMoney(c.priceMinor)}</span>
                   <span className="label text-subtle">+ {formatMoney(c.feeMinor ?? 0)} fee</span>
                 </span>
               )}
@@ -174,7 +174,7 @@ export function OfferPanel({ view, onChange, onError }: { view: ContractView; on
     <Card className="space-y-5">
       {offered && (
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <p className="cond max-w-2xl text-[28px] font-bold leading-[1.05]">
+          <p className="cond max-w-2xl text-xl font-semibold leading-[1.05]">
             {isWorker ? "Review the milestones. Counter-offer a price if needed, then accept to start." : "Waiting for the freelancer to accept. Offers expire after 48 hours."}
           </p>
           {isWorker && (
@@ -235,7 +235,7 @@ export function AuditTrail({ view }: { view: ContractView }) {
   return (
     <Card className="space-y-4">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <h2 className="cond text-[32px] font-extrabold leading-none">Audit trail</h2>
+        <h2 className="cond text-lg font-semibold">Audit trail</h2>
         <span className="label text-subtle">{view.events.length} events · every money move is logged</span>
       </div>
       {view.events.length === 0 ? (

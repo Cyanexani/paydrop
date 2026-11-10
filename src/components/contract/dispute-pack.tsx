@@ -36,7 +36,7 @@ export function DisputePack({ params }: { params: Promise<{ id: string }> }) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0">
           <Link href={`/contracts/${id}`} className="label inline-block py-2 text-muted hover:text-butter">← Contract</Link>
-          <h1 className="cond rise my-3 text-[clamp(44px,7vw,96px)] font-extrabold leading-[0.88]">Dispute pack: {pack.contract.title}</h1>
+          <h1 className="cond rise my-3 text-2xl font-semibold leading-tight">Dispute pack: {pack.contract.title}</h1>
           <p className="label leading-relaxed text-subtle">
             {pack.contract.parties.map((p) => `${p.name} (${p.role})`).join(" · ")} · generated {new Date(pack.generatedAt).toLocaleString("en-IN")}
           </p>
@@ -50,7 +50,7 @@ export function DisputePack({ params }: { params: Promise<{ id: string }> }) {
       {pack.milestones.map((m) => (
         <Card key={m.position} className="space-y-3 [overflow-wrap:anywhere]">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 className="cond text-[28px] font-bold leading-none">{m.position}. {m.title}</h2>
+            <h2 className="cond text-xl font-semibold leading-tight">{m.position}. {m.title}</h2>
             <StatusPill status={m.status} />
           </div>
           <p className="text-xs text-subtle">Due {m.dueAt ? new Date(m.dueAt).toLocaleString("en-IN") : "—"} · {m.receipt.title}</p>
@@ -73,7 +73,7 @@ export function DisputePack({ params }: { params: Promise<{ id: string }> }) {
       ))}
 
       <Card>
-        <h2 className="cond mb-3 text-[32px] font-extrabold leading-none">Timeline</h2>
+        <h2 className="cond mb-3 text-2xl font-semibold leading-tight">Timeline</h2>
         <ol className="text-sm [overflow-wrap:anywhere]">
           {pack.timeline.map((t, i) => (
             <li key={i} className="grid gap-x-3 gap-y-0.5 border-t border-line-soft py-2 first:border-0 sm:grid-cols-[9rem_7rem_minmax(0,1fr)]">

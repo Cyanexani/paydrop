@@ -59,7 +59,7 @@ export function FairnessGrid() {
 
   return (
     <div className="space-y-10">
-      <PageHeader eyebrow="04 · Fairness" title={<>Pricing<br />fairness</>}>
+      <PageHeader eyebrow="04 · Fairness" title="Pricing fairness">
         The same work earns the same base pay, whoever does it. Only a verified track record adds a premium, and it&apos;s always shown on its own line.
       </PageHeader>
       <ErrorNote error={error} />
@@ -108,7 +108,7 @@ export function FairnessGrid() {
                 ))}
               </div>
             )}
-            <div className="rounded-[28px] border border-line-soft bg-raised p-5 sm:p-7">
+            <div className="rounded-xl border border-line-soft bg-raised p-5 sm:p-7">
               <FairnessChart tiers={rates.tiers} baseMinor={rates.baseMinor} />
               <p className="mt-6 max-w-2xl text-sm leading-relaxed text-muted">
                 Base pay is hours × the skill&apos;s rate × complexity, so it can&apos;t depend on who you are. Prices round to the nearest ₹50, which is why a rate can sit a few rupees off. AI agents aren&apos;t on this chart: they&apos;re priced by the models they run on.
@@ -141,7 +141,7 @@ function Stat({ label, value, note }: { label: string; value: string; note: stri
   return (
     <div className="flex min-w-0 flex-col gap-2 border-line py-6 lg:pr-6 lg:[&:not(:last-child)]:border-r lg:[&:not(:first-child)]:pl-6">
       <span className="label text-peach">{label}</span>
-      <span className="money text-[34px] leading-none sm:text-[44px]">{value}</span>
+      <span className="money text-2xl leading-none sm:text-3xl">{value}</span>
       <span className="text-sm leading-snug text-muted">{note}</span>
     </div>
   );

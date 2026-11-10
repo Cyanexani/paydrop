@@ -53,7 +53,7 @@ export function NavList({ path }: { path: string }) {
   }, [active, place]);
 
   return (
-    <nav aria-label="Main" className="order-last -mx-3 w-[calc(100%+1.5rem)] overflow-x-auto lg:order-none lg:mx-0 lg:w-auto">
+    <nav aria-label="Main" className="order-last -mx-3 w-[calc(100%+1.5rem)] overflow-x-auto md:order-none md:mx-0 md:w-auto">
       <div ref={row} className="relative inline-flex" onPointerLeave={() => place(active)}>
         {LINKS.map((l, i) => (
           <Link
@@ -61,9 +61,9 @@ export function NavList({ path }: { path: string }) {
             href={l.href}
             aria-current={i === active ? "page" : undefined}
             onPointerEnter={(e) => e.pointerType === "mouse" && place(i)}
-            className={`label whitespace-nowrap px-3 py-3.5 transition-colors hover:text-butter ${i === active ? "text-paper" : "text-muted"}`}
+            className={`whitespace-nowrap px-3 py-4 text-sm font-medium transition-colors hover:text-paper ${i === active ? "text-paper" : "text-muted"}`}
           >
-            <span className="text-magenta">0{i + 1}</span> {l.label}
+            {l.label}
           </Link>
         ))}
         <span

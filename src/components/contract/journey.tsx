@@ -30,38 +30,30 @@ function progress(status: string): { done: number; live: boolean } {
 }
 
 /**
- * A milestone's journey as a liquid track: the fill and the finished dots melt into one shape
- * (goo filter), and a pulsing dot reaches for the step that is under way.
+ * A milestone's journey as a five-step track; a pulsing dot marks the step that is under way.
  */
 export function Journey({ status, color }: { status: string; color: string }) {
   const { done, live } = progress(status);
   const now = STEPS[done] ?? "Offered";
   return (
     <div className="px-3" role="img" aria-label={`Progress: ${now}${live ? `, ${STEPS[done + 1]} under way` : ""} (step ${done + 1} of ${STEPS.length})`}>
-      <div className="relative h-8">
-        <span className="absolute inset-x-0 top-[13px] h-1.5 rounded-full bg-line" />
-        {STEPS.map((s, i) => (
-          <span key={s} className="absolute top-[9px] size-3.5 -translate-x-1/2 rounded-full bg-line" style={{ left: `${i * 25}%` }} />
-        ))}
-        <div className="goo-sm absolute inset-x-[-14px] inset-y-0">
-          <div className="absolute inset-x-[14px] inset-y-0">
-            <span className="track-fill absolute left-0 top-[9px] h-3.5 rounded-full" style={{ width: `${Math.max(0, done) * 25}%`, background: color }} />
-            {STEPS.map((s, i) => (
-              <span
-                key={s}
-                className="track-dot absolute top-[5px] size-[22px] -translate-x-1/2 rounded-full"
-                style={{ left: `${i * 25}%`, background: color, scale: i <= done ? 1 : 0 }}
-              />
-            ))}
-            {live && <span className="track-now absolute top-[7px] size-[18px] -translate-x-1/2 rounded-full bg-peach" style={{ left: `${(done + 1) * 25 - 9}%` }} />}
-          </div>
-        </div>
-      </div>
-      <div className="label relative mt-1 h-4 text-[10px]">
+      <div className="relative h-5">
+        <span className="absolute inset-x-0 top-2 h-1 rounded-full bg-line" />
+        <span className="track-fill absolute left-0 top-2 h-1 rounded-full" style={{ width: `${Math.max(0, done) * 25}%`, background: color }} />
         {STEPS.map((s, i) => (
           <span
             key={s}
-            className={`absolute ${i === 0 ? "left-0 -ml-3" : i === 4 ? "right-0 -mr-3" : "-translate-x-1/2"} ${i <= done ? "text-paper" : live && i === done + 1 ? "text-peach" : "text-subtle/70"}`}
+            className="track-dot absolute top-[3px] size-3.5 -translate-x-1/2 rounded-full border-2 border-raised"
+            style={{ left: `${i * 25}%`, background: i <= done ? color : "var(--c-line)" }}
+          />
+        ))}
+        {live && <span className="track-now absolute top-[5px] size-2.5 -translate-x-1/2 rounded-full bg-[var(--tone-check)]" style={{ left: `${(done + 1) * 25}%` }} />}
+      </div>
+      <div className="relative mt-1.5 h-4 text-xs font-medium">
+        {STEPS.map((s, i) => (
+          <span
+            key={s}
+            className={`absolute ${i === 0 ? "left-0 -ml-3" : i === 4 ? "right-0 -mr-3" : "-translate-x-1/2"} ${i <= done ? "text-paper" : live && i === done + 1 ? "text-[var(--ink-check)]" : "text-subtle/70"}`}
             style={i > 0 && i < 4 ? { left: `${i * 25}%` } : undefined}
           >
             {s}

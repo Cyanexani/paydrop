@@ -9,24 +9,20 @@ export default function PageError({ error, retry }: { error: unknown; retry: () 
   }, [error]);
 
   return (
-    <section className="rise flex flex-col gap-7 border-y border-line py-14">
-      <span className="label flex items-center gap-2.5 text-peach">
-        <span aria-hidden className="size-2.5 rounded-full bg-danger" />
-        Something broke on this page
+    <section className="mx-auto flex max-w-md flex-col items-center gap-4 py-24 text-center">
+      <span className="grid size-10 place-items-center rounded-full bg-danger/15 text-[#ffc2c2]" aria-hidden>
+        <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 8v5M12 16.5v.5" /><circle cx="12" cy="12" r="9" /></svg>
       </span>
-      <h1 className="cond text-[clamp(52px,8vw,112px)] font-extrabold leading-[0.86]">
-        That didn&apos;t<br />
-        <span className="money text-magenta [font-stretch:100%]">go through.</span>
-      </h1>
-      <p className="max-w-lg text-lg leading-relaxed text-muted">
+      <h1 className="text-2xl font-semibold tracking-tight">Something went wrong</h1>
+      <p className="text-sm leading-relaxed text-muted">
         The page hit an error while loading. No money moves on a failed page: payments only change when PayPal confirms them.
       </p>
-      <div className="flex flex-wrap gap-3">
-        <button type="button" onClick={() => retry()} className="jelly inline-flex min-h-[52px] items-center rounded-full bg-butter px-7 font-bold text-plum hover:bg-white">
+      <div className="flex flex-wrap justify-center gap-3 pt-2">
+        <button type="button" onClick={() => retry()} className="jelly inline-flex min-h-10 items-center rounded-lg bg-butter px-4 text-sm font-semibold text-plum hover:bg-white">
           Try again
         </button>
-        <Link href="/contracts" className="jelly inline-flex min-h-[52px] items-center rounded-full border border-paper/35 px-7 font-semibold hover:border-paper/70">
-          Your contracts
+        <Link href="/contracts" className="jelly inline-flex min-h-10 items-center rounded-lg border border-line bg-raised px-4 text-sm font-semibold hover:bg-well">
+          View contracts
         </Link>
       </div>
     </section>

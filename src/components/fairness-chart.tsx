@@ -117,7 +117,7 @@ export function FairnessChart({ tiers, baseMinor }: { tiers: TierRate[]; baseMin
                   )}
                 </span>
                 <span className="col-start-2 flex items-baseline gap-2 sm:col-start-auto sm:pl-4">
-                  <span className="money text-[22px] leading-none">{rupees(base + prem)}</span>
+                  <span className="money text-lg leading-none">{rupees(base + prem)}</span>
                   <span className="label text-subtle">/hr{t.premium ? ` · +${Math.round(t.premium * 100)}%` : " · base"}</span>
                 </span>
               </li>

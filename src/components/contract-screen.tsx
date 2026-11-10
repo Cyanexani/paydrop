@@ -92,7 +92,7 @@ export function ContractScreen({ params }: { params: Promise<{ id: string }> }) 
   };
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-7">
       <nav aria-label="Contract" className="label flex flex-wrap items-center justify-between gap-2 text-muted">
         <Link href="/contracts" className="py-2 hover:text-butter">← Contracts</Link>
         <span className="flex gap-4">
@@ -107,31 +107,31 @@ export function ContractScreen({ params }: { params: Promise<{ id: string }> }) 
             {view.clientName} → {view.freelancer?.name}{view.freelancer?.kind === "agent" ? " (AI agent)" : ""} · {contract.tier.name} tier
             {contract.standing.verifiedMilestones > 0 ? ` · VRS ${contract.standing.vrs}` : ""}
           </span>
-          <h1 className="cond max-w-4xl text-[clamp(52px,8vw,112px)] font-extrabold leading-[0.86]">{contract.title}</h1>
+          <h1 className="cond max-w-4xl text-2xl font-semibold leading-tight">{contract.title}</h1>
           <div className="flex flex-wrap items-center gap-3">
             <StatusPill status={contract.status} />
             <span className="label text-subtle">You are the {role.replace("_", " ")}</span>
           </div>
         </div>
         <div className="flex flex-col items-end gap-1.5 text-right">
-          <span className="money text-[clamp(56px,7vw,84px)] leading-[0.9] text-butter"><CountUp minor={paidMinor} /></span>
+          <span className="money text-2xl"><CountUp minor={paidMinor} /></span>
           <span className="label text-subtle">released of {formatMoney(contract.subtotalMinor)} · + {formatMoney(contract.feeMinor)} fee</span>
         </div>
       </section>
 
       <MoneyStage view={view} heldMinor={heldMinor} paidMinor={paidMinor} toFundMinor={toFundMinor} onPick={pick} />
 
-      <section aria-label="Next move" className="flex flex-wrap items-center gap-x-5 gap-y-3 border-y border-line py-5">
+      <section aria-label="Next move" className="flex flex-wrap items-center gap-x-4 gap-y-3 rounded-xl border border-line-soft bg-raised px-5 py-3.5 shadow-[var(--shadow-card)]">
         <span className="label flex items-center gap-2.5 text-peach">
           <span aria-hidden className={`size-2.5 rounded-full ${move.yours ? "beat bg-butter" : "bg-wine"}`} />
           {move.yours ? "Your move" : "Next"}
         </span>
-        <p key={move.text} className="cond rise min-w-0 flex-1 text-[clamp(26px,3.4vw,40px)] font-bold leading-none">{move.text}</p>
+        <p key={move.text} className="min-w-0 flex-1 text-base font-semibold">{move.text}</p>
         {move.milestone && (
           <button
             type="button"
             onClick={() => pick(move.milestone!.id)}
-            className={`jelly inline-flex min-h-11 items-center gap-2 rounded-full px-5 text-[15px] font-bold ${move.yours ? "bg-butter text-plum hover:bg-white" : "border border-paper/35 hover:border-paper/70"}`}
+            className={`jelly inline-flex min-h-9 items-center gap-2 rounded-lg px-3.5 text-sm font-semibold ${move.yours ? "bg-butter text-plum hover:bg-white" : "border border-line hover:bg-well"}`}
           >
             Open {stopNo(move.milestone)} <span aria-hidden>↓</span>
           </button>
@@ -145,12 +145,12 @@ export function ContractScreen({ params }: { params: Promise<{ id: string }> }) 
       </p>
 
       <ErrorNote error={error} />
-      {notice && <p className="flex items-start gap-3 rounded-2xl border border-peach/30 bg-peach/10 px-4 py-3 text-[15px]"><span aria-hidden className="mt-1.5 size-2.5 flex-none rounded-full bg-peach" />{notice}</p>}
+      {notice && <p className="flex items-start gap-3 rounded-lg border border-peach/30 bg-peach/10 px-4 py-3 text-[15px]"><span aria-hidden className="mt-1.5 size-2.5 flex-none rounded-full bg-peach" />{notice}</p>}
 
       <OfferPanel view={view} onChange={load} onError={setError} />
 
       <section className="space-y-5">
-        <SectionHead title="Milestones" note={`${view.milestones.length} stops`} />
+        <SectionHead title="Milestones" note={`${view.milestones.length} in total`} />
         <ol className="space-y-3">
         {view.milestones.map((m) => (
           <MilestoneCard

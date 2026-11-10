@@ -84,24 +84,19 @@ export function LedgerGrid() {
 
   return (
     <div className="space-y-8">
-      <PageHeader eyebrow="03 · Ledger" title={<>Money<br />ledger</>}>
-        Every milestone you&apos;re part of, grouped by client and project. One dot is ₹10,000, so you can see where your money sits.
+      <PageHeader eyebrow="03 · Ledger" title="Ledger">
+        Every milestone you&apos;re part of, grouped by client and project, with where its money sits.
       </PageHeader>
       {totals && (
-        <section className="grid border-b border-line md:grid-cols-3">
+        <section className="grid gap-4 md:grid-cols-3">
           {totals.map((t) => (
-            <div key={t.label} className="flex flex-col gap-4 py-7 md:pr-7">
+            <div key={t.label} className="flex flex-col gap-2 rounded-xl border border-line-soft bg-raised p-5 shadow-[var(--shadow-card)]">
               <div className="flex items-center justify-between gap-3">
-                <span className="chip"><span className="sw" style={{ background: t.color }} />{t.label}</span>
-                <span className="label text-subtle">{t.count} milestone{t.count === 1 ? "" : "s"}</span>
+                <span className="flex items-center gap-2 text-[13px] font-medium text-muted"><span className="sw" style={{ background: t.color }} />{t.label}</span>
+                <span className="text-xs text-subtle">{t.count} milestone{t.count === 1 ? "" : "s"}</span>
               </div>
-              <span className="money text-[68px] leading-[0.9]" style={{ color: t.ink }}><CountUp minor={t.minor} /></span>
-              <div aria-hidden className="flex max-w-[320px] flex-wrap gap-2">
-                {Array.from({ length: Math.min(60, Math.round(t.minor / 1_000_000)) }, (_, i) => (
-                  <span key={i} className={`ldot ${t.cls}`} style={{ animationDelay: `${i * 0.04}s` }} />
-                ))}
-              </div>
-              <p className="text-sm leading-snug text-muted">{t.note}</p>
+              <span className="money text-2xl"><CountUp minor={t.minor} /></span>
+              <p className="text-[13px] leading-snug text-subtle">{t.note}</p>
             </div>
           ))}
         </section>

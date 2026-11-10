@@ -1,49 +1,19 @@
 import type { CSSProperties } from "react";
 
-/** SVG filters that make overlapping dots melt together. Rendered once in the root layout. */
-export function GooFilters() {
-  return (
-    <svg aria-hidden width="0" height="0" className="absolute">
-      <defs>
-        <filter id="goo-lg">
-          <feGaussianBlur in="SourceGraphic" stdDeviation="16" result="blur" />
-          <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 26 -11" result="goo" />
-          <feComposite in="SourceGraphic" in2="goo" operator="atop" />
-        </filter>
-        <filter id="goo-sm">
-          <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur" />
-          <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -8" />
-        </filter>
-        <filter id="goo-md">
-          <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur" />
-          <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -9" />
-        </filter>
-      </defs>
-    </svg>
-  );
-}
-
 type Kind = "glide" | "orbit" | "drip";
 
-/**
- * Gooey dots loader. glide: scoping and general loading; orbit: the checker at work;
- * drip: waiting for PayPal. `size` is the dot diameter in px.
- */
-export function GooLoader({ kind = "glide", size = 18, label = "Loading", showLabel = true, className = "" }: {
+/** Spinner with a label. `kind` is accepted for older call sites and ignored. */
+export function GooLoader({ size = 18, label = "Loading", showLabel = true, className = "" }: {
   kind?: Kind;
   size?: number;
   label?: string;
   showLabel?: boolean;
   className?: string;
 }) {
-  const cls = { glide: "gl", orbit: "go", drip: "gd" }[kind];
-  const dots = kind === "glide" ? 4 : 3;
   return (
-    <span role="status" className={`inline-flex items-center gap-3 ${className}`}>
-      <span className={cls} style={{ "--s": `${size}px` } as CSSProperties} aria-hidden>
-        {Array.from({ length: dots }, (_, i) => <span key={i} />)}
-      </span>
-      <span className={showLabel ? "label text-subtle" : "sr-only"}>{label}…</span>
+    <span role="status" className={`inline-flex items-center gap-2.5 ${className}`}>
+      <span className="spin" style={{ "--s": `${Math.max(14, Math.min(size, 22))}px` } as CSSProperties} aria-hidden />
+      <span className={showLabel ? "text-sm text-subtle" : "sr-only"}>{label}…</span>
     </span>
   );
 }
@@ -57,13 +27,11 @@ export function GooBlock({ label = "Loading", kind = "glide" }: { label?: string
   );
 }
 
-/** The mark: three dots, one drifting in and out of the others. */
+/** The mark: a tick inside a rounded square. */
 export function Logo() {
   return (
-    <span className="goo-md relative block h-7 w-10" aria-hidden>
-      <span className="absolute left-0.5 top-1.5 size-[18px] rounded-full bg-magenta" />
-      <span className="logo-dot absolute left-3.5 top-0.5 size-3.5 rounded-full bg-peach" />
-      <span className="absolute left-[22px] top-3 size-3 rounded-full bg-butter" />
+    <span className="grid size-7 place-items-center rounded-lg bg-butter text-plum" aria-hidden>
+      <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
     </span>
   );
 }
