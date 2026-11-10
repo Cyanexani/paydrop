@@ -3,7 +3,7 @@ import type { ContractView } from "@/server/contracts";
 
 type Milestone = ContractView["milestones"][number];
 
-const RUNG_COLORS = ["#fff7ad", "#ffb3ae", "#ff49c1"];
+const RUNG_COLORS = ["var(--tone-paid)", "var(--tone-check)", "var(--tone-held)"];
 
 /** An agent milestone's model ladder: each rung's model and estimate, which one is next, and what each attempt really cost. */
 export function AgentLadder({ m, settled }: { m: Milestone; settled: boolean }) {
@@ -24,7 +24,7 @@ export function AgentLadder({ m, settled }: { m: Milestone; settled: boolean }) 
           const run = runs.find((x) => x.rung === i + 1);
           return (
             <li key={r.modelId} className={`grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 rounded-2xl px-3 py-2.5 ${i === next ? "bg-magenta/10 ring-1 ring-magenta/50" : ""}`}>
-              <span className={`sw size-4 ${i === next ? "sw-live" : ""}`} style={{ background: run || i === next ? RUNG_COLORS[i] : "#4a2a42" }} />
+              <span className={`sw size-4 ${i === next ? "sw-live" : ""}`} style={{ background: run || i === next ? RUNG_COLORS[i] : "var(--tone-empty)" }} />
               <span className="min-w-0 truncate text-[15px]" title={r.modelId}>
                 <span className="text-subtle">Rung {i + 1} · </span>{r.name}
               </span>

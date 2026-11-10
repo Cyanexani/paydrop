@@ -8,10 +8,10 @@ import { Button, Card, StatusPill, inputClass } from "../ui";
 import { useAction } from "./use-action";
 
 const VERDICT: Record<string, { label: string; color: string }> = {
-  in_scope: { label: "In scope", color: "#fff7ad" },
-  out_of_scope: { label: "Out of scope → change order", color: "#e6b9f8" },
-  unclear: { label: "Unclear", color: "#ffb3ae" },
-  not_a_request: { label: "Not a request", color: "#6a4560" },
+  in_scope: { label: "In scope", color: "var(--tone-paid)" },
+  out_of_scope: { label: "Out of scope → change order", color: "var(--tone-lilac)" },
+  unclear: { label: "Unclear", color: "var(--tone-check)" },
+  not_a_request: { label: "Not a request", color: "var(--tone-neutral)" },
 };
 
 export function MessagesPanel({ view, onChange, onError }: { view: ContractView; onChange: () => void; onError: (m: string | null) => void }) {
@@ -37,10 +37,10 @@ export function MessagesPanel({ view, onChange, onError }: { view: ContractView;
           const verdict = m.scope ? VERDICT[m.scope.verdict] : null;
           return (
             <li key={m.id} className={`bubble-in flex max-w-[88%] flex-col gap-1.5 ${mine ? "items-end self-end [--origin:right_bottom]" : "items-start self-start"}`}>
-              <p className={`px-4 py-3 text-[15px] leading-normal [overflow-wrap:anywhere] ${mine ? "rounded-[22px_22px_6px_22px] bg-plum" : "rounded-[22px_22px_22px_6px] bg-well"}`}>{m.body}</p>
+              <p className={`px-4 py-3 text-[15px] leading-normal [overflow-wrap:anywhere] ${mine ? "rounded-[22px_22px_6px_22px] bg-[var(--c-bubble)]" : "rounded-[22px_22px_22px_6px] bg-well"}`}>{m.body}</p>
               {m.scope && (
                 <p className={`flex flex-wrap items-center gap-2 text-xs text-subtle ${mine ? "justify-end text-right" : ""}`}>
-                  <span className="chip whitespace-normal text-[11px]"><span className="sw size-3" style={{ background: verdict?.color ?? "#6a4560" }} />{verdict?.label ?? m.scope.verdict}</span>
+                  <span className="chip whitespace-normal text-[11px]"><span className="sw size-3" style={{ background: verdict?.color ?? "var(--tone-neutral)" }} />{verdict?.label ?? m.scope.verdict}</span>
                   <span>{m.scope.reasoning}</span>
                 </p>
               )}
@@ -60,7 +60,7 @@ export function MessagesPanel({ view, onChange, onError }: { view: ContractView;
           }}
         >
           <input
-            className="min-h-12 min-w-0 flex-1 rounded-full border border-line bg-[#120810] px-5 text-[15px] text-paper placeholder:text-subtle/70 focus:border-magenta focus:outline-none focus:ring-4 focus:ring-magenta/15"
+            className="min-h-12 min-w-0 flex-1 rounded-full border border-line bg-[var(--c-input)] px-5 text-[15px] text-paper placeholder:text-subtle/70 focus:border-magenta focus:outline-none focus:ring-4 focus:ring-magenta/15"
             aria-label="Message"
             value={body}
             onChange={(e) => setBody(e.target.value)}
@@ -134,7 +134,7 @@ export function ChangeRequestsPanel({ view, viewerId, onChange, onError }: { vie
               )}
             </div>
             <span className="chip whitespace-normal text-left text-[11px]">
-              <span className={`sw size-3 ${c.status === "proposed" ? "sw-live" : ""}`} style={{ background: c.status === "proposed" ? "#ff49c1" : c.status === "accepted" ? "#fff7ad" : "#6a4560" }} />
+              <span className={`sw size-3 ${c.status === "proposed" ? "sw-live" : ""}`} style={{ background: c.status === "proposed" ? "var(--tone-held)" : c.status === "accepted" ? "var(--tone-paid)" : "var(--tone-neutral)" }} />
               {c.source === "detector" ? "Flagged by the scope detector" : c.source === "gantt" ? "Schedule change" : "Raised by the freelancer"} · {c.status.replace("_", " ")}
             </span>
             <p className="text-sm leading-normal text-muted">{c.description}</p>
@@ -195,13 +195,13 @@ export function OfferPanel({ view, onChange, onError }: { view: ContractView; on
           <div className="flex h-3.5 gap-1 overflow-hidden rounded-full" aria-hidden>
             <span className="rounded-full bg-magenta transition-[flex-grow] duration-700" style={{ flexGrow: leadPct }} />
             {collaborators.map((c, i) => (
-              <span key={c.name} className="rounded-full transition-[flex-grow] duration-700" style={{ flexGrow: c.bps / 100, background: i % 2 ? "#fff7ad" : "#ffb3ae" }} />
+              <span key={c.name} className="rounded-full transition-[flex-grow] duration-700" style={{ flexGrow: c.bps / 100, background: i % 2 ? "var(--tone-paid)" : "var(--tone-check)" }} />
             ))}
           </div>
           <ul className="flex flex-wrap gap-2">
-            <li className="chip"><span className="sw" style={{ background: "#ff49c1" }} />Lead freelancer {leadPct}%</li>
+            <li className="chip"><span className="sw" style={{ background: "var(--tone-held)" }} />Lead freelancer {leadPct}%</li>
             {collaborators.map((c, i) => (
-              <li key={c.name} className="chip"><span className="sw" style={{ background: i % 2 ? "#fff7ad" : "#ffb3ae" }} />{c.name} {c.bps / 100}%</li>
+              <li key={c.name} className="chip"><span className="sw" style={{ background: i % 2 ? "var(--tone-paid)" : "var(--tone-check)" }} />{c.name} {c.bps / 100}%</li>
             ))}
           </ul>
           {canSplit && (

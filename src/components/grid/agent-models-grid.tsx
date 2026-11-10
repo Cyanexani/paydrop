@@ -5,7 +5,7 @@ import { AgGridReact } from "ag-grid-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { formatUsd } from "@/lib/agents/estimate";
 import { inputClass } from "../ui";
-import { ensureGridModules, useGridTheme } from "./setup";
+import { baseColDef, baseGridProps, ensureGridModules, useGridTheme } from "./setup";
 
 ensureGridModules();
 
@@ -71,7 +71,9 @@ export default function AgentModelsGrid({ rows, selected, onChange }: { rows: Mo
       <input className={`${inputClass} max-w-md`} placeholder="Search models, e.g. claude, gemini, llama" aria-label="Search models" value={filter} onChange={(e) => setFilter(e.target.value)} />
       <div className="h-[460px]">
         <AgGridReact<ModelRow>
+          {...baseGridProps}
           theme={theme}
+          defaultColDef={{ ...baseColDef, sortable: true }}
           rowData={rows}
           columnDefs={columnDefs}
           getRowId={(p) => p.data.id}

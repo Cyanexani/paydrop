@@ -80,6 +80,6 @@ export function PayPalFundButton(props: {
     };
   }, [props.clientId, props.currency]);
 
-  if (loadError) return <p className="text-sm text-red-700">{loadError}</p>;
+  if (loadError) return <p className="text-sm text-[#ffc2c2]">{loadError}</p>;
   return <div ref={ref} className="min-h-10 max-w-xs" />;
 }

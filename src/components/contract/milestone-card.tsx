@@ -6,7 +6,7 @@ import type { MaterialOption } from "@/lib/materials/channel3";
 import type { ContractView } from "@/server/contracts";
 import { api, type PublicConfig } from "../api";
 import { PayPalFundButton } from "../paypal-button";
-import { Button, Card, StatusPill, TONE_COLOR, inputClass, statusTone } from "../ui";
+import { Button, Card, StatusPill, TONE_INK, inputClass, statusTone } from "../ui";
 import { GooLoader } from "../goo";
 import { AgentLadder } from "./agent-ladder";
 import { Journey } from "./journey";
@@ -16,8 +16,8 @@ type Milestone = ContractView["milestones"][number];
 type Role = ContractView["role"];
 
 const OUTCOME = {
-  pass: { color: "#fff7ad", label: "passed" },
-  fail: { color: "#ff6b6b", label: "failed" },
+  pass: { color: "var(--tone-paid)", label: "passed" },
+  fail: { color: "var(--tone-bad)", label: "failed" },
   couldnt_check: { color: "#c7a9bc", label: "couldn't check" },
 } as const;
 
@@ -61,7 +61,7 @@ export function MilestoneCard({
   const tone = statusTone(m.status);
   // An agent climbs its model ladder one rung per attempt.
   const nextRung = m.agentPlan ? m.agentPlan.ladder[m.agentRuns.length] ?? null : true;
-  const color = tone === "neutral" ? "#8a6280" : TONE_COLOR[tone];
+  const color = TONE_INK[tone];
 
   async function searchMaterials(e: React.FormEvent) {
     e.preventDefault();
@@ -85,7 +85,7 @@ export function MilestoneCard({
           <span className="flex min-w-0 flex-col gap-1.5">
             <span className="cond text-[26px] font-bold leading-none sm:text-[30px]">
               {m.draft.title}
-              {m.kind === "change_order" && <span className="chip ml-3 align-middle text-[11px]"><span className="sw size-3" style={{ background: "#e6b9f8" }} />Change order</span>}
+              {m.kind === "change_order" && <span className="chip ml-3 align-middle text-[11px]"><span className="sw size-3" style={{ background: "var(--tone-lilac)" }} />Change order</span>}
             </span>
             {m.dueAt && <span className="label text-subtle">Due {new Date(m.dueAt).toLocaleDateString("en-IN", { dateStyle: "medium" })}</span>}
           </span>
@@ -113,17 +113,17 @@ export function MilestoneCard({
                 const r = m.lastCheck?.results.find((x) => x.criterionId === `c${i + 1}`);
                 return (
                   <li key={c.text} className="relative pl-6">
-                    <span key={r?.outcome ?? "none"} aria-hidden className={`absolute left-0 top-1.5 size-3 rounded-full ${r ? "pop-in" : ""}`} style={{ background: r ? OUTCOME[r.outcome].color : "#5a3550", animationDelay: `${i * 90}ms` }} />
+                    <span key={r?.outcome ?? "none"} aria-hidden className={`absolute left-0 top-1.5 size-3 rounded-full ${r ? "pop-in" : ""}`} style={{ background: r ? OUTCOME[r.outcome].color : "var(--tone-empty)", animationDelay: `${i * 90}ms` }} />
                     {r && <span className="sr-only">{OUTCOME[r.outcome].label}: </span>}
                     {c.text}
-                    {c.method === "client_judged" && <span className="text-xs text-zinc-500"> (client-judged)</span>}
-                    {r?.note && <span className="block pl-6 text-xs text-zinc-500">{r.note}</span>}
+                    {c.method === "client_judged" && <span className="text-xs text-subtle"> (client-judged)</span>}
+                    {r?.note && <span className="block pl-6 text-xs text-subtle">{r.note}</span>}
                   </li>
                 );
               })}
             </ul>
             {lastRun && (
-              <p className="mt-2 text-xs text-zinc-500">
+              <p className="mt-2 text-xs text-subtle">
                 Check attempt {lastRun.attempt} · {lastRun.mode === "kernel" ? "Kernel cloud browser" : lastRun.mode === "local" ? "local browser" : "reachability only"}
                 {lastRun.replayUrl && (
                   <>
@@ -141,8 +141,8 @@ export function MilestoneCard({
               {m.receipt.lines.map((l) => (
                 <div key={l.text}>  {l.text}{l.amountMinor !== null ? ` = ${formatMoney(l.amountMinor)}` : ""}</div>
               ))}
-              <div className="text-zinc-500">  {m.receipt.fairBand}</div>
-              <div className="mt-2 text-zinc-500">
+              <div className="text-subtle">  {m.receipt.fairBand}</div>
+              <div className="mt-2 text-subtle">
                 Client funds {formatMoney(m.fundMinor, m.chargeCurrency)} · freelancer receives {formatMoney(m.payoutMinor, m.chargeCurrency)}
                 {m.split && m.split.length > 1 ? ` split ${m.split.map((s) => `${s.name} ${s.bps / 100}%`).join(", ")}` : ""}
               </div>
@@ -165,7 +165,7 @@ export function MilestoneCard({
         </div>
 
         {m.authorizationHealth !== "none" && m.authorizationExpiresAt && !settled && !["voided"].includes(m.status) && (
-          <p className="text-xs text-zinc-500">PayPal hold: {m.authorizationHealth.replaceAll("_", " ")}, expires {new Date(m.authorizationExpiresAt).toLocaleDateString("en-IN")}.</p>
+          <p className="text-xs text-subtle">PayPal hold: {m.authorizationHealth.replaceAll("_", " ")}, expires {new Date(m.authorizationExpiresAt).toLocaleDateString("en-IN")}.</p>
         )}
 
         {/* Negotiation (before the contract is accepted) */}
@@ -218,7 +218,7 @@ export function MilestoneCard({
             </form>
             {materialResults && (
               <ul className="mt-2 space-y-1">
-                {materialResults.length === 0 && <li className="text-zinc-500">No matches.</li>}
+                {materialResults.length === 0 && <li className="text-subtle">No matches.</li>}
                 {materialResults.map((r) => (
                   <li key={r.productId} className="flex items-center justify-between gap-2">
                     <span>{r.title} · {r.currency} {r.price.toLocaleString("en-IN")} · {r.merchant}</span>
@@ -255,7 +255,7 @@ export function MilestoneCard({
                 </Button>
               </div>
             ) : (
-              <p className="text-sm text-amber-700 dark:text-amber-400">PayPal isn&apos;t configured yet: add sandbox keys to .env.local.</p>
+              <p className="text-sm text-peach">PayPal isn&apos;t configured yet: add sandbox keys to .env.local.</p>
             )}
             {payLink && (
               <p className="break-all text-xs">
@@ -264,8 +264,8 @@ export function MilestoneCard({
             )}
           </div>
         )}
-        {isClient && m.status === "accepted" && !m.canFundNow && <p className="text-sm text-zinc-500">Funds after the previous milestone is released.</p>}
-        {isWorker && m.status === "accepted" && <p className="text-sm text-zinc-500">Don&apos;t start until the client funds this milestone.</p>}
+        {isClient && m.status === "accepted" && !m.canFundNow && <p className="text-sm text-subtle">Funds after the previous milestone is released.</p>}
+        {isWorker && m.status === "accepted" && <p className="text-sm text-subtle">Don&apos;t start until the client funds this milestone.</p>}
 
         {/* Delivery (freelancer or agent) */}
         {isWorker && ["funded", "changes_requested", "needs_review"].includes(m.status) && (
@@ -293,7 +293,7 @@ export function MilestoneCard({
               </form>
             )}
             {m.delivery && (
-              <p className="text-xs text-zinc-500">Latest agent build: {new Date(m.delivery.createdAt).toLocaleString("en-IN")}</p>
+              <p className="text-xs text-subtle">Latest agent build: {new Date(m.delivery.createdAt).toLocaleString("en-IN")}</p>
             )}
           </div>
         )}

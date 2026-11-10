@@ -4,7 +4,7 @@ import { useId, useState, type InputHTMLAttributes, type ReactNode } from "react
 import { GooLoader } from "../goo";
 
 const field =
-  "min-h-12 w-full rounded-2xl border bg-[#120810] px-4 text-[15px] text-paper placeholder:text-subtle/60 transition-colors focus:outline-none focus:ring-4";
+  "min-h-12 w-full rounded-2xl border bg-[var(--c-input)] px-4 text-[15px] text-paper placeholder:text-subtle/60 transition-colors focus:outline-none focus:ring-4";
 const ok = "border-line focus:border-magenta focus:ring-magenta/15";
 const bad = "border-danger/70 focus:border-danger focus:ring-danger/15";
 
@@ -57,7 +57,7 @@ export function strength(pw: string): { score: 0 | 1 | 2 | 3 | 4; label: string 
   return { score: s, label: ["Too short", "Okay", "Good", "Strong", "Very strong"][s] };
 }
 
-const METER = ["#ff6b6b", "#ffb3ae", "#fff7ad", "#9ff0c5", "#9ff0c5"];
+const METER = ["var(--tone-bad)", "var(--tone-check)", "var(--tone-paid)", "#9ff0c5", "#9ff0c5"];
 
 export function PasswordField({ label, error, meter, action, value, ...props }: Omit<InputHTMLAttributes<HTMLInputElement>, "type"> & {
   label: string;
@@ -138,7 +138,7 @@ export function SubmitButton({ busy, children, busyLabel }: { busy: boolean; chi
 /** Form-level message (wrong password, rate limited, server error). */
 export function FormAlert({ message, tone = "error" }: { message: string | null; tone?: "error" | "info" }) {
   if (!message) return null;
-  const color = tone === "error" ? "#ff6b6b" : "#ffb3ae";
+  const color = tone === "error" ? "var(--tone-bad)" : "var(--tone-check)";
   return (
     <p role={tone === "error" ? "alert" : "status"} className="flex items-start gap-3 rounded-2xl border px-4 py-3 text-[15px]" style={{ borderColor: `${color}66`, background: `${color}1a` }}>
       <span aria-hidden className="mt-1.5 size-2.5 flex-none rounded-full" style={{ background: color }} />

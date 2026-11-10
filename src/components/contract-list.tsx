@@ -24,10 +24,10 @@ const CHECKING = ["submitted", "needs_review", "verified"];
 
 /** A milestone's drop: butter when paid, peach while being checked, magenta when held, hollow before funding. */
 function dropStyle(status: string): { background: string; boxShadow?: string; live: boolean } {
-  if (PAID.includes(status)) return { background: "#fff7ad", live: false };
-  if (CHECKING.includes(status)) return { background: "#ffb3ae", live: true };
-  if (HELD.includes(status)) return { background: "#ff49c1", live: false };
-  return { background: "transparent", boxShadow: "inset 0 0 0 1.5px #6a4560", live: false };
+  if (PAID.includes(status)) return { background: "var(--tone-paid)", live: false };
+  if (CHECKING.includes(status)) return { background: "var(--tone-check)", live: true };
+  if (HELD.includes(status)) return { background: "var(--tone-held)", live: false };
+  return { background: "transparent", boxShadow: "inset 0 0 0 1.5px var(--tone-neutral)", live: false };
 }
 
 export function ContractList() {

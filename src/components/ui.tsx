@@ -48,12 +48,22 @@ const STATUS: Record<string, { label: string; tone: Tone; live?: boolean }> = {
 
 /** Swatch colour per tone; the contract's money drops use the same colours. */
 export const TONE_COLOR: Record<Tone, string> = {
-  neutral: "#6a4560",
-  held: "#ff49c1",
-  checking: "#ffb3ae",
-  paid: "#fff7ad",
-  warn: "#ffb3ae",
-  bad: "#ff6b6b",
+  neutral: "var(--tone-neutral)",
+  held: "var(--tone-held)",
+  checking: "var(--tone-check)",
+  paid: "var(--tone-paid)",
+  warn: "var(--tone-check)",
+  bad: "var(--tone-bad)",
+};
+
+/** Text colour per tone: the swatch colour on dark, a darker shade of it on light. */
+export const TONE_INK: Record<Tone, string> = {
+  neutral: "var(--color-muted)",
+  held: "var(--ink-held)",
+  checking: "var(--ink-check)",
+  paid: "var(--ink-paid)",
+  warn: "var(--ink-check)",
+  bad: "var(--ink-bad)",
 };
 
 export function statusTone(status: string): Tone {
@@ -105,4 +115,4 @@ export function SectionHead({ title, note }: { title: ReactNode; note?: ReactNod
 }
 
 export const inputClass =
-  "w-full rounded-2xl border border-line bg-[#120810] px-4 py-3 text-[15px] text-paper placeholder:text-subtle/70 transition-colors focus:border-magenta focus:outline-none focus:ring-4 focus:ring-magenta/15";
+  "w-full rounded-2xl border border-line bg-[var(--c-input)] px-4 py-3 text-[15px] text-paper placeholder:text-subtle/70 transition-colors focus:border-magenta focus:outline-none focus:ring-4 focus:ring-magenta/15";

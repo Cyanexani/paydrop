@@ -9,7 +9,7 @@ import type { LedgerRow } from "@/server/ledger";
 import { api as call } from "../api";
 import { CountUp } from "../motion";
 import { Button, Card, ErrorNote, PageHeader, StatusPill, inputClass } from "../ui";
-import { ensureGridModules, money, useGridTheme } from "./setup";
+import { baseColDef, baseGridProps, ensureGridModules, money, useGridTheme } from "./setup";
 
 ensureGridModules();
 
@@ -43,12 +43,12 @@ export function LedgerGrid() {
       { field: "client", rowGroup: true, hide: true, filter: "agSetColumnFilter" },
       { field: "project", rowGroup: true, hide: true, filter: "agSetColumnFilter" },
       { field: "milestone", minWidth: 200, filter: "agTextColumnFilter" },
-      { field: "status", filter: "agSetColumnFilter", cellRenderer: (p: { value?: string }) => (p.value ? <StatusPill status={p.value} /> : null), minWidth: 170 },
-      { field: "freelancer", filter: "agTextColumnFilter" },
+      { field: "status", filter: "agSetColumnFilter", cellRenderer: (p: { value?: string }) => (p.value ? <StatusPill status={p.value} /> : null), minWidth: 190 },
+      { field: "freelancer", filter: "agTextColumnFilter", minWidth: 140 },
       { field: "kind", headerName: "Type", filter: "agSetColumnFilter", valueFormatter: (p) => (p.value === "change_order" ? "Change order" : p.value ? "Original" : "") },
-      { field: "priceMinor", headerName: "Price (₹)", type: "numericColumn", aggFunc: "sum", valueFormatter: money, filter: "agNumberColumnFilter" },
-      { field: "feeMinor", headerName: "Fee (₹)", type: "numericColumn", aggFunc: "sum", valueFormatter: money },
-      { field: "heldMinor", headerName: "Held in PayPal", type: "numericColumn", aggFunc: "sum", valueFormatter: money, filter: "agNumberColumnFilter" },
+      { field: "priceMinor", headerName: "Price", type: "numericColumn", aggFunc: "sum", valueFormatter: money, filter: "agNumberColumnFilter" },
+      { field: "feeMinor", headerName: "Fee", type: "numericColumn", aggFunc: "sum", valueFormatter: money },
+      { field: "heldMinor", headerName: "Held", type: "numericColumn", aggFunc: "sum", valueFormatter: money, filter: "agNumberColumnFilter" },
       { field: "releasedMinor", headerName: "Released", type: "numericColumn", aggFunc: "sum", valueFormatter: money, filter: "agNumberColumnFilter" },
       { field: "paidOutMinor", headerName: "Paid out", type: "numericColumn", aggFunc: "sum", valueFormatter: money },
       { field: "payoutStatus", headerName: "Payout", filter: "agSetColumnFilter" },
@@ -95,7 +95,7 @@ export function LedgerGrid() {
                 <span className="chip"><span className="sw" style={{ background: t.color }} />{t.label}</span>
                 <span className="label text-subtle">{t.count} milestone{t.count === 1 ? "" : "s"}</span>
               </div>
-              <span className="money text-[68px] leading-[0.9]" style={{ color: t.color === "#6a4560" ? "var(--color-muted)" : t.color }}><CountUp minor={t.minor} /></span>
+              <span className="money text-[68px] leading-[0.9]" style={{ color: t.ink }}><CountUp minor={t.minor} /></span>
               <div aria-hidden className="flex max-w-[320px] flex-wrap gap-2">
                 {Array.from({ length: Math.min(60, Math.round(t.minor / 1_000_000)) }, (_, i) => (
                   <span key={i} className={`ldot ${t.cls}`} style={{ animationDelay: `${i * 0.04}s` }} />
@@ -106,28 +106,31 @@ export function LedgerGrid() {
           ))}
         </section>
       )}
-      <div className="flex justify-end gap-2">
-        <Button variant="secondary" onClick={() => apiRef.current?.exportDataAsCsv({ fileName: "milestonepay-ledger.csv" })}>CSV</Button>
-        <Button variant="secondary" onClick={() => apiRef.current?.exportDataAsExcel({ fileName: "milestonepay-ledger.xlsx" })}>Excel</Button>
-      </div>
-      <Card className="p-3">
-        <form onSubmit={ask} className="flex flex-wrap gap-2">
-          <input className={`${inputClass} min-w-64 flex-1`} value={query} onChange={(e) => setQuery(e.target.value)} placeholder='Ask: "held payments over ₹5000", "group by status", "show all"' aria-label="Ask the grid" />
-          <Button type="submit" disabled={busy}>{busy ? "Thinking…" : "Apply"}</Button>
-        </form>
-        {answer && <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">{answer}</p>}
+      <Card className="space-y-3 p-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <form onSubmit={ask} className="flex min-w-0 flex-[1_1_420px] gap-2">
+            <input className={`${inputClass} min-w-0 flex-1`} value={query} onChange={(e) => setQuery(e.target.value)} placeholder='Ask: "held payments over ₹5000", "group by status"' aria-label="Ask the ledger" />
+            <Button type="submit" disabled={busy}>{busy ? "Thinking…" : "Ask"}</Button>
+          </form>
+          <div className="flex gap-2">
+            <Button variant="secondary" onClick={() => apiRef.current?.exportDataAsCsv({ fileName: "milestonepay-ledger.csv" })}>CSV</Button>
+            <Button variant="secondary" onClick={() => apiRef.current?.exportDataAsExcel({ fileName: "milestonepay-ledger.xlsx" })}>Excel</Button>
+          </div>
+        </div>
+        {answer && <p className="px-2 pb-1 text-sm text-muted">{answer}</p>}
       </Card>
       <ErrorNote error={error} />
       {rows?.length === 0 && (
-        <Card className="text-sm">No milestones yet. <Link href="/new" className="text-emerald-700 underline dark:text-emerald-400">Start a project</Link>.</Card>
+        <Card className="text-sm">No milestones yet. <Link href="/new" className="text-magenta underline">Start a project</Link>.</Card>
       )}
       <div className="h-[560px]">
         <AgGridReact<LedgerRow>
+          {...baseGridProps}
           theme={theme}
           rowData={rows ?? undefined}
           loading={rows === null && !error}
           columnDefs={columnDefs}
-          defaultColDef={{ sortable: true, resizable: true, flex: 1, minWidth: 110, filter: true, floatingFilter: false }}
+          defaultColDef={{ ...baseColDef, sortable: true, flex: 1, minWidth: 110, filter: true, floatingFilter: false }}
           autoGroupColumnDef={{ headerName: "Client / project", minWidth: 240 }}
           groupDefaultExpanded={-1}
           grandTotalRow="bottom"
@@ -137,7 +140,7 @@ export function LedgerGrid() {
           onRowDoubleClicked={(e) => e.data && router.push(`/contracts/${e.data.contractId}`)}
         />
       </div>
-      <p className="text-xs text-zinc-500">Double-click a milestone to open its contract. Totals use the locked contract prices.</p>
+      <p className="text-xs text-subtle">Double-click a milestone to open its contract. Totals use the locked contract prices.</p>
     </div>
   );
 }
@@ -152,8 +155,8 @@ function ledgerTotals(rows: LedgerRow[]) {
   const none = leaves.filter((r) => UNFUNDED.includes(r.status));
   const sum = (rs: LedgerRow[], f: (r: LedgerRow) => number) => rs.reduce((a, r) => a + f(r), 0);
   return [
-    { label: "Held at PayPal", minor: sum(held, (r) => r.heldMinor), count: held.length, color: "#ff49c1", cls: "ldot-held", note: "Authorized, not taken. Each hold is renewed before PayPal's 29-day limit." },
-    { label: "Released", minor: sum(paid, (r) => r.releasedMinor), count: paid.length, color: "#fff7ad", cls: "ldot-paid", note: "Captured after the checker passed and the client approved." },
-    { label: "Not yet funded", minor: sum(none, (r) => r.priceMinor), count: none.length, color: "#6a4560", cls: "ldot-none", note: "Agreed in the contract. Funded one milestone at a time." },
+    { label: "Held at PayPal", minor: sum(held, (r) => r.heldMinor), count: held.length, color: "var(--tone-held)", ink: "var(--ink-held)", cls: "ldot-held", note: "Authorized, not taken. Each hold is renewed before PayPal's 29-day limit." },
+    { label: "Released", minor: sum(paid, (r) => r.releasedMinor), count: paid.length, color: "var(--tone-paid)", ink: "var(--ink-paid)", cls: "ldot-paid", note: "Captured after the checker passed and the client approved." },
+    { label: "Not yet funded", minor: sum(none, (r) => r.priceMinor), count: none.length, color: "var(--tone-neutral)", ink: "var(--color-muted)", cls: "ldot-none", note: "Agreed in the contract. Funded one milestone at a time." },
   ];
 }

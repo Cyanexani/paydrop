@@ -10,7 +10,7 @@ import { GooBlock } from "./goo";
 
 const AgentModelsGrid = dynamic(() => import("./grid/agent-models-grid"), { ssr: false, loading: () => <GooBlock label="Loading models" /> });
 
-const RUNG_COLORS = ["#fff7ad", "#ffb3ae", "#ff49c1"];
+const RUNG_COLORS = ["var(--tone-paid)", "var(--tone-check)", "var(--tone-held)"];
 
 /** Re-price the agent in the browser for the client's chosen ladder (the server re-checks at signing). */
 export function useAgentQuote(catalog: AgentCatalogView, drafts: readonly MilestoneDraft[], ids: readonly string[], ownerName: string, humanPricesMinor: readonly number[]) {

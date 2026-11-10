@@ -6,6 +6,7 @@ import type { Gantt, GanttConfig, StringHelper as StringHelperType, TaskModel, T
 import { useEffect, useMemo, useRef, useState } from "react";
 import { formatMoney } from "@/lib/money";
 import type { ContractView } from "@/server/contracts";
+import { useTheme } from "../theme";
 
 interface BryntumGanttNS {
   Gantt: new (config: Partial<GanttConfig>) => Gantt;
@@ -16,12 +17,13 @@ let loader: Promise<BryntumGanttNS> | null = null;
 
 function loadBryntum(): Promise<BryntumGanttNS> {
   loader ??= new Promise((resolve, reject) => {
-    for (const href of ["gantt.css", "stockholm-dark.css", "fontawesome/css/fontawesome.css", "fontawesome/css/solid.css"]) {
+    for (const href of ["gantt.css", "fontawesome/css/fontawesome.css", "fontawesome/css/solid.css"]) {
       const link = document.createElement("link");
       link.rel = "stylesheet";
       link.href = `/vendor/bryntum/${href}`;
       document.head.appendChild(link);
     }
+    setBryntumTheme(document.documentElement.dataset.theme === "light" ? "light" : "dark");
     const script = document.createElement("script");
     script.src = "/vendor/bryntum/gantt.umd.js";
     script.async = true;
@@ -39,6 +41,19 @@ function loadBryntum(): Promise<BryntumGanttNS> {
   return loader;
 }
 
+/** One Bryntum theme stylesheet, swapped in place when the app's theme changes. */
+function setBryntumTheme(theme: "dark" | "light") {
+  let link = document.getElementById("bryntum-theme") as HTMLLinkElement | null;
+  if (!link) {
+    link = document.createElement("link");
+    link.id = "bryntum-theme";
+    link.rel = "stylesheet";
+    document.head.appendChild(link);
+  }
+  const href = `/vendor/bryntum/stockholm-${theme}.css`;
+  if (link.getAttribute("href") !== href) link.setAttribute("href", href);
+}
+
 const DONE = ["released", "payout_pending", "paid_out"];
 const PROGRESS: Record<string, number> = {
   funding: 5,
@@ -54,21 +69,27 @@ const PROGRESS: Record<string, number> = {
   paid_out: 100,
 };
 // The app's swatch colours: magenta = held at PayPal, peach = being checked, butter = paid.
-const COLOR: Record<string, string> = {
-  paid_out: "#fff7ad",
-  payout_pending: "#fff7ad",
-  released: "#fff7ad",
-  releasing: "#fff7ad",
-  release_pending: "#fff7ad",
-  verified: "#ffb3ae",
-  needs_review: "#ffb3ae",
-  changes_requested: "#ffb3ae",
-  submitted: "#ffb3ae",
-  funded: "#ff49c1",
-  funding: "#ff49c1",
-  disputed: "#ff6b6b",
-  voided: "#6a4560",
-  cancelled: "#6a4560",
+// Bryntum wants literal colours, so each theme gets its own set (matching the --tone-* tokens).
+const TONES = {
+  dark: { paid: "#fff7ad", check: "#ffb3ae", held: "#ff49c1", bad: "#ff6b6b", neutral: "#6a4560", pending: "#8a6280", project: "#6a1452" },
+  light: { paid: "#f2c230", check: "#f0857d", held: "#e6249f", bad: "#e5484d", neutral: "#cbb3c3", pending: "#b39aab", project: "#b5107b" },
+} as const;
+type ToneKey = keyof (typeof TONES)["dark"];
+const STATUS_TONE: Record<string, ToneKey> = {
+  paid_out: "paid",
+  payout_pending: "paid",
+  released: "paid",
+  releasing: "paid",
+  release_pending: "paid",
+  verified: "check",
+  needs_review: "check",
+  changes_requested: "check",
+  submitted: "check",
+  funded: "held",
+  funding: "held",
+  disputed: "bad",
+  voided: "neutral",
+  cancelled: "neutral",
 };
 
 /**
@@ -80,12 +101,19 @@ export default function MilestoneGantt({ view, onProposeDue }: { view: ContractV
   const host = useRef<HTMLDivElement>(null);
   const propose = useRef(onProposeDue);
   const [error, setError] = useState<string | null>(null);
+  const theme = useTheme();
 
   useEffect(() => {
     propose.current = onProposeDue;
   });
 
+  useEffect(() => {
+    if (loader) setBryntumTheme(theme);
+  }, [theme]);
+
   const data = useMemo(() => {
+    const tone = TONES[theme];
+    const color = (key: ToneKey) => tone[key] as TaskModelConfig["eventColor"];
     const day = 86_400_000;
     const kickoff = new Date(view.contract.acceptedAt ?? view.contract.createdAt);
     let cursor = kickoff.getTime();
@@ -102,7 +130,7 @@ export default function MilestoneGantt({ view, onProposeDue }: { view: ContractV
         endDate: new Date(due),
         manuallyScheduled: true,
         percentDone: PROGRESS[m.status] ?? 0,
-        eventColor: (COLOR[m.status] ?? "#8a6280") as TaskModelConfig["eventColor"],
+        eventColor: color(STATUS_TONE[m.status] ?? "pending"),
         draggable: !settled,
         resizable: settled ? false : "end",
         note: `${m.status.replaceAll("_", " ")} · ${formatMoney(m.priceMinor)}`,
@@ -116,7 +144,7 @@ export default function MilestoneGantt({ view, onProposeDue }: { view: ContractV
             manuallyScheduled: true,
             draggable: false,
             resizable: false,
-            eventColor: (releasedAt.has(m.id) ? "#fff7ad" : "#8a6280") as TaskModelConfig["eventColor"],
+            eventColor: color(releasedAt.has(m.id) ? "paid" : "pending"),
           },
         ],
       };
@@ -128,7 +156,7 @@ export default function MilestoneGantt({ view, onProposeDue }: { view: ContractV
           id: "project",
           name: view.contract.title,
           expanded: true,
-          eventColor: "#6a1452" as TaskModelConfig["eventColor"],
+          eventColor: color("project"),
           manuallyScheduled: true,
           draggable: false,
           resizable: false,
@@ -142,7 +170,7 @@ export default function MilestoneGantt({ view, onProposeDue }: { view: ContractV
       end: new Date(Math.max(cursor, kickoff.getTime()) + 5 * day),
       ids: new Set(view.milestones.map((m) => m.id)),
     };
-  }, [view]);
+  }, [view, theme]);
 
   useEffect(() => {
     let gantt: Gantt | null = null;
@@ -184,6 +212,8 @@ export default function MilestoneGantt({ view, onProposeDue }: { view: ContractV
     };
   }, [data]);
 
-  if (error) return <p className="text-sm text-red-700">{error}</p>;
-  return <div ref={host} className="h-[380px] overflow-hidden rounded-md border border-zinc-200 bg-white dark:border-zinc-800" />;
+  if (error) return <p className="text-sm text-[#ffc2c2]">{error}</p>;
+  // Header (~76px) plus one 40px row for the project and each milestone, with a little air.
+  const height = Math.min(560, 96 + (view.milestones.length + 1) * 40);
+  return <div ref={host} style={{ height }} className="overflow-hidden rounded-2xl border border-line bg-raised" />;
 }

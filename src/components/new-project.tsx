@@ -14,7 +14,7 @@ import { Button, Card, ErrorNote, PageHeader } from "./ui";
 const EXAMPLE =
   "a website for my dance studio, Jaya Dance & Fitness: home, classes and contact pages, online class booking with a deposit through PayPal, a photo gallery of our shows, live on our own domain with good SEO. We have a logo and photos,";
 
-const DROP_COLORS = ["#ff49c1", "#ffb3ae", "#fff1f7", "#fff7ad"];
+const DROP_COLORS = ["var(--tone-held)", "var(--tone-check)", "var(--tone-white)", "var(--tone-paid)"];
 
 /** An inline "blank" in the sentence form. */
 const blank =
@@ -98,10 +98,10 @@ export function NewProject() {
 }
 
 const SCOPING_STEPS = [
-  { label: "Reading the brief", color: "#fff7ad", headline: "Reading your brief" },
-  { label: "Cutting milestones", color: "#ffb3ae", headline: "Cutting it into milestones" },
-  { label: "Estimating hours", color: "#ff49c1", headline: "Estimating the hours" },
-  { label: "Pricing", color: "#fff1f7", headline: "Pricing each milestone" },
+  { label: "Reading the brief", color: "var(--tone-paid)", headline: "Reading your brief" },
+  { label: "Cutting milestones", color: "var(--tone-check)", headline: "Cutting it into milestones" },
+  { label: "Estimating hours", color: "var(--tone-held)", headline: "Estimating the hours" },
+  { label: "Pricing", color: "var(--tone-white)", headline: "Pricing each milestone" },
 ];
 
 /** Shown while the scoper runs: the steps light up one after another. */
@@ -210,7 +210,7 @@ function QuoteResult({ quote, onContract }: { quote: QuoteView; onContract: (id:
           {scope.milestones.map((m, i) => (
             <li key={m.title} className="rise flex flex-col gap-3 border-t border-line py-5 pr-5" style={{ animationDelay: `${300 + i * 250}ms` }}>
               <div className="flex items-baseline justify-between gap-2">
-                <span className="label" style={{ color: DROP_COLORS[i % DROP_COLORS.length] }}>0{i + 1} · {m.durationDays} days</span>
+                <span className="label" style={{ color: DROP_COLORS[i % DROP_COLORS.length].replace("--tone-", "--ink-") }}>0{i + 1} · {m.durationDays} days</span>
                 {values[i] !== null && <span className="money text-[34px] leading-none">{formatMoney(values[i]!)}</span>}
               </div>
               <h3 className="cond text-[28px] font-bold leading-none">{m.title}</h3>
@@ -284,7 +284,7 @@ function PricingSection({ quote, onContract }: { quote: QuoteView; onContract: (
       <label className="flex max-w-2xl flex-col gap-2">
         <span className="label text-peach">Where will the work be delivered?</span>
         <input
-          className="min-h-12 rounded-full border border-line bg-[#120810] px-5 text-[15px] text-paper focus:border-magenta focus:outline-none focus:ring-4 focus:ring-magenta/15"
+          className="min-h-12 rounded-full border border-line bg-[var(--c-input)] px-5 text-[15px] text-paper focus:border-magenta focus:outline-none focus:ring-4 focus:ring-magenta/15"
           type="url"
           value={deliveryUrl}
           onChange={(e) => setDeliveryUrl(e.target.value)}
@@ -325,7 +325,7 @@ function PricingSection({ quote, onContract }: { quote: QuoteView; onContract: (
             <div className="flex items-center gap-3.5">
               <span aria-hidden className="relative size-[52px] flex-none">
                 <span className="absolute inset-0 rounded-full" style={{ background: DROP_COLORS[i % DROP_COLORS.length] }} />
-                <span className="absolute -bottom-0.5 -right-0.5 size-[18px] rounded-full shadow-[0_0_0_3px_var(--color-raised)]" style={{ background: candidate.kind === "agent" ? "#ff49c1" : "#fff7ad" }} />
+                <span className="absolute -bottom-0.5 -right-0.5 size-[18px] rounded-full shadow-[0_0_0_3px_var(--color-raised)]" style={{ background: candidate.kind === "agent" ? "var(--tone-held)" : "var(--tone-paid)" }} />
               </span>
               <div className="flex min-w-0 flex-col gap-0.5">
                 <strong className="text-[19px]">{candidate.name}</strong>

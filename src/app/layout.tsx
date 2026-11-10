@@ -5,6 +5,8 @@ import { Bricolage_Grotesque, Instrument_Serif, JetBrains_Mono } from "next/font
 import { GooFilters, Logo } from "@/components/goo";
 import { NavLinks, NavList } from "@/components/nav-links";
 import { AccountMenu } from "@/components/account-menu";
+import { ThemeSync, ThemeToggle } from "@/components/theme";
+import { THEME_SCRIPT } from "@/lib/theme-script";
 import "./globals.css";
 
 const display = Bricolage_Grotesque({ variable: "--font-display-face", subsets: ["latin"], axes: ["opsz", "wdth"] });
@@ -18,7 +20,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`dark ${display.variable} ${serif.variable} ${mono.variable} h-full antialiased`}>
+    // The theme script below sets data-theme and the "dark" class before React hydrates.
+    <html lang="en" data-theme="dark" suppressHydrationWarning className={`dark ${display.variable} ${serif.variable} ${mono.variable} h-full antialiased`}>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+      </head>
       <body className="flex min-h-full flex-col">
         <GooFilters />
         <header className="mx-auto flex w-full max-w-[1240px] flex-wrap items-center justify-between gap-x-6 gap-y-2 px-5 pb-2 pt-5">
@@ -29,9 +35,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <Suspense fallback={<NavList path="" />}>
             <NavLinks />
           </Suspense>
-          <Suspense fallback={<span className="w-10" />}>
-            <AccountMenu />
-          </Suspense>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <ThemeSync />
+            <Suspense fallback={<span className="w-10" />}>
+              <AccountMenu />
+            </Suspense>
+          </div>
         </header>
         <main className="mx-auto w-full max-w-[1240px] flex-1 px-5 pb-16 pt-6">{children}</main>
         <footer className="label mx-auto flex w-full max-w-[1240px] flex-wrap justify-between gap-3 border-t border-line px-5 pb-9 pt-8 text-subtle">

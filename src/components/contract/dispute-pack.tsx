@@ -53,22 +53,22 @@ export function DisputePack({ params }: { params: Promise<{ id: string }> }) {
             <h2 className="cond text-[28px] font-bold leading-none">{m.position}. {m.title}</h2>
             <StatusPill status={m.status} />
           </div>
-          <p className="text-xs text-zinc-500">Due {m.dueAt ? new Date(m.dueAt).toLocaleString("en-IN") : "—"} · {m.receipt.title}</p>
+          <p className="text-xs text-subtle">Due {m.dueAt ? new Date(m.dueAt).toLocaleString("en-IN") : "—"} · {m.receipt.title}</p>
           <ul className="space-y-1.5 text-[15px]">
             {m.criteria.map((c) => {
               const r = m.lastCheck?.results.find((x) => x.criterionId === c.id);
               return (
                 <li key={c.id}>
                   <strong>{c.id}</strong> {c.text} — {r ? `${r.outcome}${r.note ? `: ${r.note}` : ""}` : "not checked"}
-                  {r?.replayUrl && <a className="ml-1 text-emerald-700 underline dark:text-emerald-400" href={r.replayUrl} target="_blank" rel="noreferrer">replay</a>}
+                  {r?.replayUrl && <a className="ml-1 text-magenta underline" href={r.replayUrl} target="_blank" rel="noreferrer">replay</a>}
                 </li>
               );
             })}
           </ul>
           {m.submissions.length > 0 && (
-            <p className="text-xs text-zinc-500">Submissions: {m.submissions.map((s) => `${s.evidenceUrl}${s.commitSha ? ` @${s.commitSha}` : ""} (${new Date(s.at).toLocaleString("en-IN")})`).join("; ")}</p>
+            <p className="text-xs text-subtle">Submissions: {m.submissions.map((s) => `${s.evidenceUrl}${s.commitSha ? ` @${s.commitSha}` : ""} (${new Date(s.at).toLocaleString("en-IN")})`).join("; ")}</p>
           )}
-          {m.payouts.length > 0 && <p className="text-xs text-zinc-500">Payouts: {m.payouts.map((p) => `${p.name} ${formatMoney(p.amountMinor, p.currency)} ${p.status}`).join("; ")}</p>}
+          {m.payouts.length > 0 && <p className="text-xs text-subtle">Payouts: {m.payouts.map((p) => `${p.name} ${formatMoney(p.amountMinor, p.currency)} ${p.status}`).join("; ")}</p>}
         </Card>
       ))}
 
@@ -81,7 +81,7 @@ export function DisputePack({ params }: { params: Promise<{ id: string }> }) {
               <span className="label text-peach">{t.kind}{t.milestone ? ` #${t.milestone}` : ""}</span>
               <span>
                 {t.text}
-                {t.link && <a className="ml-1 text-emerald-700 underline dark:text-emerald-400" href={t.link} target="_blank" rel="noreferrer">replay</a>}
+                {t.link && <a className="ml-1 text-magenta underline" href={t.link} target="_blank" rel="noreferrer">replay</a>}
               </span>
             </li>
           ))}
