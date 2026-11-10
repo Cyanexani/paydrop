@@ -102,6 +102,7 @@ export function MilestoneCard({
           <div inert={!open}>
             <div className="space-y-5 px-5 pb-6 sm:px-6">
               <p className="max-w-3xl text-[15px] leading-relaxed text-muted">{m.draft.description}</p>
+              {m.draft.briefQuote && <p className="border-l-2 border-magenta/60 pl-3 text-sm italic leading-snug text-muted"><span className="not-italic text-subtle">From the brief: </span>“{m.draft.briefQuote}”</p>}
               <Journey status={m.status} color={color} />
               <AgentLadder m={m} settled={settled} />
 

@@ -5,7 +5,7 @@ import { mockScope } from "./mock-scoping";
 
 export const SCOPING_MODEL = "claude-opus-5-5";
 /** Bump whenever the prompt changes; stored on every quote so a price can be traced to its prompt. */
-export const SCOPING_PROMPT_VERSION = "scope-v1";
+export const SCOPING_PROMPT_VERSION = "scope-v2";
 
 export interface ScopeMeta {
   mode: "claude" | "mock";
@@ -32,6 +32,7 @@ Decide the status first:
 
 For "scoped":
 - 1 to 8 milestones in delivery order. Each must be useful on its own and take 1 to 25 calendar days (durationDays).
+- briefQuote: the words in the brief that ask for this milestone, copied exactly (a phrase or sentence, 8 to 300 characters; you may join two excerpts with "..."). Never paraphrase. If nothing in the brief asks for a milestone, leave the milestone out: the client pays only for what they asked for. Work that is needed but unstated (hosting, testing) belongs inside the milestone it supports, not in a milestone of its own.
 - skill: the closest of web_dev, ui_design, video_editing.
 - estimate: three-point hours for a competent mid-level freelancer (optimistic <= likely <= pessimistic), with one or two sentences of reasoning.
 - complexityTags: every tag that applies from standard (static pages, layout), data_or_auth (logins, databases), integrations (payments, third-party APIs), legacy_code (unclear existing code). Explain in complexityReason.
@@ -102,7 +103,7 @@ export async function scopeBrief(brief: string, examples: CalibrationExample[] =
 
     const parsed = response.parsed_output;
     if (parsed) {
-      const checked = toScopeResult(parsed);
+      const checked = toScopeResult(parsed, brief);
       if (checked.ok) return { result: checked.result, meta };
       lastIssues = checked.issues;
     } else {

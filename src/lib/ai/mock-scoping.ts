@@ -4,6 +4,12 @@ import type { ScopeResult } from "./scoping-schema";
  * Deterministic stand-in for Claude, used when no API key is configured (AI_MODE=mock).
  * It returns the brief's dance studio example so the whole flow can be demoed offline.
  */
+/** The clause of the brief that mentions one of `words`, so the demo scoper quotes the brief like Claude must. */
+function quoteFor(brief: string, words: RegExp): string | undefined {
+  const clause = brief.split(/(?<=[.!?:;,])\s+/).map((c) => c.trim().replace(/[,;:]$/, "")).find((c) => words.test(c) && c.length >= 8);
+  return clause?.slice(0, 300);
+}
+
 export function mockScope(brief: string): ScopeResult {
   const text = brief.trim();
   if (text.length < 40) {
@@ -26,6 +32,7 @@ export function mockScope(brief: string): ScopeResult {
     milestones: [
       {
         title: "Design and layout",
+        briefQuote: quoteFor(text, /home|pages|website/i),
         description: "Home, classes and contact pages with the studio's branding, responsive on phones.",
         skill: "web_dev",
         complexityTags: ["standard"],
@@ -40,6 +47,7 @@ export function mockScope(brief: string): ScopeResult {
       },
       {
         title: "Booking system",
+        briefQuote: quoteFor(text, /booking/i),
         description: "Visitors pick a class and time slot and pay a deposit through PayPal.",
         skill: "web_dev",
         complexityTags: ["integrations"],
@@ -54,6 +62,7 @@ export function mockScope(brief: string): ScopeResult {
       },
       {
         title: "Gallery",
+        briefQuote: quoteFor(text, /gallery|photo/i),
         description: "A photo gallery of performances and classes.",
         skill: "web_dev",
         complexityTags: ["standard"],
@@ -67,6 +76,7 @@ export function mockScope(brief: string): ScopeResult {
       },
       {
         title: "Deploy and SEO",
+        briefQuote: quoteFor(text, /domain|seo|live/i),
         description: "Live on the client's domain with titles, descriptions and a sitemap.",
         skill: "web_dev",
         complexityTags: ["standard"],

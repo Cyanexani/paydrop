@@ -4,6 +4,7 @@ import { runClaudeChecker, type AgentVerdict } from "./agent";
 import { openCheckerBrowser, type CheckerBrowser } from "./browser";
 import { heuristicVerdict, type Verdict } from "./heuristics";
 import { scanForInjection } from "./injection";
+import { BlockedUrlError, assertPublicUrl, guardedFetch, privateAddressesAllowed, requestGuard } from "./net-guard";
 import { pageReport } from "./page-report";
 import type { CheckInput, CheckOutput, CheckStep, InjectionFinding, PageReport } from "./types";
 
@@ -37,6 +38,29 @@ export async function runCheck(input: CheckInput): Promise<CheckOutput> {
     return basicCheck(input, steps, judge);
   }
   log("browser", browser.mode === "kernel" ? "Kernel cloud browser (recorded)" : "Local headless Chromium (recorded)");
+
+  // The delivery is untrusted: it may redirect, or load scripts and images, from inside our network.
+  // Every request the browser makes is checked, not only the first page.
+  if (!privateAddressesAllowed()) {
+    const allowed = requestGuard();
+    const blocked = new Set<string>();
+    await browser.context.route("**/*", async (route) => {
+      const url = route.request().url();
+      if (await allowed(url)) return route.fallback();
+      const host = new URL(url).host;
+      if (!blocked.has(host)) {
+        blocked.add(host);
+        log("blocked", `Refused a request to ${host}: private or internal address`);
+      }
+      return route.abort("blockedbyclient");
+    });
+    const refusal = await assertPublicUrl(input.evidenceUrl).then(() => null, (e: unknown) => (e instanceof BlockedUrlError && e.kind === "blocked" ? e : null));
+    if (refusal) {
+      log("blocked", `Did not open ${input.evidenceUrl}: ${refusal.message}`);
+      const results = input.criteria.map((c) => ({ criterionId: c.id, outcome: "couldnt_check" as const, note: "The submitted link points to a private or internal address, so it was not opened." }));
+      return { results, steps, mode: browser.mode, judge, injection: [], ...(await browser.close()) };
+    }
+  }
 
   const injection: InjectionFinding[] = [];
   let results: CriterionResult[] = [];
@@ -152,7 +176,7 @@ async function basicCheck(input: CheckInput, steps: CheckStep[], judge: "claude"
   let reachable = false;
   for (let attempt = 0; attempt < 3 && !reachable; attempt++) {
     try {
-      const res = await fetch(input.evidenceUrl, { redirect: "follow", signal: AbortSignal.timeout(8_000) });
+      const res = await guardedFetch(input.evidenceUrl, { signal: AbortSignal.timeout(8_000) });
       reachable = res.ok;
     } catch {
       await new Promise((r) => setTimeout(r, 500 * 2 ** attempt));

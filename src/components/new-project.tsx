@@ -185,6 +185,7 @@ function QuoteResult({ quote, onContract }: { quote: QuoteView; onContract: (id:
                 {values[i] !== null && <span className="money text-2xl leading-none">{formatMoney(values[i]!)}</span>}
               </div>
               <h3 className="cond text-xl font-bold">{m.title}</h3>
+              {m.briefQuote && <p className="border-l-2 border-magenta/60 pl-3 text-[13px] italic leading-snug text-muted"><span className="not-italic text-subtle">From your brief: </span>“{m.briefQuote}”</p>}
               <span className="label text-subtle">{SKILL_LABELS[m.skill]} · {m.estimate.optimistic}/{m.estimate.likely}/{m.estimate.pessimistic} hrs</span>
               <ul className="space-y-2 text-sm leading-snug text-muted">
                 {m.criteria.map((c) => (
