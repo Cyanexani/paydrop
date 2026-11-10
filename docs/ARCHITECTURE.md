@@ -157,7 +157,7 @@ Graded by `evals/checker` (see [CHECKER_EVAL.md](CHECKER_EVAL.md)).
 ## Security
 
 - **Party checks:** every route checks the caller is a party to the contract.
-- **Persona cookie:** an httpOnly demo cookie (`mp_user`) with no passwords, for the hackathon only.
+- **Accounts and sessions:** passwords hashed with scrypt; sessions are random tokens in an httpOnly, SameSite=Lax cookie, stored as SHA-256 with a 30-day expiry and deleted on sign-out; sign-in is rate-limited per email and address; auth endpoints refuse cross-site origins; password reset links are single-use, expire in 30 minutes, go out through the Zapier hook and sign out every other session. `src/proxy.ts` sends signed-out visitors to sign-in; every API call still checks the session in the database. Demo personas sign in without a password (`DEMO_LOGIN=off` turns that off).
 - **Webhooks:** verified with PayPal's verify-webhook-signature API; the capture is re-fetched before acting.
 - **Amounts:** come from PayPal, never the browser; a mismatch voids the hold.
 - **Agent sites:** served with `Content-Security-Policy: sandbox`, so their scripts run in an opaque origin.

@@ -43,6 +43,13 @@
       "when": 1794288611328,
       "tag": "0005_agent_runs",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794293748315,
+      "tag": "0006_accounts_and_sessions",
+      "breakpoints": true
     }
   ]
 }

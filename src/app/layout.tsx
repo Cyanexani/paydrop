@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { Bricolage_Grotesque, Instrument_Serif, JetBrains_Mono } from "next/font/google";
 import { GooFilters, Logo } from "@/components/goo";
 import { NavLinks, NavList } from "@/components/nav-links";
-import { PersonaSwitcher } from "@/components/persona-switcher";
+import { AccountMenu } from "@/components/account-menu";
 import "./globals.css";
 
 const display = Bricolage_Grotesque({ variable: "--font-display-face", subsets: ["latin"], axes: ["opsz", "wdth"] });
@@ -29,7 +29,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <Suspense fallback={<NavList path="" />}>
             <NavLinks />
           </Suspense>
-          <PersonaSwitcher />
+          <Suspense fallback={<span className="w-10" />}>
+            <AccountMenu />
+          </Suspense>
         </header>
         <main className="mx-auto w-full max-w-[1240px] flex-1 px-5 pb-16 pt-6">{children}</main>
         <footer className="label mx-auto flex w-full max-w-[1240px] flex-wrap justify-between gap-3 border-t border-line px-5 pb-9 pt-8 text-subtle">

@@ -5,7 +5,7 @@
 
 ## Conventions
 
-- **Auth (demo):** `POST /api/session {"userId":"client-jaya"}` sets an httpOnly `mp_user` cookie. Personas: `client-jaya`, `client-demo`, `fl-meera`, `fl-ravi`, `fl-asha`, `agent-buildbot`.
+- **Auth:** accounts with email and password (`/api/auth/signup`, `/api/auth/login`, `/api/auth/logout`, `/api/auth/forgot`, `/api/auth/reset`) set an httpOnly `mp_session` cookie: a random token whose SHA-256 is stored with an expiry. **Demo:** `POST /api/auth/demo {"userId":"client-jaya"}` (or the older `POST /api/session`) signs in as a demo persona without a password: `client-jaya`, `client-demo`, `fl-meera`, `fl-ravi`, `fl-asha`. Turn demo sign-in off with `DEMO_LOGIN=off`.
 - **Money:** integer minor units (paise for INR, cents for USD). `priceMinor: 836000` is ₹8,360.
 - **Errors:** `{"error":{"code":"funding_out_of_order","message":"…"}}` with 400/401/403/404/409/502/503.
 - **Idempotency:** milestone actions are safe to retry; a repeated request is a no-op.

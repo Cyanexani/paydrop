@@ -1,4 +1,4 @@
-import { bigint, boolean, doublePrecision, integer, jsonb, pgTable, text, timestamp, index } from "drizzle-orm/pg-core";
+import { bigint, boolean, doublePrecision, integer, jsonb, pgTable, text, timestamp, index, uniqueIndex } from "drizzle-orm/pg-core";
 import type { CriterionResult } from "@/lib/milestones/state-machine";
 import type { ScopeMeta } from "@/lib/ai/scoping";
 import type { MilestoneDraft, ScopeResult } from "@/lib/ai/scoping-schema";
@@ -56,6 +56,37 @@ export const users = pgTable("users", {
   /** Used to match inbound WhatsApp/email (via Zapier) to the right client. */
   contactEmail: text("contact_email"),
   contactPhone: text("contact_phone"),
+  /** Sign-in email, lower-cased. Null for AI agents, which never sign in. */
+  email: text("email"),
+  /** scrypt hash; null for demo personas, which sign in only through the demo buttons */
+  passwordHash: text("password_hash"),
+  lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
+  createdAt: createdAt(),
+}, (t) => [uniqueIndex("users_email_idx").on(t.email)]);
+
+/** A signed-in browser. The cookie holds a random token; only its SHA-256 is stored here. */
+export const sessions = pgTable(
+  "sessions",
+  {
+    /** SHA-256 of the cookie token, hex */
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull(),
+    /** Started from the demo buttons rather than a password */
+    demo: boolean("demo").notNull().default(false),
+    userAgent: text("user_agent"),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    lastSeenAt: timestamp("last_seen_at", { withTimezone: true }).notNull().defaultNow(),
+    createdAt: createdAt(),
+  },
+  (t) => [index("sessions_user_idx").on(t.userId)],
+);
+
+/** One-time password reset links. Only the SHA-256 of the token is stored. */
+export const passwordResets = pgTable("password_resets", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  usedAt: timestamp("used_at", { withTimezone: true }),
   createdAt: createdAt(),
 });
 

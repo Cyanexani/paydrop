@@ -38,7 +38,7 @@ export default function Home() {
                 Your contracts
               </Link>
             </div>
-            <p className="label">Pick a persona at the top to act as a client or a freelancer</p>
+            <p className="label">Free to try: sign in, or explore with a demo account</p>
           </div>
           <div aria-hidden className="relative h-[460px] min-w-0 flex-[1_1_380px] max-sm:h-[380px]">
             <div className="goo-lg absolute inset-0">
