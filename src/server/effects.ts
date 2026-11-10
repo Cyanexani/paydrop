@@ -103,7 +103,7 @@ export async function runEffects(db: Db, milestoneId: string, effects: readonly 
               amountMinor: r.amountMinor,
               currency: r.currency,
               senderItemId: r.id,
-              note: "Payment for a verified MilestonePay milestone",
+              note: "Payment for a verified Paydrop milestone",
             })),
           });
           const batchId = batch.batch_header.payout_batch_id;

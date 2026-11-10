@@ -18,7 +18,7 @@ export async function emitEvent(event: OutboundEvent): Promise<void> {
     await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...event, app: "MilestonePay", at: new Date().toISOString() }),
+      body: JSON.stringify({ ...event, app: "Paydrop", at: new Date().toISOString() }),
       signal: AbortSignal.timeout(5_000),
     });
   } catch (error) {

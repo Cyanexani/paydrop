@@ -38,7 +38,7 @@ export const PASSWORD_MAX = 128;
 /** The most common choices; long enough passwords from this list still get refused. */
 const COMMON = new Set([
   "password123", "password1234", "1234567890", "qwertyuiop", "iloveyou12", "123456789a", "abcdefghij", "passw0rd123",
-  "letmein1234", "welcome123", "admin12345", "qwerty12345", "milestonepay", "milestone123",
+  "letmein1234", "welcome123", "admin12345", "qwerty12345", "milestonepay", "milestone123", "paydrop1234", "paydrop12345",
 ]);
 
 /** Returns why a password is refused, or null. Length matters most (NIST SP 800-63B); no forced symbol rules. */

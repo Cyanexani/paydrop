@@ -20,7 +20,7 @@ async function main() {
     try {
       const order = await createAuthorizeOrder({
         milestoneId: "currency-check",
-        description: "MilestonePay currency check (never approved)",
+        description: "Paydrop currency check (never approved)",
         amountMinor: currency === "INR" ? 100_00 : 1_00,
         currency,
         requestId: `currency-check-${currency}-${Date.now()}`,

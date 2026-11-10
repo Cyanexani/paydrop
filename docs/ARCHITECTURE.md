@@ -98,7 +98,7 @@ Persistence (`src/server/milestone-store.ts`):
 ```mermaid
 sequenceDiagram
   participant C as Client
-  participant App as MilestonePay
+  participant App as Paydrop
   participant PP as PayPal
   participant K as Checker (Kernel + Claude)
   participant F as Freelancer

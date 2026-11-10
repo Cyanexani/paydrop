@@ -21,7 +21,7 @@ export class ScopingUnavailableError extends Error {
   }
 }
 
-const SYSTEM_PROMPT = `You scope freelance projects for MilestonePay, a marketplace where a client's money is held in PayPal and released per milestone only after an AI checks the delivered work against agreed criteria.
+const SYSTEM_PROMPT = `You scope freelance projects for Paydrop, a marketplace where a client's money is held in PayPal and released per milestone only after an AI checks the delivered work against agreed criteria.
 
 Turn the client's brief into milestones a freelancer can deliver and a checker can verify.
 
@@ -69,7 +69,7 @@ export async function scopeBrief(brief: string, examples: CalibrationExample[] =
   }
 
   const calibration = examples.length
-    ? `<calibration>\nSimilar milestones finished on MilestonePay (estimated likely hours → actual hours). Use them to calibrate:\n${examples
+    ? `<calibration>\nSimilar milestones finished on Paydrop (estimated likely hours → actual hours). Use them to calibrate:\n${examples
         .map((e) => `- ${e.title}: ${e.likelyHours} h → ${e.actualHours} h`)
         .join("\n")}\n</calibration>\n`
     : "";
@@ -98,7 +98,7 @@ export async function scopeBrief(brief: string, examples: CalibrationExample[] =
     const meta: ScopeMeta = { mode, model: response.model, promptVersion: SCOPING_PROMPT_VERSION, attempts: attempt };
 
     if (response.stop_reason === "refusal") {
-      return { result: { status: "refused", reason: "This brief can't be scoped on MilestonePay." }, meta };
+      return { result: { status: "refused", reason: "This brief can't be scoped on Paydrop." }, meta };
     }
 
     const parsed = response.parsed_output;

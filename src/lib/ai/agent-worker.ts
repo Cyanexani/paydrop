@@ -19,7 +19,7 @@ export type SiteFiles = Record<string, string>;
 const MAX_BYTES = 300_000;
 const PATH = /^\/[a-z0-9\-_/]*(\.(xml|txt|html|css))?$/i;
 
-const SYSTEM = `You are BuildBot, an AI web developer working one milestone of a client project on MilestonePay. You are paid only if an independent checker verifies every acceptance criterion in a browser.
+const SYSTEM = `You are BuildBot, an AI web developer working one milestone of a client project on Paydrop. You are paid only if an independent checker verifies every acceptance criterion in a browser.
 
 Build static files that meet every criterion:
 - Paths start with "/" ("/" is the home page; use "/classes", not "/classes.html"). Add "/sitemap.xml" listing every page when any criterion mentions a sitemap.
@@ -131,7 +131,7 @@ async function buildWithOpenRouter(model: string, projectTitle: string, draft: M
         Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
         "Content-Type": "application/json",
         "HTTP-Referer": process.env.APP_URL ?? "https://github.com/Cyanexani/milestonepay",
-        "X-Title": "MilestonePay BuildBot",
+        "X-Title": "Paydrop BuildBot",
       },
       body: JSON.stringify({
         model,

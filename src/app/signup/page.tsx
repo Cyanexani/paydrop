@@ -6,7 +6,7 @@ import { SignupForm } from "@/components/auth/forms";
 import { GooBlock } from "@/components/goo";
 import { PageTransition } from "@/components/page-transition";
 
-export const metadata: Metadata = { title: "Create an account · MilestonePay" };
+export const metadata: Metadata = { title: "Create an account · Paydrop" };
 
 export default function SignupPage() {
   return (

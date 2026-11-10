@@ -1,6 +1,6 @@
 openapi: 3.1.0
 info:
-  title: MilestonePay API
+  title: Paydrop API
   version: 0.1.0
   summary: Milestone payments held in PayPal and released only for AI-verified work.
   description: |
@@ -13,7 +13,7 @@ info:
     name: MIT
 servers:
   - url: http://localhost:3000
-  - url: https://milestonepay-web.onrender.com
+  - url: https://paydrop-web.onrender.com
 tags:
   - name: Session
   - name: Quotes

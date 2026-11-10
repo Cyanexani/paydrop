@@ -93,7 +93,7 @@ export function ProfileScreen({ params }: { params: Promise<{ id: string }> }) {
         ))}
       </section>
       <p className="text-[13px] text-subtle">
-        These figures come from {p.stats.completed} completed milestone{p.stats.completed === 1 ? "" : "s"} on MilestonePay: checker results, due dates and PayPal payouts. Freelancers can&apos;t edit them.
+        These figures come from {p.stats.completed} completed milestone{p.stats.completed === 1 ? "" : "s"} on Paydrop: checker results, due dates and PayPal payouts. Freelancers can&apos;t edit them.
       </p>
 
       <section className="space-y-4">

@@ -18,7 +18,7 @@ export default function Home() {
         <div aria-hidden className="ring right-[4%] top-20 size-[560px] max-lg:hidden" />
         <div aria-hidden className="ring right-[calc(4%+100px)] top-[180px] size-[360px] max-lg:hidden" />
         <div className="label flex justify-between gap-4 border-b border-paper/20 px-6 pb-4 pt-7 sm:px-9">
-          <span>MilestonePay<br /><span className="opacity-75">Pay per milestone</span></span>
+          <span>Paydrop<br /><span className="opacity-75">Pay per milestone</span></span>
           <span className="text-right">Stops<br /><span className="opacity-75">4</span></span>
         </div>
         <div className="flex flex-1 flex-wrap items-end gap-8 px-6 pb-9 pt-10 sm:px-9">

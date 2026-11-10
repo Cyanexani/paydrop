@@ -4,7 +4,7 @@ import { AuthShell } from "@/components/auth/auth-shell";
 import { ForgotForm } from "@/components/auth/forms";
 import { PageTransition } from "@/components/page-transition";
 
-export const metadata: Metadata = { title: "Reset your password · MilestonePay" };
+export const metadata: Metadata = { title: "Reset your password · Paydrop" };
 
 export default function ForgotPasswordPage() {
   return (

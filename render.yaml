@@ -3,7 +3,7 @@
 # Plans are left at Render's default (0.5c-512mb) for services; the database uses the free plan.
 services:
   - type: web
-    name: milestonepay-web
+    name: paydrop-web
     runtime: node
     buildCommand: npm ci && npm run build
     startCommand: npm start
@@ -13,7 +13,7 @@ services:
         value: "24"
       - key: DATABASE_URL
         fromDatabase:
-          name: milestonepay-db
+          name: paydrop-db
           property: connectionString
       - key: ANTHROPIC_API_KEY
         sync: false
@@ -56,7 +56,7 @@ services:
   # Runs every job each minute: auto-release, PayPal holds, stale checkouts, offers,
   # silent freelancers, payout retries, stuck checks, reconciliation.
   - type: worker
-    name: milestonepay-worker
+    name: paydrop-worker
     runtime: node
     buildCommand: npm ci
     startCommand: npx tsx scripts/run-jobs.ts --loop
@@ -65,7 +65,7 @@ services:
         value: "24"
       - key: DATABASE_URL
         fromDatabase:
-          name: milestonepay-db
+          name: paydrop-db
           property: connectionString
       - key: ANTHROPIC_API_KEY
         sync: false
@@ -90,7 +90,7 @@ services:
 
   # Nightly reconciliation with PayPal at 01:30 IST (20:00 UTC), in case a webhook was missed.
   - type: cron
-    name: milestonepay-reconcile
+    name: paydrop-reconcile
     runtime: node
     schedule: "0 20 * * *"
     buildCommand: npm ci
@@ -100,7 +100,7 @@ services:
         value: "24"
       - key: DATABASE_URL
         fromDatabase:
-          name: milestonepay-db
+          name: paydrop-db
           property: connectionString
       - key: PAYPAL_CLIENT_ID
         sync: false
@@ -112,6 +112,6 @@ services:
         sync: false
 
 databases:
-  - name: milestonepay-db
+  - name: paydrop-db
     plan: free
-    databaseName: milestonepay
+    databaseName: paydrop

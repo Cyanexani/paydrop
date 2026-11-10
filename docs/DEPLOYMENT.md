@@ -4,10 +4,10 @@
 
 | Resource | Type | Runs |
 | --- | --- | --- |
-| `milestonepay-web` | Web service | `npm ci && npm run build` → `npm start`; health check `/api/health` |
-| `milestonepay-worker` | Background worker | `npx tsx scripts/run-jobs.ts --loop` (every job, each minute) |
-| `milestonepay-reconcile` | Cron job, `0 20 * * *` (01:30 IST) | `npx tsx scripts/run-jobs.ts reconcile payouts` |
-| `milestonepay-db` | Postgres (free plan) | Migrations run automatically when the app or worker starts |
+| `paydrop-web` | Web service | `npm ci && npm run build` → `npm start`; health check `/api/health` |
+| `paydrop-worker` | Background worker | `npx tsx scripts/run-jobs.ts --loop` (every job, each minute) |
+| `paydrop-reconcile` | Cron job, `0 20 * * *` (01:30 IST) | `npx tsx scripts/run-jobs.ts reconcile payouts` |
+| `paydrop-db` | Postgres (free plan) | Migrations run automatically when the app or worker starts |
 
 Services use Render's default instance size; change `plan` per service if you want something else.
 
@@ -35,7 +35,7 @@ Services use Render's default instance size; change `plan` per service if you wa
 4. **Deploy** and wait for the web service to pass its health check. Render sets `RENDER_EXTERNAL_URL`, which PayPal payment links use for their return URL.
 5. **PayPal webhook:** in your PayPal app add `https://<web>.onrender.com/api/webhooks/paypal`, subscribe to `PAYMENT.CAPTURE.*`, `PAYMENT.AUTHORIZATION.VOIDED`, `PAYMENT.PAYOUTS-ITEM.*`, copy the webhook ID into `PAYPAL_WEBHOOK_ID`, and redeploy.
 6. **Demo data (optional):** open the web service's **Shell** in Render and run `npx tsx scripts/seed-demo.ts`.
-7. **Smoke test:** `npx newman run postman/milestonepay.postman_collection.json --env-var baseUrl=https://<web>.onrender.com`.
+7. **Smoke test:** `npx newman run postman/paydrop.postman_collection.json --env-var baseUrl=https://<web>.onrender.com`.
 
 ## Before recording the demo
 

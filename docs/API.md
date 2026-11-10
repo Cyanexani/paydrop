@@ -1,7 +1,7 @@
 # API
 
 - **Spec:** [`openapi.yaml`](../openapi.yaml) (OpenAPI 3.1). Import it into APIMatic for an SDK, or into Postman.
-- **Tests:** [`postman/milestonepay.postman_collection.json`](../postman/milestonepay.postman_collection.json): the full flow plus guard rails, run by newman in CI.
+- **Tests:** [`postman/paydrop.postman_collection.json`](../postman/paydrop.postman_collection.json): the full flow plus guard rails, run by newman in CI.
 
 ## Conventions
 

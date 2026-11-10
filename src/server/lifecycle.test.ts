@@ -174,7 +174,7 @@ describe("full milestone lifecycle", () => {
 
     await acceptMilestone(db, asha, decided.milestoneId!);
     // Change orders can be paid right away, even though milestone 1 isn't released yet.
-    const link = await startFunding(db, client, decided.milestoneId!, { baseUrl: "https://milestonepay.example" });
+    const link = await startFunding(db, client, decided.milestoneId!, { baseUrl: "https://paydrop.example" });
     expect(link.approveUrl).toContain("sandbox.paypal.com");
   });
 

@@ -6,7 +6,7 @@ import { ResetForm } from "@/components/auth/forms";
 import { GooBlock } from "@/components/goo";
 import { PageTransition } from "@/components/page-transition";
 
-export const metadata: Metadata = { title: "Choose a new password · MilestonePay", referrer: "no-referrer" };
+export const metadata: Metadata = { title: "Choose a new password · Paydrop", referrer: "no-referrer" };
 
 export default function ResetPasswordPage() {
   return (

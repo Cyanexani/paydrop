@@ -16,9 +16,9 @@ Deadline: **12 Nov 2026, 12:00 pm PST (13 Nov, 1:30 am IST)**. Submit on the mor
 
 ## Description (draft)
 
-**MilestonePay: pay for outcomes, not promises.**
+**Paydrop: pay for outcomes, not promises.**
 
-Freelancers in India get paid late, and clients pay for work that doesn't match what they asked for. MilestonePay puts a verifiable promise between them.
+Freelancers in India get paid late, and clients pay for work that doesn't match what they asked for. Paydrop puts a verifiable promise between them.
 
 1. **Scope.** The client describes the project in plain language. Claude scopes it into milestones with checkable acceptance criteria. It asks questions if the brief is too vague, and refuses work that breaks PayPal's rules.
 2. **Price.** A deterministic pricing engine prices each milestone with a visible receipt. The same work earns the same base pay; a premium comes only from verified track record.

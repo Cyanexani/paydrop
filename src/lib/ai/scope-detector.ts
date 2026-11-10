@@ -30,7 +30,7 @@ export interface ScopeVerdict {
   changeOrder: MilestoneDraft | null;
 }
 
-const SYSTEM = `You protect freelancers from scope creep on MilestonePay. Compare a new message from the client with the signed contract's milestones and acceptance criteria (the closest matches are given).
+const SYSTEM = `You protect freelancers from scope creep on Paydrop. Compare a new message from the client with the signed contract's milestones and acceptance criteria (the closest matches are given).
 
 Verdicts:
 - in_scope: the request is already covered by an existing milestone's description or criteria (a fix or clarification of agreed work).

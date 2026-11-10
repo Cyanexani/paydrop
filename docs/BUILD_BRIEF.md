@@ -1,4 +1,4 @@
-# MilestonePay — PayPal AI Hackathon Build Brief
+# Paydrop — PayPal AI Hackathon Build Brief
 
 > The product spec this repo was built from, exported from the team's [Claude Doc](https://claude.ai/artifact/R43CwA1q3VpxZmuMvWpmDs) on 9 Nov 2026. Where the code differs, the code and [EDGE_CASES.md](EDGE_CASES.md) are current.
 
@@ -6,7 +6,7 @@
 
 ## How to use this brief
 
-MilestonePay is an AI freelance marketplace where every milestone is a bridge: the client's money is held in PayPal, an AI checks the delivered work against agreed criteria, and payment is released only for verified work. It is Aniketh's entry for the PayPal AI Hackathon on Devpost, due 12 Nov 2026 at 12:00pm PST (1:30am IST, 13 Nov).
+Paydrop is an AI freelance marketplace where every milestone is a bridge: the client's money is held in PayPal, an AI checks the delivered work against agreed criteria, and payment is released only for verified work. It is Aniketh's entry for the PayPal AI Hackathon on Devpost, due 12 Nov 2026 at 12:00pm PST (1:30am IST, 13 Nov).
 
 **Pitch:** "Describe your project. The AI scopes it, prices it fairly, finds the right freelancer, and only pays them when the work is verified — whether the worker is a human or an AI agent."
 
@@ -300,7 +300,7 @@ PayPal limits checked 9 Nov 2026: [authorizations](https://developer.paypal.com/
 
 Each sponsor has a job that would break a feature if removed. AG Grid is the hero integration.
 
-| Sponsor | Job in MilestonePay | Priority |
+| Sponsor | Job in Paydrop | Priority |
 | --- | --- | --- |
 | PayPal (core) | Orders with authorize then capture for milestone funding; Invoicing; Payouts for freelancer and collaborator splits; webhooks; Agent Toolkit or MCP server for agent actions | Must |
 | AG Grid (hero) | Money ledger grouped by client and project with totals, status cells and export; criteria-check grid with replay links; price-receipt rows; fairness dashboard; MCP filtering from chat | Must |
@@ -311,7 +311,7 @@ Each sponsor has a job that would break a feature if removed. AG Grid is the her
 | Astropods | Runs the scope-creep, checker and nudge agents with runtime monitoring and guardrails | Should |
 | Postman | API collection for the full flow (fund, check, release, webhook) used as the integration test suite in CI | Should |
 | Zapier | Client email or WhatsApp messages become change requests; released payments post to Slack or Sheets | Nice |
-| APIMatic | Context Plugins while building the PayPal integration; generated TypeScript SDK and docs for MilestonePay's own API | Nice |
+| APIMatic | Context Plugins while building the PayPal integration; generated TypeScript SDK and docs for Paydrop's own API | Nice |
 | Channel3 | Materials and expenses: the agent sources items a milestone needs and adds them to its funded budget (strongest when pitched for all freelancers, not only developers) | Nice |
 
 **Demo story that touches every sponsor:** client sends "can you also add a blog?" on WhatsApp → Zapier brings it in → Elastic flags it as out of scope → an Astropods agent drafts a change order → a block appears on the Bryntum Gantt → client pays via PayPal → freelancer delivers → Kernel tests the site and records a replay → AG Grid shows money move from held to released → the designer's share goes out via Payouts, all running on Render.
@@ -320,7 +320,7 @@ Each sponsor has a job that would break a feature if removed. AG Grid is the her
 
 Agents only propose; deterministic TypeScript in the core API validates every proposal and is the only code that calls PayPal.
 
-> Diagram in the original doc: MilestonePay architecture · 4 layers
+> Diagram in the original doc: Paydrop architecture · 4 layers
 
 | Layer | Choice |
 | --- | --- |

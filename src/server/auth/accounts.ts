@@ -104,7 +104,7 @@ export async function signUp(db: Db, input: z.infer<typeof SignUpRequest>, ip: s
       skills: isFreelancer ? (input.skills ?? []) : [],
       paypalEmail: isFreelancer ? normalizeEmail(input.paypalEmail || email) : null,
       contactEmail: email,
-      headline: isFreelancer ? "New on MilestonePay" : null,
+      headline: isFreelancer ? "New on Paydrop" : null,
       lastLoginAt: new Date(),
     })
     .returning();

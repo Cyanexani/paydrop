@@ -1,4 +1,4 @@
-# MilestonePay
+# Paydrop
 
 **Pay for outcomes, not promises.**
 
@@ -62,7 +62,7 @@ npm test              # 57 tests
 npm run typecheck
 npm run lint
 npm run eval:checker  # checker eval; fails on any wrongful pass
-npx newman run postman/milestonepay.postman_collection.json   # with the app running
+npx newman run postman/paydrop.postman_collection.json   # with the app running
 ```
 
 CI (`.github/workflows/ci.yml`) runs all of these plus a gitleaks secret scan and a production build.

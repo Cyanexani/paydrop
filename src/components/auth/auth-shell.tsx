@@ -18,7 +18,7 @@ export function AuthShell({ eyebrow, title, subtitle, children, footer }: {
     <div className="grid gap-6 lg:grid-cols-[1.05fr_1fr] lg:items-stretch">
       <section aria-hidden className="poster flex min-h-[220px] min-w-0 flex-col max-lg:order-last lg:min-h-[680px]">
         <div className="label flex justify-between gap-4 border-b border-paper/20 px-6 pb-4 pt-6 sm:px-8">
-          <span>MilestonePay<br /><span className="opacity-75">Pay per milestone</span></span>
+          <span>Paydrop<br /><span className="opacity-75">Pay per milestone</span></span>
           <span className="text-right">Secure<br /><span className="opacity-75">sign-in</span></span>
         </div>
         <div className="relative flex flex-1 items-center justify-center overflow-hidden max-lg:hidden">

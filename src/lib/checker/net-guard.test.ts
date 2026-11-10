@@ -53,8 +53,8 @@ describe("assertPublicUrl in production", () => {
 
   it("accepts public sites and the app's own address", async () => {
     expect((await assertPublicUrl("https://jayadance.example/booking", resolveTo("93.184.216.34"))).hostname).toBe("jayadance.example");
-    process.env.APP_URL = "https://milestonepay.onrender.com";
-    expect((await assertPublicUrl("https://milestonepay.onrender.com/deliveries/ct_1/", resolveTo("10.0.0.9"))).pathname).toBe("/deliveries/ct_1/");
+    process.env.APP_URL = "https://paydrop.onrender.com";
+    expect((await assertPublicUrl("https://paydrop.onrender.com/deliveries/ct_1/", resolveTo("10.0.0.9"))).pathname).toBe("/deliveries/ct_1/");
   });
 
   it("CHECKER_ALLOW_PRIVATE=1 turns the guard off; the per-check guard caches by host", async () => {

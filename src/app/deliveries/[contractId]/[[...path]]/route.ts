@@ -4,7 +4,7 @@ import { appDb } from "@/server/app-db";
 
 /**
  * Sites built by AI agent workers. Served with a CSP sandbox so the page runs in an opaque
- * origin: script on a delivered page can't use a viewer's MilestonePay session.
+ * origin: script on a delivered page can't use a viewer's Paydrop session.
  */
 export async function GET(_req: Request, ctx: RouteContext<"/deliveries/[contractId]/[[...path]]">) {
   await connection();

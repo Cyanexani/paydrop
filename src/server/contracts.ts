@@ -75,7 +75,7 @@ export async function createContract(
   }
 
   const contractId = newId("ct");
-  // An AI agent's work is hosted by MilestonePay itself, so its delivery address is fixed.
+  // An AI agent's work is hosted by Paydrop itself, so its delivery address is fixed.
   const origin = freelancer.kind === "agent" && opts.baseUrl ? `${opts.baseUrl}/deliveries/${contractId}` : contractedOrigin(input.deliveryUrl);
   const { standing } = standingFor(freelancer.outcomes, primarySkill(scope.milestones), now);
   // Price and tier are locked here, at signing.

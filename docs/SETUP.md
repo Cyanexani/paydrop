@@ -1,4 +1,4 @@
-# Setup: run MilestonePay locally
+# Setup: run Paydrop locally
 
 Everything runs on your machine with no accounts: AI features have deterministic demo modes, the database is PGlite (Postgres in-process), and PayPal steps say they're not configured until you add sandbox keys.
 
@@ -90,7 +90,7 @@ npm run eval:checker  # the AI checker against 24 test sites
 With `npm run dev` running in another terminal:
 
 ```bash
-npx newman run postman/milestonepay.postman_collection.json
+npx newman run postman/paydrop.postman_collection.json
 ```
 
 ## Useful commands

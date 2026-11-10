@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* MilestonePay — poster UI. Near-black plum ground, Retro Magic accents (magenta, peach, butter),
+/* Paydrop — poster UI. Near-black plum ground, Retro Magic accents (magenta, peach, butter),
    condensed grotesk headlines, italic serif money, mono labels. Money is drawn as gooey drops. */
 @custom-variant dark (&:where(.dark, .dark *));
 

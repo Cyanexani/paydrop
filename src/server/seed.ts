@@ -44,7 +44,7 @@ export function personas(now: Date): Array<typeof users.$inferInsert> {
       id: "fl-asha",
       name: "Asha Patel",
       role: "freelancer",
-      headline: "Web developer, new to MilestonePay",
+      headline: "Web developer, new to Paydrop",
       skills: ["web_dev"],
       paypalEmail: "asha.freelancer@example.com",
       email: "asha.freelancer@example.com",

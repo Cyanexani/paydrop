@@ -6,7 +6,7 @@ import { LoginForm } from "@/components/auth/forms";
 import { GooBlock } from "@/components/goo";
 import { PageTransition } from "@/components/page-transition";
 
-export const metadata: Metadata = { title: "Sign in · MilestonePay" };
+export const metadata: Metadata = { title: "Sign in · Paydrop" };
 
 export default function LoginPage() {
   return (
@@ -15,7 +15,7 @@ export default function LoginPage() {
         eyebrow="Welcome back"
         title={<>Sign in</>}
         subtitle="Pick up where you left off: your milestones, money held at PayPal and payouts."
-        footer={<>New to MilestonePay? <Link href="/signup" className="font-semibold text-peach hover:text-butter">Create an account</Link></>}
+        footer={<>New to Paydrop? <Link href="/signup" className="font-semibold text-peach hover:text-butter">Create an account</Link></>}
       >
         <Suspense fallback={<GooBlock label="Loading" />}>
           <LoginForm />

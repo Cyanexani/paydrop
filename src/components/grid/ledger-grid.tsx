@@ -108,8 +108,8 @@ export function LedgerGrid() {
             <Button type="submit" disabled={busy}>{busy ? "Thinking…" : "Ask"}</Button>
           </form>
           <div className="flex gap-2">
-            <Button variant="secondary" onClick={() => apiRef.current?.exportDataAsCsv({ fileName: "milestonepay-ledger.csv" })}>CSV</Button>
-            <Button variant="secondary" onClick={() => apiRef.current?.exportDataAsExcel({ fileName: "milestonepay-ledger.xlsx" })}>Excel</Button>
+            <Button variant="secondary" onClick={() => apiRef.current?.exportDataAsCsv({ fileName: "paydrop-ledger.csv" })}>CSV</Button>
+            <Button variant="secondary" onClick={() => apiRef.current?.exportDataAsExcel({ fileName: "paydrop-ledger.xlsx" })}>Excel</Button>
           </div>
         </div>
         {answer && <p className="px-2 pb-1 text-sm text-muted">{answer}</p>}
