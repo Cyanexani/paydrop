@@ -6,6 +6,8 @@ on:
 
 permissions:
   contents: read
+  # The secret scan lists a pull request's commits, which needs this on pull_request runs.
+  pull-requests: read
 
 jobs:
   test:
