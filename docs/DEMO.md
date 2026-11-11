@@ -1,6 +1,6 @@
 # Demo video script (under 3 minutes)
 
-Set up first: deploy (or run locally), add PayPal sandbox and Anthropic keys, and run `npm run seed:demo` for a contract at every stage. Open the site a minute early so it's warm. Record from a run that worked.
+Set up first: use the live site (https://paydrop-web.onrender.com) or run locally, with PayPal sandbox keys set. An Anthropic key is optional: without one the scoper always returns the dance-studio example, which is what this script shows. Load a contract at every stage with `POST /api/admin/seed-demo` on the live site (see DEPLOYMENT.md) or `npm run seed:demo` locally. Open the site a minute early so it's warm. Record from a run that worked.
 
 | Time | Show | Persona and clicks |
 | --- | --- | --- |
