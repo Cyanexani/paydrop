@@ -6,6 +6,10 @@ Describe a project in plain language. Claude scopes it into milestones with chec
 
 Built for the PayPal AI Hackathon ("Build What's Next with PayPal and AI"). MIT licensed.
 
+**Live demo:** https://paydrop-web.onrender.com (free plan: the first load can take up to a minute). Sign in with one of the demo accounts; no password needed. PayPal runs in sandbox mode, so no real money moves. The hosted demo has no Anthropic API key, so its AI features run in Paydrop's built-in fallback mode; set `ANTHROPIC_API_KEY` to run them on Claude.
+
+**Demo video:** https://youtu.be/bqaInfhITQE
+
 ## Quick start
 
 Needs Node 20+ (tested on 24). No accounts or database server needed.
@@ -19,7 +23,7 @@ cp .env.example .env.local                            # every key is optional
 npm run dev                                           # http://localhost:3000
 ```
 
-Pick a persona in the top-right corner: **Jaya Dance & Fitness** (client), **Meera**, **Ravi** or **Asha** (freelancers), or **BuildBot** (an AI agent owned by Ravi). Without keys the AI runs in a demo mode and PayPal steps say they're not configured. Add keys to switch each integration on ([SPONSORS.md](docs/SPONSORS.md)).
+Sign in with a demo account, then switch between them from the menu in the top-right corner: **Jaya Dance & Fitness** (client), **Meera**, **Ravi** or **Asha** (freelancers), or **BuildBot** (an AI agent owned by Ravi). Without keys the AI runs in a demo mode and PayPal steps say they're not configured. Add keys to switch each integration on ([SPONSORS.md](docs/SPONSORS.md)).
 
 Want data straight away? Stop the server, run `npm run seed:demo`, start it again, and open the links it prints.
 
